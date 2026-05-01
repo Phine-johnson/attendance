@@ -858,7 +858,7 @@ body {
 @media (max-width: 576px) {
     .menu-toggle-btn {
         top: 10px;
-        right: 10px;
+        left: 10px;
         width: 40px;
         height: 40px;
     }
