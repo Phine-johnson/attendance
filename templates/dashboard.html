@@ -270,12 +270,13 @@
 
             const attendanceRef = database.ref(`sessions/${sessionId}/attendance`);
             
-            attendanceRef.on('child_added', (snapshot) => {
-                const data = snapshot.val();
-                addAttendanceRow(data);
-            });
+             attendanceRef.on('child_added', (snapshot) => {
+                 const data = snapshot.val();
+                 addAttendanceRow(data);
+             });
+         }
 
-        // Real Firebase listener (for production)
+         // Real Firebase listener (for production)
         function startListeningForAttendance(sessionId) {
             if (attendanceListener) {
                 attendanceListener.off();
