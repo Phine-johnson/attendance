@@ -1,0 +1,86 @@
+<!-- Bible Sidebar Toggle Button -->
+<button class="bible-toggle-btn" id="bibleToggle" title="Open Bible Reader">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z" opacity="0.3"/>
+    </svg>
+</button>
+
+<!-- Bible Sidebar Overlay -->
+<div class="bible-sidebar-overlay" id="bibleOverlay"></div>
+
+<!-- Bible Sidebar -->
+<div class="bible-sidebar" id="bibleSidebar">
+    <div class="bible-sidebar-header">
+        <div class="d-flex align-items-center">
+            <svg width="28" height="28" class="me-2" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+            <h5 class="mb-0">Bible Reader</h5>
+        </div>
+        <button class="bible-close-btn" id="bibleClose">&times;</button>
+    </div>
+
+    <div class="bible-sidebar-body">
+        <!-- Version Selector -->
+        <div class="mb-3">
+            <label class="form-label fw-bold text-pcg-blue">Bible Version</label>
+            <select class="form-select form-control-custom" id="bibleVersion">
+                <option value="kjv">King James Version (KJV)</option>
+                <option value="niv">New International Version (NIV)</option>
+                <option value="esv">English Standard Version (ESV)</option>
+                <option value="nasb">New American Standard Bible (NASB)</option>
+                <option value="nlt">New Living Translation (NLT)</option>
+                <option value="msg">The Message (MSG)</option>
+            </select>
+            <small class="text-muted">Powered by Bible-api.com</small>
+        </div>
+
+        <!-- Book & Chapter Input -->
+        <div class="row g-2 mb-3">
+            <div class="col-6">
+                <label class="form-label fw-bold text-pcg-blue">Book</label>
+                <input type="text" class="form-control form-control-custom" id="bibleBook" placeholder="e.g., John" value="John">
+            </div>
+            <div class="col-3">
+                <label class="form-label fw-bold text-pcg-blue">Chapter</label>
+                <input type="number" class="form-control form-control-custom" id="bibleChapter" placeholder="1" value="1" min="1">
+            </div>
+            <div class="col-3">
+                <label class="form-label fw-bold text-pcg-blue">Verse</label>
+                <input type="number" class="form-control form-control-custom" id="bibleVerse" placeholder="1" min="1">
+            </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="d-flex gap-2 mb-3">
+            <button class="btn btn-custom-primary flex-fill" id="loadPassage">Load Passage</button>
+            <button class="btn btn-outline-secondary flex-fill" id="randomVerse">Random Verse</button>
+        </div>
+
+        <!-- Reference Display -->
+        <div class="mb-3">
+            <div id="bibleReference" class="fw-bold text-pcg-green" style="font-size: 1.1rem;"></div>
+        </div>
+
+        <!-- Bible Text -->
+        <div class="bible-text-container">
+            <div id="bibleText" class="bible-text">
+                <div class="text-center text-muted py-5">
+                    <svg width="48" height="48" class="mb-3 opacity-25" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                    <p>Select a passage or click "Random Verse" to begin reading.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Spinner (hidden by default) -->
+        <div class="bible-loading text-center py-4" id="bibleLoading" style="display: none;">
+            <div class="spinner-border text-pcg-blue" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Loading Scripture...</p>
+        </div>
+    </div>
+</div>
