@@ -311,6 +311,12 @@
         function showPanel(panelId) {
             document.querySelectorAll('.bible-form-section, .bible-reader-area').forEach(el => el.classList.remove('active'));
             document.getElementById(panelId).classList.add('active');
+
+            // Load notes when opening notes panel
+            if (panelId === 'notesPanel') {
+                const saved = localStorage.getItem('bibleNotes') || '';
+                document.getElementById('notesText').value = saved;
+            }
         }
 
         menuToggle.addEventListener('click', openBibleSidebar);
@@ -410,8 +416,16 @@
              if (e.key === 'Escape' && bibleSidebar.classList.contains('active')) closeBibleSidebar();
          });
 
-         function showBibleMenu() { showPanel('bibleMenuPanel'); }
-         window.showBibleMenu = showBibleMenu; // Expose globally for inline onclick
+        function showBibleMenu() { showPanel('bibleMenuPanel'); }
+
+        // Notes save functionality
+        document.getElementById('saveNotesBtn')?.addEventListener('click', () => {
+            const notes = document.getElementById('notesText').value;
+            localStorage.setItem('bibleNotes', notes);
+            alert('Notes saved!');
+        });
+
+        window.showBibleMenu = showBibleMenu; // Expose globally for inline onclick
      });
      </script>
 
@@ -529,7 +543,12 @@
             </div>
 
             <!-- Other Panels (Placeholder) -->
-            <div class="bible-reader-area" id="notesPanel"><div class="text-center py-5"><p class="text-muted">📝 Notes</p><button class="btn btn-outline-secondary mt-2" onclick="showBibleMenu()">Back to Menu</button></div></div>
+            <div class="bible-reader-area" id="notesPanel">
+                <div class="text-center py-5"><p class="text-muted">📝 Notes</p>
+                <div class="mb-3"><textarea class="form-control form-control-custom" id="notesText" rows="12" placeholder="Write your notes here..."></textarea></div>
+                <button class="btn btn-custom-primary" id="saveNotesBtn">Save Notes</button>
+                <button class="btn btn-outline-secondary mt-2" onclick="showBibleMenu()">Back to Menu</button></div>
+            </div>
             <div class="bible-reader-area" id="highlightsPanel"><div class="text-center py-5"><p class="text-muted">✨ Highlights</p><button class="btn btn-outline-secondary mt-2" onclick="showBibleMenu()">Back to Menu</button></div></div>
             <div class="bible-reader-area" id="searchPanel"><div class="text-center py-5"><p class="text-muted">🔍 Search</p><button class="btn btn-outline-secondary mt-2" onclick="showBibleMenu()">Back to Menu</button></div></div>
             <div class="bible-reader-area" id="bookmarksPanel"><div class="text-center py-5"><p class="text-muted">🔖 Bookmarks</p><button class="btn btn-outline-secondary mt-2" onclick="showBibleMenu()">Back to Menu</button></div></div>
