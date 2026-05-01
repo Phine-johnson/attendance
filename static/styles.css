@@ -849,11 +849,6 @@ body {
 }
 .bible-icon-item:hover span { color: var(--pcg-blue); }
 
-/* Ensure back button hidden on reader */
-#backToMenu { display: none; }
-.bible-reader-area.active + .bible-reader-area #backToMenu { /* show in non-reader panels? Actually backToMenu is in reader panel only - but logic handled by showPanel: we might hide via JS? The placeholder panels have their own back buttons. So no issue. */
-}
-
 /* Responsive */
 @media (max-width: 576px) {
     .menu-toggle-btn {
