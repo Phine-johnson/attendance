@@ -405,23 +405,20 @@
             document.getElementById(id).addEventListener('keypress', e => { if (e.key === 'Enter') loadBiblePassage(); });
         });
 
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && bibleSidebar.classList.contains('active')) closeBibleSidebar();
-        });
+         document.addEventListener('keydown', (e) => {
+             if (e.key === 'Escape' && bibleSidebar.classList.contains('active')) closeBibleSidebar();
+         });
 
          function showBibleMenu() { showPanel('bibleMenuPanel'); }
-         });
+     });
      </script>
 
-    <!-- Bible Sidebar -->
-    <!-- Bible Sidebar Toggle Button -->
-    <!-- Bible Sidebar -->
-    <!-- Bible Sidebar Toggle Button -->
-    <button class="menu-toggle-btn" id="menuToggle" title="Open Menu">
-        <span></span><span></span><span></span>
-    </button>
+     <!-- Bible Sidebar Toggle Button -->
+     <button class="menu-toggle-btn" id="menuToggle" title="Open Menu">
+         <span></span><span></span><span></span>
+     </button>
 
-    <!-- Bible Sidebar Overlay -->
+     <!-- Bible Sidebar Overlay -->
     <div class="bible-sidebar-overlay" id="bibleOverlay"></div>
 
     <!-- Bible Sidebar -->
