@@ -1,7 +1,7 @@
 import os
 import uuid
 import json
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, Response
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, Response, send_from_directory
 try:
     import firebase_admin
     from firebase_admin import credentials, auth, db
@@ -18,8 +18,13 @@ from datetime import datetime
 from dotenv import load_dotenv
 load_dotenv()
 
-app = Flask(__name__, static_folder='static', static_url_path='/static')
+app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev-secret-key-change-in-production')
+
+# Serve static files from 'static' folder
+@app.route('/static/<path:filename>')
+def static_files(filename):
+    return send_from_directory(os.path.join(app.root_path, 'static'), filename)
 
 # Initialize Firebase Admin SDK if available
 if FIREBASE_AVAILABLE:
