@@ -6,9 +6,21 @@
       "use": "@vercel/python"
     },
     {
-      "src": "public/**",
+      "src": "static/**",
       "use": "@vercel/static"
     }
+  ],
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "app.py"
+    }
+  ]
+}
   ],
   "routes": [
     {
