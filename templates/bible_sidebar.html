@@ -1,86 +1,116 @@
-<!-- Bible Sidebar Toggle Button -->
-<button class="bible-toggle-btn" id="bibleToggle" title="Open Bible Reader">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-        <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z" opacity="0.3"/>
-    </svg>
-</button>
-
-<!-- Bible Sidebar Overlay -->
-<div class="bible-sidebar-overlay" id="bibleOverlay"></div>
-
-<!-- Bible Sidebar -->
-<div class="bible-sidebar" id="bibleSidebar">
-    <div class="bible-sidebar-header">
-        <div class="d-flex align-items-center">
-            <svg width="28" height="28" class="me-2" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-            </svg>
-            <h5 class="mb-0">Bible Reader</h5>
-        </div>
-        <button class="bible-close-btn" id="bibleClose">&times;</button>
-    </div>
-
-    <div class="bible-sidebar-body">
-        <!-- Version Selector -->
-        <div class="mb-3">
-            <label class="form-label fw-bold text-pcg-blue">Bible Version</label>
-            <select class="form-select form-control-custom" id="bibleVersion">
-                <option value="kjv">King James Version (KJV)</option>
-                <option value="niv">New International Version (NIV)</option>
-                <option value="esv">English Standard Version (ESV)</option>
-                <option value="nasb">New American Standard Bible (NASB)</option>
-                <option value="nlt">New Living Translation (NLT)</option>
-                <option value="msg">The Message (MSG)</option>
-            </select>
-            <small class="text-muted">Powered by Bible-api.com</small>
-        </div>
-
-        <!-- Book & Chapter Input -->
-        <div class="row g-2 mb-3">
-            <div class="col-6">
-                <label class="form-label fw-bold text-pcg-blue">Book</label>
-                <input type="text" class="form-control form-control-custom" id="bibleBook" placeholder="e.g., John" value="John">
+<!-- Overall Sidebar Container -->
+<div class="bible-sidebar-wrap" id="bibleSidebarWrap">
+    <div class="bible-sidebar" id="bibleSidebar">
+        <div class="bible-sidebar-header">
+            <div class="d-flex align-items-center">
+                <svg width="24" height="24" class="me-2" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <h5 class="mb-0">Menu</h5>
             </div>
-            <div class="col-3">
-                <label class="form-label fw-bold text-pcg-blue">Chapter</label>
-                <input type="number" class="form-control form-control-custom" id="bibleChapter" placeholder="1" value="1" min="1">
-            </div>
-            <div class="col-3">
-                <label class="form-label fw-bold text-pcg-blue">Verse</label>
-                <input type="number" class="form-control form-control-custom" id="bibleVerse" placeholder="1" min="1">
-            </div>
+            <button class="bible-close-btn" id="bibleClose">&times;</button>
         </div>
 
-        <!-- Navigation Buttons -->
-        <div class="d-flex gap-2 mb-3">
-            <button class="btn btn-custom-primary flex-fill" id="loadPassage">Load Passage</button>
-            <button class="btn btn-outline-secondary flex-fill" id="randomVerse">Random Verse</button>
-        </div>
-
-        <!-- Reference Display -->
-        <div class="mb-3">
-            <div id="bibleReference" class="fw-bold text-pcg-green" style="font-size: 1.1rem;"></div>
-        </div>
-
-        <!-- Bible Text -->
-        <div class="bible-text-container">
-            <div id="bibleText" class="bible-text">
-                <div class="text-center text-muted py-5">
-                    <svg width="48" height="48" class="mb-3 opacity-25" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                    </svg>
-                    <p>Select a passage or click "Random Verse" to begin reading.</p>
+        <div class="bible-sidebar-body" id="bibleSidebarBody">
+            <!-- MENU PANEL -->
+            <div id="bibleMenuPanel" class="bible-form-section active">
+                <div class="bible-icon-grid">
+                    <div class="bible-icon-item" data-go="bible-reader">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="var(--pcg-green)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                        <span>Bible</span>
+                    </div>
+                    <div class="bible-icon-item" data-go="notes">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                        <span>Notes</span>
+                    </div>
+                    <div class="bible-icon-item" data-go="highlights">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                        <span>Highlights</span>
+                    </div>
+                    <div class="bible-icon-item" data-go="search">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                        <span>Search</span>
+                    </div>
+                    <div class="bible-icon-item" data-go="bookmarks">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+                        <span>Bookmarks</span>
+                    </div>
+                    <div class="bible-icon-item" data-go="history">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+                        <span>History</span>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Loading Spinner (hidden by default) -->
-        <div class="bible-loading text-center py-4" id="bibleLoading" style="display: none;">
-            <div class="spinner-border text-pcg-blue" role="status">
-                <span class="visually-hidden">Loading...</span>
+            <!-- BIBLE READER PANEL -->
+            <div class="bible-reader-area" id="bibleReaderPanel">
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-pcg-blue mb-1">Version</label>
+                    <select class="form-select form-control-custom" id="bibleVersion">
+                        <option value="kjv">King James (KJV)</option>
+                        <option value="niv">New Int'l (NIV)</option>
+                        <option value="esv">English Standard (ESV)</option>
+                        <option value="nasb">NASB</option>
+                        <option value="nlt">New Living (NLT)</option>
+                        <option value="msg">The Message</option>
+                    </select>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-7">
+                        <label class="form-label fw-bold text-pcg-blue mb-1">Book</label>
+                        <input type="text" class="form-control form-control-custom" id="bibleBook" placeholder="e.g., John" value="John">
+                    </div>
+                    <div class="col-3">
+                        <label class="form-label fw-bold text-pcg-blue mb-1">Chapter</label>
+                        <input type="number" class="form-control form-control-custom" id="bibleChapter" placeholder="1" value="1" min="1">
+                    </div>
+                    <div class="col-2">
+                        <label class="form-label fw-bold text-pcg-blue mb-1">Verse</label>
+                        <input type="number" class="form-control form-control-custom" id="bibleVerse" placeholder="" min="1">
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mb-3">
+                    <button class="btn btn-custom-primary flex-fill" id="loadPassage">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+                        Load
+                    </button>
+                    <button class="btn btn-outline-secondary flex-fill" id="randomVerse">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+                        Random
+                    </button>
+                    <button class="btn btn-outline-secondary bible-reader-btn" id="backToMenu">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                    </button>
+                </div>
+
+                <div class="bible-reader-header mb-2">
+                    <div id="bibleReference" class="fw-bold text-pcg-green"></div>
+                </div>
+
+                <div class="bible-text-box" id="bibleText">
+                    <div class="text-center text-muted py-5">
+                        <svg width="48" height="48" class="mb-2 opacity-25" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                        <p class="small">Select a passage to begin reading.</p>
+                    </div>
+                </div>
+
+                <div class="bible-loading text-center py-3" id="bibleLoading">
+                    <div class="spinner-border text-pcg-green" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 small text-muted">Loading...</p>
+                </div>
             </div>
-            <p class="mt-2 text-muted">Loading Scripture...</p>
+
+            <!-- Other Panels (Placeholder) -->
+            <div class="bible-reader-area" id="notesPanel"><div class="text-center py-5"><p class="text-muted">📝 Notes</p><button class="btn btn-outline-secondary mt-2" onclick="showBibleMenu()">Back to Menu</button></div></div>
+            <div class="bible-reader-area" id="highlightsPanel"><div class="text-center py-5"><p class="text-muted">✨ Highlights</p><button class="btn btn-outline-secondary mt-2" onclick="showBibleMenu()">Back to Menu</button></div></div>
+            <div class="bible-reader-area" id="searchPanel"><div class="text-center py-5"><p class="text-muted">🔍 Search</p><button class="btn btn-outline-secondary mt-2" onclick="showBibleMenu()">Back to Menu</button></div></div>
+            <div class="bible-reader-area" id="bookmarksPanel"><div class="text-center py-5"><p class="text-muted">🔖 Bookmarks</p><button class="btn btn-outline-secondary mt-2" onclick="showBibleMenu()">Back to Menu</button></div></div>
+            <div class="bible-reader-area" id="historyPanel"><div class="text-center py-5"><p class="text-muted">📜 History</p><button class="btn btn-outline-secondary mt-2" onclick="showBibleMenu()">Back to Menu</button></div></div>
+
         </div>
     </div>
 </div>
