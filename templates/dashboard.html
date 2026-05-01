@@ -297,6 +297,8 @@
         const bibleOverlay = document.getElementById('bibleOverlay');
         const bibleClose = document.getElementById('bibleClose');
         const menuToggle = document.getElementById('menuToggle');
+        const bibleMainBtn = document.getElementById('bibleMainBtn');
+        const bibleDropdownBtn = document.getElementById('bibleDropdownBtn');
 
         function openBibleSidebar() {
             bibleSidebar.classList.add('active');
@@ -307,33 +309,100 @@
             bibleSidebar.classList.remove('active');
             bibleOverlay.classList.remove('active');
             document.body.style.overflow = '';
-        }
-        function showPanel(panelId) {
-            document.querySelectorAll('.bible-form-section, .bible-reader-area').forEach(el => el.classList.remove('active'));
-            document.getElementById(panelId).classList.add('active');
-
-            // Load notes when opening notes panel
-            if (panelId === 'notesPanel') {
-                const saved = localStorage.getItem('bibleNotes') || '';
-                document.getElementById('notesText').value = saved;
-            }
+            // Close dropdown when closing sidebar
+            document.querySelector('.bible-dropdown-menu').classList.remove('show');
+            bibleDropdownBtn?.classList.remove('active');
         }
 
         menuToggle.addEventListener('click', openBibleSidebar);
         bibleClose.addEventListener('click', closeBibleSidebar);
         bibleOverlay.addEventListener('click', closeBibleSidebar);
 
-        // Menu icon clicks
-        document.querySelectorAll('.bible-icon-item').forEach(item => {
+        // Bible main button → opens Bible reader directly
+        bibleMainBtn.addEventListener('click', () => {
+            document.querySelectorAll('.bible-form-section, .bible-reader-area').forEach(el => el.classList.remove('active'));
+            document.getElementById('bibleReaderPanel').classList.add('active');
+            showTool('bible-reader');
+        });
+
+        // Dropdown toggle button
+        bibleDropdownBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const menu = document.querySelector('.bible-dropdown-menu');
+            const isShown = menu.classList.toggle('show');
+            bibleDropdownBtn.classList.toggle('active', isShown);
+        });
+
+        // Close dropdown when clicking elsewhere
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#bibleDropdownBtn')) {
+                document.querySelector('.bible-dropdown-menu').classList.remove('show');
+                bibleDropdownBtn?.classList.remove('active');
+            }
+        });
+
+        // Back to main menu
+        function showBibleMenu() {
+            document.querySelectorAll('.bible-form-section, .bible-reader-area').forEach(el => el.classList.remove('active'));
+            document.getElementById('bibleMenuPanel').classList.add('active');
+        }
+
+        document.getElementById('backToMenu').addEventListener('click', showBibleMenu);
+
+        // Dropdown item clicks
+        document.querySelectorAll('.bible-dropdown-item').forEach(item => {
             item.addEventListener('click', () => {
                 const action = item.getAttribute('data-go');
-                if (action === 'bible-reader') showPanel('bibleReaderPanel');
-                else showPanel(action + 'Panel');
+                document.querySelectorAll('.bible-form-section, .bible-reader-area').forEach(el => el.classList.remove('active'));
+                document.getElementById('bibleReaderPanel').classList.add('active');
+                showTool(action);
             });
         });
 
-        document.getElementById('backToMenu').addEventListener('click', () => showPanel('bibleMenuPanel'));
+        // Show specific tool inside bibleReaderPanel
+        function showTool(tool) {
+            // Hide all sections first
+            document.getElementById('bibleInputSection').style.display = 'none';
+            document.querySelectorAll('.bible-tool-section').forEach(s => s.style.display = 'none');
+            document.getElementById('bibleText').style.display = 'none';
+            document.getElementById('bibleLoading').style.display = 'none';
 
+            // Show appropriate section
+            if (tool === 'bible-reader') {
+                document.getElementById('bibleInputSection').style.display = 'block';
+                document.getElementById('bibleText').style.display = 'block';
+            } else if (tool === 'notes') {
+                document.getElementById('notesSection').style.display = 'block';
+                const saved = localStorage.getItem('bibleNotes') || '';
+                document.getElementById('notesText').value = saved;
+            } else if (tool === 'highlights') {
+                document.getElementById('highlightsSection').style.display = 'block';
+            } else if (tool === 'search') {
+                document.getElementById('searchSection').style.display = 'block';
+            } else if (tool === 'bookmarks') {
+                document.getElementById('bookmarksSection').style.display = 'block';
+            } else if (tool === 'history') {
+                document.getElementById('historySection').style.display = 'block';
+            }
+        }
+
+        // Load default Bible on sidebar open (John 1)
+        bibleMainBtn.addEventListener('click', () => {
+            setTimeout(() => {
+                if (!bibleSidebar.classList.contains('active')) return;
+                document.getElementById('bibleBook').value = 'John';
+                document.getElementById('bibleChapter').value = '1';
+                document.getElementById('bibleVerse').value = '';
+                document.getElementById('loadPassage').click();
+            }, 300);
+        });
+
+        // Escape key closes sidebar
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && bibleSidebar.classList.contains('active')) closeBibleSidebar();
+        });
+
+        // --- Bible API ---
         async function loadBiblePassage() {
             const version = document.getElementById('bibleVersion').value;
             const book = document.getElementById('bibleBook').value.trim();
@@ -412,22 +481,91 @@
             document.getElementById(id).addEventListener('keypress', e => { if (e.key === 'Enter') loadBiblePassage(); });
         });
 
-         document.addEventListener('keydown', (e) => {
-             if (e.key === 'Escape' && bibleSidebar.classList.contains('active')) closeBibleSidebar();
-         });
-
-        function showBibleMenu() { showPanel('bibleMenuPanel'); }
-
-        // Notes save functionality
+        // Notes save
         document.getElementById('saveNotesBtn')?.addEventListener('click', () => {
-            const notes = document.getElementById('notesText').value;
-            localStorage.setItem('bibleNotes', notes);
+            localStorage.setItem('bibleNotes', document.getElementById('notesText').value);
             alert('Notes saved!');
         });
+        // Also save on panel switch? Not necessary.
 
-        window.showBibleMenu = showBibleMenu; // Expose globally for inline onclick
-     });
-     </script>
+        // Expose globally for any inline handlers (unused now but safe)
+        window.showBibleMenu = showBibleMenu;
+        });
+
+        // Close dropdown when clicking elsewhere
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#bibleDropdownBtn')) {
+                document.querySelector('.bible-dropdown-menu').classList.remove('show');
+                bibleDropdownBtn.classList.remove('active');
+            }
+        });
+
+        menuToggle.addEventListener('click', openBibleSidebar);
+        bibleClose.addEventListener('click', closeBibleSidebar);
+        bibleOverlay.addEventListener('click', closeBibleSidebar);
+
+        // Show specific tool inside bibleReaderPanel
+        function showTool(tool) {
+            // Hide all sections first
+            document.getElementById('bibleInputSection').style.display = 'none';
+            document.querySelectorAll('.bible-tool-section').forEach(s => s.style.display = 'none');
+            document.getElementById('bibleText').style.display = 'none';
+            document.getElementById('bibleLoading').style.display = 'none';
+
+            // Show appropriate section
+            if (tool === 'bible-reader') {
+                document.getElementById('bibleInputSection').style.display = 'block';
+                document.getElementById('bibleText').style.display = 'block';
+            } else if (tool === 'notes') {
+                document.getElementById('notesSection').style.display = 'block';
+                const saved = localStorage.getItem('bibleNotes') || '';
+                document.getElementById('notesText').value = saved;
+            } else if (tool === 'highlights') {
+                document.getElementById('highlightsSection').style.display = 'block';
+            } else if (tool === 'search') {
+                document.getElementById('searchSection').style.display = 'block';
+            } else if (tool === 'bookmarks') {
+                document.getElementById('bookmarksSection').style.display = 'block';
+            } else if (tool === 'history') {
+                document.getElementById('historySection').style.display = 'block';
+            }
+        }
+
+        // Back to main menu
+        function showBibleMenu() {
+            document.querySelectorAll('.bible-form-section, .bible-reader-area').forEach(el => el.classList.remove('active'));
+            document.getElementById('bibleMenuPanel').classList.add('active');
+        }
+
+        // Back to main menu from within bibleReaderPanel
+        document.getElementById('backToMenu').addEventListener('click', showBibleMenu);
+
+        // Dropdown menu clicks
+        document.querySelectorAll('.bible-dropdown-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const action = item.getAttribute('data-go');
+                // Switch to bibleReaderPanel and show the selected tool
+                document.querySelectorAll('.bible-form-section, .bible-reader-area').forEach(el => el.classList.remove('active'));
+                document.getElementById('bibleReaderPanel').classList.add('active');
+                showTool(action);
+            });
+        });
+
+        // Load default Bible on sidebar open (John 1)
+        menuToggle.addEventListener('click', () => {
+            setTimeout(() => {
+                if (!bibleSidebar.classList.contains('active')) return;
+                document.getElementById('bibleBook').value = 'John';
+                document.getElementById('bibleChapter').value = '1';
+                document.getElementById('bibleVerse').value = '';
+                document.getElementById('loadPassage').click();
+            }, 300);
+        });
+
+        // Escape key closes sidebar
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && bibleSidebar.classList.contains('active')) closeBibleSidebar();
+        });
 
      <!-- Bible Sidebar Toggle Button -->
      <button class="menu-toggle-btn" id="menuToggle" title="Open Menu">
@@ -450,13 +588,151 @@
         </div>
 
         <div class="bible-sidebar-body" id="bibleSidebarBody">
-            <!-- MENU PANEL -->
+            <!-- MENU PANEL (Bible + Dropdown Submenu) -->
             <div id="bibleMenuPanel" class="bible-form-section active">
-                <div class="bible-icon-grid">
-                    <div class="bible-icon-item" data-go="bible-reader">
-                        <svg width="36" height="36" viewBox="0 0 24 24" fill="var(--pcg-green)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                        <span>Bible</span>
+                <!-- Bible Icon (Main Trigger) -->
+                <div class="bible-icon-item dropdown-trigger" id="bibleDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="var(--pcg-green)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    <span>Bible</span>
+                    <small class="dropdown-indicator">▼</small>
+                </div>
+
+                <!-- Dropdown Menu -->
+                <div class="bible-dropdown-menu" aria-labelledby="bibleDropdownBtn">
+                    <div class="bible-dropdown-item" data-go="notes">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                        <span>Notes</span>
                     </div>
+                    <div class="bible-dropdown-item" data-go="highlights">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                        <span>Highlights</span>
+                    </div>
+                    <div class="bible-dropdown-item" data-go="search">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                        <span>Search</span>
+                    </div>
+                    <div class="bible-dropdown-item" data-go="bookmarks">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+                        <span>Bookmarks</span>
+                    </div>
+                    <div class="bible-dropdown-item" data-go="history">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+                        <span>History</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BIBLE READER PANEL (shared by all tools) -->
+            <div class="bible-reader-area" id="bibleReaderPanel">
+                <div class="bible-reader-header mb-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div id="bibleReference" class="fw-bold text-pcg-green"></div>
+                        <button class="btn btn-outline-secondary btn-sm" id="backToMenu" title="Back to Menu">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                            Back
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bible Input Section -->
+                <div class="bible-input-section" id="bibleInputSection">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-pcg-blue mb-1">Version</label>
+                        <select class="form-select form-control-custom" id="bibleVersion">
+                            <option value="kjv">King James (KJV)</option>
+                            <option value="niv">New Int'l (NIV)</option>
+                            <option value="esv">English Standard (ESV)</option>
+                            <option value="nasb">NASB</option>
+                            <option value="nlt">New Living (NLT)</option>
+                            <option value="msg">The Message</option>
+                        </select>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-7">
+                            <label class="form-label fw-bold text-pcg-blue mb-1">Book</label>
+                            <input type="text" class="form-control form-control-custom" id="bibleBook" placeholder="e.g., John" value="John">
+                        </div>
+                        <div class="col-3">
+                            <label class="form-label fw-bold text-pcg-blue mb-1">Chapter</label>
+                            <input type="number" class="form-control form-control-custom" id="bibleChapter" placeholder="1" value="1" min="1">
+                        </div>
+                        <div class="col-2">
+                            <label class="form-label fw-bold text-pcg-blue mb-1">Verse</label>
+                            <input type="number" class="form-control form-control-custom" id="bibleVerse" placeholder="" min="1">
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mb-3">
+                        <button class="btn btn-custom-primary flex-fill" id="loadPassage">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+                            Load
+                        </button>
+                        <button class="btn btn-outline-secondary flex-fill" id="randomVerse">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+                            Random
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Notes Section (hidden by default) -->
+                <div class="bible-tool-section" id="notesSection" style="display: none;">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-pcg-blue mb-1">Your Notes</label>
+                        <textarea class="form-control form-control-custom" id="notesText" rows="10" placeholder="Write your notes here..."></textarea>
+                        <button class="btn btn-custom-primary mt-2" id="saveNotesBtn">Save Notes</button>
+                    </div>
+                </div>
+
+                <!-- Highlights Section -->
+                <div class="bible-tool-section" id="highlightsSection" style="display: none;">
+                    <div class="text-center py-5">
+                        <p class="text-muted">✨ Highlights</p>
+                        <p class="small">Highlighted verses will appear here.</p>
+                    </div>
+                </div>
+
+                <!-- Search Section -->
+                <div class="bible-tool-section" id="searchSection" style="display: none;">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-pcg-blue mb-1">Search</label>
+                        <input type="text" class="form-control form-control-custom mb-2" id="searchInput" placeholder="Search...">
+                        <div id="searchResults" class="text-muted text-center py-4">Results will appear here.</div>
+                    </div>
+                </div>
+
+                <!-- Bookmarks Section -->
+                <div class="bible-tool-section" id="bookmarksSection" style="display: none;">
+                    <div class="text-center py-5">
+                        <p class="text-muted">🔖 Bookmarks</p>
+                        <p class="small">Your bookmarked passages will appear here.</p>
+                    </div>
+                </div>
+
+                <!-- History Section -->
+                <div class="bible-tool-section" id="historySection" style="display: none;">
+                    <div class="text-center py-5">
+                        <p class="text-muted">📜 History</p>
+                        <p class="small">Your reading history will appear here.</p>
+                    </div>
+                </div>
+
+                <!-- Bible Text Container (for Bible Reader mode) -->
+                <div class="bible-text-container" id="bibleText">
+                    <div class="text-center text-muted py-5">
+                        <svg width="48" height="48" class="mb-2 opacity-25" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                        <p class="small">Select a passage to begin reading.</p>
+                    </div>
+                </div>
+
+                <div class="bible-loading text-center py-3" id="bibleLoading" style="display: none;">
+                    <div class="spinner-border text-pcg-green" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 small text-muted">Loading...</p>
+                </div>
+            </div>
+        </div>
                     <div class="bible-icon-item" data-go="notes">
                         <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
                         <span>Notes</span>
