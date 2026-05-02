@@ -8,7 +8,7 @@
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Custom styles -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=3">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=5">
 </head>
 <body>
     <!-- Header -->
@@ -309,7 +309,7 @@
         const searchSection = document.getElementById('searchSection');
         const bookmarksSection = document.getElementById('bookmarksSection');
         const historySection = document.getElementById('historySection');
-        const serviceUpdatePanel = document.getElementById('serviceUpdatePanel');
+        const serviceUpdateSection = document.getElementById('serviceUpdateSection');
         const backToMenuBtn = document.getElementById('backToMenu');
 
         function showPanel(panelId) {
@@ -320,7 +320,7 @@
                 searchSection,
                 bookmarksSection,
                 historySection,
-                serviceUpdatePanel
+                serviceUpdateSection
             ];
             panels.forEach(p => p.style.display = 'none');
             document.getElementById(panelId).style.display = 'block';
@@ -735,7 +735,7 @@
                 </div>
 
                 <!-- Service Update Form Panel (new) -->
-                <div class="bible-tool-section" id="serviceUpdatePanel" style="display: none;">
+                <div class="bible-tool-section" id="serviceUpdateSection" style="display: none;">
                     <form id="serviceUpdateForm">
                         <!-- Main Service Info -->
                         <h5 class="mb-3 text-pcg-green">Main Service Info</h5>

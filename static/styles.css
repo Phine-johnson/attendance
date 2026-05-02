@@ -700,10 +700,10 @@ body {
 /* Bible toggle button */
 .bible-toggle-btn {
     position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    width: 60px;
-    height: 60px;
+    top: 1rem;
+    left: 1rem;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     background: linear-gradient(135deg, var(--pcg-green) 0%, #005028 100%);
     color: var(--pcg-white);
@@ -734,10 +734,10 @@ body {
     }
     
     .bible-toggle-btn {
-        bottom: 1rem;
-        right: 1rem;
-        width: 50px;
-        height: 50px;
+        top: 0.5rem;
+        left: 0.5rem;
+        width: 45px;
+        height: 45px;
     }
 }
 
