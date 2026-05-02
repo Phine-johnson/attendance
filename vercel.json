@@ -1,7 +1,5 @@
 {
   "buildCommand": "pip install --break-system-packages -r requirements.txt",
   "devCommand": "python app.py",
-  "installCommand": "pip install --break-system-packages -r requirements.txt",
-  "framework": "python",
-  "outputDirectory": "."
+  "installCommand": "pip install --break-system-packages -r requirements.txt"
 }

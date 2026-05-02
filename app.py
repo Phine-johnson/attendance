@@ -1,17 +1,11 @@
+#!/usr/bin/env python3
+"""Church Management System - Flask Application"""
 import os
 import uuid
 import json
 import requests
 from datetime import datetime, date, timedelta
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, Response, send_from_directory, send_file
-try:
-    import firebase_admin
-    from firebase_admin import credentials, auth, db
-    FIREBASE_AVAILABLE = True
-except ImportError:
-    FIREBASE_AVAILABLE = False
-    print("Warning: Firebase admin SDK not available. Running in demo mode.")
-
 import qrcode
 import io
 
@@ -21,6 +15,7 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev-secret-key-change-in-production')
+print(f"Flask app initialized - NO CACHED /resources ROUTE")
 
 # Serve static files from 'static' folder
 @app.route('/static/<path:filename>')
@@ -28,6 +23,15 @@ def static_files(filename):
     return send_from_directory(os.path.join(app.root_path, 'static'), filename)
 
 # Initialize Firebase Admin SDK if available
+FIREBASE_AVAILABLE = True
+try:
+    import firebase_admin
+    from firebase_admin import credentials, auth, db
+    FIREBASE_AVAILABLE = True
+except ImportError:
+    FIREBASE_AVAILABLE = False
+    print("Warning: Firebase admin SDK not available. Running in demo mode.")
+
 FIREBASE_INITIALIZED = False
 ref = None
 if FIREBASE_AVAILABLE:
