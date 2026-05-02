@@ -1065,6 +1065,18 @@ body {
     }
 }
 
+/* Offcanvas Bible Panel (content area inside sidebar) */
+.offcanvas-bible-panel {
+    padding: 1.25rem;
+    background-color: #FAFAFA;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.back-to-menu-btn {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.8rem;
+}
+
 /* Ensure accordion chevron is visible */
 .accordion-button .chevron-icon {
     transition: transform 0.3s ease;
