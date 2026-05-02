@@ -11,6 +11,18 @@
   ],
   "routes": [
     {
+      "src": "/start_service",
+      "dest": "app.py"
+    },
+    {
+      "src": "/publish_service",
+      "dest": "app.py"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "app.py"
+    },
+    {
       "src": "/(.*)",
       "dest": "app.py"
     }
