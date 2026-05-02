@@ -559,7 +559,8 @@
                 const response = await fetch('/api/inventory', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(data)
+                    body: JSON.stringify(data),
+                    credentials: 'include'
                 });
                 if (response.ok) {
                     alert('Item added successfully!');
@@ -586,7 +587,8 @@
                         time: data.time,
                         purpose: data.purpose,
                         assigned_to: data.booked_by
-                    })
+                    }),
+                    credentials: 'include'
                 });
                 if (response.ok) {
                     alert('Booking created!');

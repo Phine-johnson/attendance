@@ -1,5 +1,33 @@
 {
-  "buildCommand": "pip install --break-system-packages -r requirements.txt",
-  "devCommand": "python app.py",
-  "installCommand": "pip install --break-system-packages -r requirements.txt"
+  "version": 2,
+  "builds": [
+    {
+      "src": "app.py",
+      "use": "@vercel/python",
+      "config": {
+        "runtime": "python3.12"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/start_service",
+      "dest": "app.py"
+    },
+    {
+      "src": "/publish_service",
+      "dest": "app.py"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "app.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "app.py"
+    }
+  ],
+  "env": {
+    "PYTHON_VERSION": "3.12"
+  }
 }
