@@ -326,9 +326,10 @@
             document.getElementById(panelId).style.display = 'block';
         }
 
-        // Dropdown menu item clicks (Notes, Highlights, Search, Bookmarks, History)
+        // Dropdown menu item clicks (Notes, Highlights, Search, Bookmarks, History, Service Update)
         document.querySelectorAll('.bible-dropdown-item').forEach(item => {
-            item.addEventListener('click', () => {
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
                 const target = item.getAttribute('data-go');
                 bibleMenuPanel.classList.remove('active');
                 showPanel(`${target}Section`);
