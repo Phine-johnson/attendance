@@ -900,10 +900,17 @@ body {
     border-left: 4px solid transparent;
 }
 
-.sidebar-item:hover,
-.sidebar-subitem:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+/* Standalone items (Search, Service Update) - more visible */
+.sidebar-item {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-left-color: var(--pcg-gold);
     color: var(--pcg-gold);
+    font-weight: 600;
+}
+
+.sidebar-item:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: var(--pcg-white);
     border-left-color: var(--pcg-gold);
     text-decoration: none;
 }
