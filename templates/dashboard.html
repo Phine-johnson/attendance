@@ -335,7 +335,8 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    credentials: 'include'
                 });
 
                 if (response.ok) {
@@ -631,7 +632,8 @@
                 const response = await fetch('/publish_service', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(serviceData)
+                    body: JSON.stringify(serviceData),
+                    credentials: 'include'
                 });
 
                 if (response.ok) {
