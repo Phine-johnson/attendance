@@ -1,20 +1,16 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "app.py",
-      "use": "@vercel/python"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "app.py"
-    }
-  ],
-  "build": {
-    "env": {
-      "PYTHON_VERSION": "3.9"
-    }
+  "buildCommand": "pip install -r requirements.txt",
+  "devCommand": "python app.py",
+  "installCommand": "pip install -r requirements.txt",
+  "framework": "vercel-python",
+  "env": {
+    "FLASK_SECRET_KEY": "@flask-secret-key",
+    "FIREBASE_API_KEY": "@firebase-api-key",
+    "FIREBASE_AUTH_DOMAIN": "@firebase-auth-domain",
+    "FIREBASE_DATABASE_URL": "@firebase-database-url",
+    "FIREBASE_PROJECT_ID": "@firebase-project-id",
+    "FIREBASE_STORAGE_BUCKET": "@firebase-storage-bucket",
+    "FIREBASE_MESSAGING_SENDER_ID": "@firebase-messaging-sender-id",
+    "FIREBASE_APP_ID": "@firebase-app-id"
   }
 }
