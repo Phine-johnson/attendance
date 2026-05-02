@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events - Redemption Presby Congregation</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=6">
+</head>
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <button class="hamburger-btn me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas" title="Open Menu">
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                </button>
+                <div class="d-flex align-items-center">
+                    <div class="logo-img d-flex align-items-center justify-content-center">
+                        <img src="{{ url_for('static', filename='presby-logo.png') }}?v=3" alt="PCG Logo" style="max-width: 70%; max-height: 70%;">
+                    </div>
+                    <div>
+                        <div class="church-name">Redemption Presby</div>
+                        <div class="church-subtitle">Congregation</div>
+                    </div>
+                </div>
+            </div>
+            <div class="ms-auto d-flex align-items-center">
+                <span class="navbar-text me-3">Welcome, <strong>{{ user }}</strong></span>
+                <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm">Sign Out</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="text-pcg-blue fw-bold mb-1" style="font-family: 'Playfair Display', serif;">
+                            Event Management
+                        </h2>
+                        <div class="divider-custom" style="width: 100%; margin: 0 0 1rem 0;"></div>
+                    </div>
+                    <button class="btn btn-custom-primary" data-bs-toggle="modal" data-bs-target="#createEventModal">
+                        <svg width="18" height="18" class="me-1" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                        </svg>
+                        Create Event
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Event Type Filter -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <select class="form-select form-control-custom" id="eventTypeFilter">
+                    <option value="all">All Event Types</option>
+                    <option value="sunday">Sunday Service</option>
+                    <option value="wedding">Wedding</option>
+                    <option value="funeral">Funeral</option>
+                    <option value="meeting">Meeting</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Calendar Grid -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card card-custom">
+                    <div class="card-header d-flex align-items-center">
+                        <svg width="24" height="24" class="me-2" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V9h14v10z"/>
+                        </svg>
+                        Event Calendar
+                    </div>
+                    <div class="card-body">
+                        <div class="event-calendar" style="min-height: 300px; background-color: var(--pcg-white); border-radius: 8px; padding: 20px;">
+                            <p class="text-muted text-center">Calendar view will be implemented here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Events -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-custom">
+                    <div class="card-header d-flex align-items-center">
+                        <svg width="24" height="24" class="me-2" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                        </svg>
+                        Upcoming Events
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-lg-4 col-md-6 mb-3">
+                                <div class="card card-custom h-100">
+                                    <div class="card-body">
+                                        <h5 class="text-pcg-blue">Sunday Service</h5>
+                                        <p class="text-muted mb-2">May 4, 2026 - 9:00 AM</p>
+                                        <p class="mb-2"><span class="badge bg-pcg-green">Public</span></p>
+                                        <p class="small">Main sanctuary service with worship and teaching.</p>
+                                        <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-6 mb-3">
+                                <div class="card card-custom h-100">
+                                    <div class="card-body">
+                                        <h5 class="text-pcg-blue">Prayer Meeting</h5>
+                                        <p class="text-muted mb-2">May 6, 2026 - 7:00 PM</p>
+                                        <p class="mb-2"><span class="badge bg-secondary">Private</span></p>
+                                        <p class="small">Mid-week prayer and fellowship.</p>
+                                        <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-6 mb-3">
+                                <div class="card card-custom h-100">
+                                    <div class="card-body">
+                                        <h5 class="text-pcg-blue">Youth Conference</h5>
+                                        <p class="text-muted mb-2">May 15-17, 2026</p>
+                                        <p class="mb-2"><span class="badge bg-pcg-blue">Special</span></p>
+                                        <p class="small">Annual youth gathering with guest speakers.</p>
+                                        <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Event Modal -->
+    <div class="modal fade" id="createEventModal" tabindex="-1" aria-labelledby="createEventModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-pcg-blue" id="createEventModalLabel">Create New Event</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('create_event') }}" method="POST">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Event Title</label>
+                            <input type="text" class="form-control form-control-custom" name="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Date</label>
+                            <input type="date" class="form-control form-control-custom" name="date" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Time</label>
+                            <input type="time" class="form-control form-control-custom" name="time" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Location</label>
+                            <input type="text" class="form-control form-control-custom" name="location" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Event Type</label>
+                            <select class="form-select form-control-custom" name="event_type" required>
+                                <option value="sunday">Sunday Service</option>
+                                <option value="wedding">Wedding</option>
+                                <option value="funeral">Funeral</option>
+                                <option value="meeting">Meeting</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Description</label>
+                            <textarea class="form-control form-control-custom" name="description" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-custom-primary">Create Event</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Offcanvas Sidebar -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="sidebarOffcanvasLabel">Menu</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            <nav class="navbar-dark">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('dashboard') }}'">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                    </svg>
+                    Dashboard
+                </div>
+                <div class="sidebar-item" onclick="location.href='{{ url_for('members') }}'">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.76 0-8 1.34-8 4v3h16v-3c0-2.66-5.24-4-8-4z"/>
+                    </svg>
+                    Members
+                </div>
+                <div class="sidebar-item sidebar-highlight" onclick="location.href='{{ url_for('attendance') }}'">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H8v-2h4v2zm0-4H8v-2h4v2zm0-4H8V6h4v2zm5 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V6h2v2z"/>
+                    </svg>
+                    Attendance
+                </div>
+                <div class="sidebar-item" onclick="location.href='{{ url_for('groups') }}'">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.76 0-8 1.34-8 4v3h16v-3c0-2.66-5.24-4-8-4z"/>
+                    </svg>
+                    Groups
+                </div>
+                <div class="sidebar-item" onclick="location.href='{{ url_for('donations') }}'">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 14.59L12 11.17l-1.41 4.59L7.82 14l4.59-.61-.61-4.59 1.41 4.59L16.18 14z"/>
+                    </svg>
+                    Donations
+                </div>
+                <div class="sidebar-item" onclick="location.href='{{ url_for('communications') }}'">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+                    </svg>
+                    Communications
+                </div>
+                <div class="sidebar-item" onclick="location.href='{{ url_for('volunteers') }}'">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                    Volunteers
+                </div>
+                <div class="sidebar-divider"></div>
+                <a href="{{ url_for('logout') }}" class="sidebar-logout sidebar-item">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M16 13v-2H7V8l-5 4 5 4v-3h9zM20 3H4c-1.1 0-2 .9-2 2v4h2V5h16v14H4v-4H2v4c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+                    </svg>
+                    Sign Out
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

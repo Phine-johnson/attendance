@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resource Management - Redemption Presby</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=6">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <button class="hamburger-btn me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas" title="Open Menu">
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                </button>
+                <div class="d-flex align-items-center">
+                    <div class="logo-img d-flex align-items-center justify-content-center">
+                        <img src="{{ url_for('static', filename='presby-logo.png') }}?v=3" alt="PCG Logo" style="max-width: 70%; max-height: 70%;">
+                    </div>
+                    <div>
+                        <div class="church-name">Redemption Presby</div>
+                        <div class="church-subtitle">Congregation</div>
+                    </div>
+                </div>
+            </div>
+            <div class="ms-auto d-flex align-items-center">
+                <span class="navbar-text me-3">Welcome, <strong>{{ user }}</strong></span>
+                <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm">Sign Out</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="text-pcg-blue fw-bold mb-1" style="font-family: 'Playfair Display', serif;">
+                            Resource Management
+                        </h2>
+                        <div class="divider-custom" style="width: 100%; margin: 0 0 1rem 0;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card card-custom">
+                    <div class="card-body text-center">
+                        <h3 class="text-pcg-blue" id="totalInventory">{{ stats.total_inventory if stats.total_inventory else 0 }}</h3>
+                        <p class="text-muted mb-0">Inventory Items</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card card-custom">
+                    <div class="card-body text-center">
+                        <h3 class="text-pcg-green" id="lowStock">{{ stats.low_stock if stats.low_stock else 0 }}</h3>
+                        <p class="text-muted mb-0">Low Stock Alerts</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card card-custom">
+                    <div class="card-body text-center">
+                        <h3 class="text-pcg-gold" id="activeBookings">{{ stats.active_bookings if stats.active_bookings else 0 }}</h3>
+                        <p class="text-muted mb-0">Active Bookings</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card card-custom">
+                    <div class="card-body text-center">
+                        <button class="btn btn-custom-primary w-100" data-bs-toggle="modal" data-bs-target="#addInventoryModal">
+                            <svg width="20" height="20" class="me-2" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                            </svg>
+                            Add Item
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs for Inventory and Bookings -->
+        <ul class="nav nav-tabs nav-fill mb-4" id="resourcesTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory" type="button" role="tab" aria-selected="true">
+                    📦 Inventory
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="bookings-tab" data-bs-toggle="tab" data-bs-target="#bookings" type="button" role="tab" aria-selected="false">
+                    📅 Bookings
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="resourcesTabContent">
+            <!-- Inventory Tab -->
+            <div class="tab-pane fade show active" id="inventory" role="tabpanel">
+                <div class="card card-custom">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>📦 Inventory Items</span>
+                        <div>
+                            <input type="text" class="form-control form-control-custom d-inline-block" style="width: 200px;" placeholder="Search inventory..." id="inventorySearch">
+                            <button class="btn btn-outline-secondary btn-sm ms-2" onclick="exportInventory()">Export CSV</button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-custom mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Item Name</th>
+                                        <th>Category</th>
+                                        <th>Quantity</th>
+                                        <th>Min Qty</th>
+                                        <th>Location</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inventoryTableBody">
+                                    {% for item in inventory %}
+                                    <tr>
+                                        <td><span class="badge bg-secondary">{{ item.id }}</span></td>
+                                        <td><strong>{{ item.name }}</strong></td>
+                                        <td>{{ item.category }}</td>
+                                        <td>{{ item.quantity }}</td>
+                                        <td>{{ item.min_quantity }}</td>
+                                        <td>{{ item.location }}</td>
+                                        <td>
+                                            {% if item.quantity <= item.min_quantity %}
+                                                <span class="status-indicator status-inactive">Low Stock</span>
+                                            {% else %}
+                                                <span class="status-indicator status-active">In Stock</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="editInventory('{{ item.id }}')">Edit</button>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="deleteInventory('{{ item.id }}')">Delete</button>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="8" class="text-center py-4 text-muted">No inventory items yet. Add your first item!</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bookings Tab -->
+            <div class="tab-pane fade" id="bookings" role="tabpanel">
+                <div class="card card-custom">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>📅 Facility Bookings</span>
+                        <button class="btn btn-custom-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addBookingModal">
+                            + New Booking
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-custom mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Resource</th>
+                                        <th>Date</th>
+                                        <th>Time</th>
+                                        <th>Booked By</th>
+                                        <th>Purpose</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bookingsTableBody">
+                                    {% for booking in bookings %}
+                                    <tr>
+                                        <td><strong>{{ booking.resource_name }}</strong></td>
+                                        <td>{{ booking.date }}</td>
+                                        <td>{{ booking.time }}</td>
+                                        <td>{{ booking.booked_by }}</td>
+                                        <td>{{ booking.purpose }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if booking.status == 'confirmed' else 'warning' }}">
+                                                {{ booking.status|title }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="cancelBooking('{{ booking.id }}')">Cancel</button>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4 text-muted">No bookings yet.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Inventory Modal -->
+    <div class="modal fade" id="addInventoryModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Inventory Item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="addInventoryForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Item Name</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" name="category">
+                                <option value="Equipment">Equipment</option>
+                                <option value="Supplies">Supplies</option>
+                                <option value="Furniture">Furniture</option>
+                                <option value="Literature">Literature</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Quantity</label>
+                                <input type="number" class="form-control" name="quantity" min="0" required>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Min Quantity</label>
+                                <input type="number" class="form-control" name="minQuantity" min="0" value="5">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Location</label>
+                            <input type="text" class="form-control" name="location" placeholder="e.g., Sanctuary, Storage Room A">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-custom-primary">Add Item</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Booking Modal -->
+    <div class="modal fade" id="addBookingModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">New Facility Booking</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="addBookingForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Resource</label>
+                            <select class="form-select" name="resource">
+                                <option value="Projector">Projector</option>
+                                <option value="Sound System">Sound System</option>
+                                <option value="Piano">Piano</option>
+                                <option value="Chairs">Chairs</option>
+                                <option value="Tables">Tables</option>
+                                <option value=" Fellowship Hall">Fellowship Hall</option>
+                                <option value="Sanctuary">Sanctuary</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Date</label>
+                            <input type="date" class="form-control" name="date" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Start Time</label>
+                            <input type="time" class="form-control" name="time" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Purpose</label>
+                            <input type="text" class="form-control" name="purpose" placeholder="e.g., Sunday Service, Bible Study">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Booked By</label>
+                            <input type="text" class="form-control" name="booked_by" placeholder="Your name">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-custom-primary">Book</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Offcanvas Sidebar -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="sidebarOffcanvasLabel">Menu</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            <nav class="navbar-dark">
+                <!-- General Bible Tools Accordion -->
+                <div class="accordion accordion-flush bg-dark" id="sidebarAccordion">
+                    <div class="accordion-item bg-transparent border-0">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-transparent text-light ps-4 py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeneralTools" aria-expanded="false" aria-controls="collapseGeneralTools">
+                                <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                </svg>
+                                General Bible Tools
+                                <svg width="16" height="16" class="ms-auto chevron-icon" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M7 10l5 5 5-5z"/>
+                                </svg>
+                            </button>
+                        </h2>
+                        <div id="collapseGeneralTools" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
+                            <div class="accordion-body p-0">
+                                <div class="sidebar-subitem" data-panel="bibleInputSection">
+                                    <svg width="18" height="18" class="me-2" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                    </svg>
+                                    📖 Bible
+                                </div>
+                                <div class="sidebar-subitem" data-panel="notesSection">
+                                    <svg width="18" height="18" class="me-2" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                                    </svg>
+                                    📝 Notes
+                                </div>
+                                <div class="sidebar-subitem" data-panel="historySection">
+                                    <svg width="18" height="18" class="me-2" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
+                                    </svg>
+                                    🕒 History
+                                </div>
+                                <div class="sidebar-subitem" data-panel="bookmarksSection">
+                                    <svg width="18" height="18" class="me-2" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
+                                    </svg>
+                                    🔖 Bookmarks
+                                </div>
+                                <div class="sidebar-subitem" data-panel="highlightsSection">
+                                    <svg width="18" height="18" class="me-2" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                                    </svg>
+                                    🖍️ Highlights
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Standalone Links -->
+                <div class="sidebar-item" data-panel="searchSection">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                    </svg>
+                    🔍 Search
+                </div>
+
+                <div class="sidebar-item sidebar-highlight" data-panel="serviceUpdateSection">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 14h-3v3h-2v-3H8v-2h3v-3h2v3h3v2zm-3-7V3.5L18.5 9H13z"/>
+                    </svg>
+                    ➕ Service Update
+                </div>
+
+                <!-- Church Management Links -->
+                <div class="sidebar-divider my-2"></div>
+                <a href="{{ url_for('members_list') }}" class="sidebar-item">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                    👥 Members
+                </a>
+                <a href="{{ url_for('attendance_report') }}" class="sidebar-item">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                    </svg>
+                    📊 Attendance
+                </a>
+                <a href="{{ url_for('events_list') }}" class="sidebar-item">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/>
+                    </svg>
+                    📅 Events
+                </a>
+                <a href="{{ url_for('groups_list') }}" class="sidebar-item">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                    </svg>
+                    👥 Groups
+                </a>
+                <a href="{{ url_for('donations_page') }}" class="sidebar-item">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                    💰 Donations
+                </a>
+                <a href="{{ url_for('communications_page') }}" class="sidebar-item">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                    </svg>
+                    📢 Communications
+                </a>
+                <a href="{{ url_for('volunteers_page') }}" class="sidebar-item">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                    </svg>
+                    🙋 Volunteers
+                </a>
+                <a href="{{ url_for('resources_page') }}" class="sidebar-item sidebar-active">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-2 .9-2 2v12c0 1.1.89 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v5z"/>
+                    </svg>
+                    📦 Resources
+                </a>
+
+                <!-- Logout -->
+                <div class="sidebar-divider my-2"></div>
+                <a href="{{ url_for('logout') }}" class="sidebar-item sidebar-logout">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+                    </svg>
+                    Sign Out
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Bible Reader Panels (hidden, for offcanvas navigation) -->
+    <div class="bible-reader-area" id="bibleReaderPanel" style="display: none;">
+        <div class="bible-reader-header mb-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <div id="bibleReference" class="fw-bold text-pcg-green"></div>
+                <button class="btn btn-outline-secondary btn-sm back-to-menu-btn" title="Back to Menu">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                    Back
+                </button>
+            </div>
+        </div>
+
+        <!-- Bible Input Section -->
+        <div class="bible-input-section" id="bibleInputSection">
+            <div class="mb-3">
+                <label class="form-label fw-bold text-pcg-blue mb-1">Version</label>
+                <select class="form-select form-control-custom" id="bibleVersion">
+                    <option value="kjv">King James (KJV)</option>
+                    <option value="niv">New Int'l (NIV)</option>
+                    <option value="esv">English Standard (ESV)</option>
+                    <option value="nasb">NASB</option>
+                    <option value="nlt">New Living (NLT)</option>
+                    <option value="msg">The Message</option>
+                </select>
+            </div>
+            <div class="row g-2 mb-3">
+                <div class="col-7">
+                    <label class="form-label fw-bold text-pcg-blue mb-1">Book</label>
+                    <input type="text" class="form-control form-control-custom" id="bibleBook" placeholder="e.g., John" value="John">
+                </div>
+                <div class="col-3">
+                    <label class="form-label fw-bold text-pcg-blue mb-1">Chapter</label>
+                    <input type="number" class="form-control form-control-custom" id="bibleChapter" placeholder="1" value="1" min="1">
+                </div>
+                <div class="col-2">
+                    <label class="form-label fw-bold text-pcg-blue mb-1">Verse</label>
+                    <input type="number" class="form-control form-control-custom" id="bibleVerse" placeholder="" min="1">
+                </div>
+            </div>
+            <div class="d-flex gap-2 mb-3">
+                <button class="btn btn-custom-primary flex-fill" id="loadPassage">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+                    Load
+                </button>
+                <button class="btn btn-outline-secondary flex-fill" id="randomVerse">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+                    Random
+                </button>
+            </div>
+        </div>
+
+        <!-- Other Bible tool sections (hidden, for SPA navigation if needed) -->
+        <div class="bible-tool-section" id="notesSection" style="display: none;">📝 Notes</div>
+        <div class="bible-tool-section" id="highlightsSection" style="display: none;">🖍️ Highlights</div>
+        <div class="bible-tool-section" id="searchSection" style="display: none;">🔍 Search</div>
+        <div class="bible-tool-section" id="bookmarksSection" style="display: none;">🔖 Bookmarks</div>
+        <div class="bible-tool-section" id="historySection" style="display: none;">🕒 History</div>
+
+        <!-- Bible text -->
+        <div class="bible-text-container" id="bibleText">
+            <div class="text-center text-muted py-5">
+                <svg width="48" height="48" class="mb-2 opacity-25" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                <p class="small">Select a passage to begin reading.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let DEMO_MODE = false;
+        let database = null;
+
+        const firebaseConfig = {
+            apiKey: "{{ firebase_api_key }}",
+            authDomain: "{{ firebase_auth_domain }}",
+            databaseURL: "{{ firebase_database_url }}",
+            projectId: "{{ firebase_project_id }}",
+            storageBucket: "{{ firebase_storage_bucket }}",
+            messagingSenderId: "{{ firebase_messaging_sender_id }}",
+            appId: "{{ firebase_app_id }}"
+        };
+
+        if (typeof firebase === 'undefined' || !firebaseConfig.apiKey || !firebaseConfig.databaseURL) {
+            DEMO_MODE = true;
+            console.warn('Demo mode - Firebase not configured');
+        }
+
+        if (!DEMO_MODE) {
+            try {
+                firebase.initializeApp(firebaseConfig);
+                database = firebase.database();
+            } catch (e) {
+                DEMO_MODE = true;
+            }
+        }
+
+        // Inventory management
+        document.getElementById('addInventoryForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch('/api/inventory', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                if (response.ok) {
+                    alert('Item added successfully!');
+                    location.reload();
+                }
+            } catch (err) {
+                alert('Error adding item');
+            }
+        });
+
+        // Booking form
+        document.getElementById('addBookingForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch('/api/volunteers/schedule', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        resource: data.resource,
+                        date: data.date,
+                        time: data.time,
+                        purpose: data.purpose,
+                        assigned_to: data.booked_by
+                    })
+                });
+                if (response.ok) {
+                    alert('Booking created!');
+                    location.reload();
+                }
+            } catch (err) {
+                alert('Error creating booking');
+            }
+        });
+
+        // Bible passage loader
+        document.getElementById('loadPassage')?.addEventListener('click', async () => {
+            const version = document.getElementById('bibleVersion')?.value;
+            const book = document.getElementById('bibleBook')?.value;
+            const chapter = document.getElementById('bibleChapter')?.value;
+            if (!book || !chapter) return;
+
+            try {
+                const res = await fetch(`https://bible-api.com/${book} ${chapter}?translation=${version}`);
+                const data = await res.json();
+                if (data.verses) {
+                    document.getElementById('bibleText').innerHTML = data.verses.map(v => 
+                        `<p><span class="verse">${v.verse}</span> ${v.text}</p>`
+                    ).join('');
+                }
+            } catch (e) {
+                console.error('Bible load error', e);
+            }
+        });
+
+        // Sidebar panel switching
+        document.querySelectorAll('.sidebar-subitem[data-panel], .sidebar-item[data-panel]').forEach(item => {
+            item.addEventListener('click', () => {
+                const panelId = item.getAttribute('data-panel');
+                document.querySelectorAll('.bible-tool-section, #bibleInputSection').forEach(p => {
+                    p.style.display = 'none';
+                });
+                document.getElementById(panelId).style.display = 'block';
+                document.getElementById('bibleReaderPanel').style.display = 'block';
+                const offcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('sidebarOffcanvas'));
+                offcanvas?.hide();
+            });
+        });
+
+        // Back button
+        document.querySelector('.back-to-menu-btn')?.addEventListener('click', () => {
+            document.getElementById('bibleInputSection').style.display = 'block';
+            document.querySelectorAll('.bible-tool-section').forEach(p => p.style.display = 'none');
+        });
+    });
+    </script>
+</body>
+</html>

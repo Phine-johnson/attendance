@@ -515,7 +515,19 @@ body {
     color: var(--pcg-white);
 }
 
-/* Empty state */
+/* Quick access cards hover effect */
+.hover-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 33, 146, 0.15);
+    border-color: var(--pcg-gold);
+}
+
+/* Existing empty state styles continue below */
 .empty-state {
     text-align: center;
     padding: 4rem 2rem;

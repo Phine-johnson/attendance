@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groups - Redemption Presby Congregation</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=6">
+</head>
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <button class="hamburger-btn me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas" title="Open Menu">
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                </button>
+                <div class="d-flex align-items-center">
+                    <div class="logo-img d-flex align-items-center justify-content-center">
+                        <img src="{{ url_for('static', filename='presby-logo.png') }}?v=3" alt="PCG Logo" style="max-width: 70%; max-height: 70%;">
+                    </div>
+                    <div>
+                        <div class="church-name">Redemption Presby</div>
+                        <div class="church-subtitle">Congregation</div>
+                    </div>
+                </div>
+            </div>
+            <div class="ms-auto d-flex align-items-center">
+                <span class="navbar-text me-3">Welcome, <strong>{{ user }}</strong></span>
+                <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm">Sign Out</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="text-pcg-blue fw-bold mb-1" style="font-family: 'Playfair Display', serif;">
+                            Small Groups
+                        </h2>
+                        <div class="divider-custom" style="width: 100%; margin: 0 0 1rem 0;"></div>
+                    </div>
+                    <button class="btn btn-custom-primary" data-bs-toggle="modal" data-bs-target="#createGroupModal">
+                        <svg width="18" height="18" class="me-1" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                        </svg>
+                        Create Group
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Groups List -->
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card card-custom h-100">
+                    <div class="card-body">
+                        <h5 class="text-pcg-blue">Men's Fellowship</h5>
+                        <p class="text-muted small mb-2">A group for men to grow in faith together.</p>
+                        <p class="mb-1"><strong>Members:</strong> 12</p>
+                        <p class="mb-1"><strong>Meeting:</strong> Sundays 7:00 PM</p>
+                        <p class="mb-1"><strong>Location:</strong> Room 101</p>
+                        <button class="btn btn-sm btn-outline-primary mt-2" type="button" data-bs-toggle="collapse" data-bs-target="#membersList1" aria-expanded="false">
+                            View Members
+                        </button>
+                        <div class="collapse mt-2" id="membersList1">
+                            <ul class="list-unstyled small">
+                                <li>John Doe</li>
+                                <li>Michael Smith</li>
+                                <li>Robert Johnson</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card card-custom h-100">
+                    <div class="card-body">
+                        <h5 class="text-pcg-blue">Women's Ministry</h5>
+                        <p class="text-muted small mb-2">Supporting women in their spiritual journey.</p>
+                        <p class="mb-1"><strong>Members:</strong> 18</p>
+                        <p class="mb-1"><strong>Meeting:</strong> Wednesdays 6:30 PM</p>
+                        <p class="mb-1"><strong>Location:</strong> Room 202</p>
+                        <button class="btn btn-sm btn-outline-primary mt-2" type="button" data-bs-toggle="collapse" data-bs-target="#membersList2" aria-expanded="false">
+                            View Members
+                        </button>
+                        <div class="collapse mt-2" id="membersList2">
+                            <ul class="list-unstyled small">
+                                <li>Jane Smith</li>
+                                <li>Mary Johnson</li>
+                                <li>Sarah Williams</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card card-custom h-100">
+                    <div class="card-body">
+                        <h5 class="text-pcg-blue">Youth Group</h5>
+                        <p class="text-muted small mb-2">For teenagers to connect and grow.</p>
+                        <p class="mb-1"><strong>Members:</strong> 24</p>
+                        <p class="mb-1"><strong>Meeting:</strong> Fridays 7:00 PM</p>
+                        <p class="mb-1"><strong>Location:</strong> Youth Center</p>
+                        <button class="btn btn-sm btn-outline-primary mt-2" type="button" data-bs-toggle="collapse" data-bs-target="#membersList3" aria-expanded="false">
+                            View Members
+                        </button>
+                        <div class="collapse mt-2" id="membersList3">
+                            <ul class="list-unstyled small">
+                                <li>Alex Johnson</li>
+                                <li>Sam Wilson</li>
+                                <li>Taylor Brown</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Group Modal -->
+    <div class="modal fade" id="createGroupModal" tabindex="-1" aria-labelledby="createGroupModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-pcg-blue" id="createGroupModalLabel">Create New Group</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('create_group') }}" method="POST">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Group Name</label>
+                            <input type="text" class="form-control form-control-custom" name="group_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Description</label>
+                            <textarea class="form-control form-control-custom" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Meeting Day</label>
+                            <select class="form-select form-control-custom" name="meeting_day" required>
+                                <option value="sunday">Sunday</option>
+                                <option value="monday">Monday</option>
+                                <option value="tuesday">Tuesday</option>
+                                <option value="wednesday">Wednesday</option>
+                                <option value="thursday">Thursday</option>
+                                <option value="friday">Friday</option>
+                                <option value="saturday">Saturday</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Meeting Time</label>
+                            <input type="time" class="form-control form-control-custom" name="meeting_time" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Location</label>
+                            <input type="text" class="form-control form-control-custom" name="location" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-custom-primary">Create Group</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Member to Group Modal -->
+    <div class="modal fade" id="addMemberGroupModal" tabindex="-1" aria-labelledby="addMemberGroupModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-pcg-blue" id="addMemberGroupModalLabel">Add Member to Group</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('add_member_to_group') }}" method="POST">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Group</label>
+                            <select class="form-select form-control-custom" name="group_id" required>
+                                <option value="">Select Group</option>
+                                <option value="1">Men's Fellowship</option>
+                                <option value="2">Women's Ministry</option>
+                                <option value="3">Youth Group</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Member</label>
+                            <select class="form-select form-control-custom" name="member_id" required>
+                                <option value="">Select Member</option>
+                                <option value="1">John Doe</option>
+                                <option value="2">Jane Smith</option>
+                                <option value="3">Michael Johnson</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-custom-primary">Add to Group</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Offcanvas Sidebar -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="sidebarOffcanvasLabel">Menu</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            <nav class="navbar-dark">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('dashboard') }}'">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                    </svg>
+                    Dashboard
+                </div>
+                <div class="sidebar-item" onclick="location.href='{{ url_for('members') }}'">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.76 0-8 1.34-8 4v3h16v-3c0-2.66-5.24-4-8-4z"/>
+                    </svg>
+                    Members
+                </div>
+                <div class="sidebar-item" onclick="location.href='{{ url_for('attendance') }}'">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H8v-2h4v2zm0-4H8v-2h4v2zm0-4H8V6h4v2zm5 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V6h2v2z"/>
+                    </svg>
+                    Attendance
+                </div>
+                <div class="sidebar-item sidebar-highlight" onclick="location.href='{{ url_for('events') }}'">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V9h14v10z"/>
+                    </svg>
+                    Events
+                </div>
+                <div class="sidebar-item" onclick="location.href='{{ url_for('donations') }}'">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 14.59L12 11.17l-1.41 4.59L7.82 14l4.59-.61-.61-4.59 1.41 4.59L16.18 14z"/>
+                    </svg>
+                    Donations
+                </div>
+                <div class="sidebar-item" onclick="location.href='{{ url_for('communications') }}'">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+                    </svg>
+                    Communications
+                </div>
+                <div class="sidebar-item" onclick="location.href='{{ url_for('volunteers') }}'">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                    Volunteers
+                </div>
+                <div class="sidebar-divider"></div>
+                <a href="{{ url_for('logout') }}" class="sidebar-logout sidebar-item">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M16 13v-2H7V8l-5 4 5 4v-3h9zM20 3H4c-1.1 0-2 .9-2 2v4h2V5h16v14H4v-4H2v4c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+                    </svg>
+                    Sign Out
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
