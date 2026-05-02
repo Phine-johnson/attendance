@@ -4,7 +4,18 @@ import json
 import requests
 from datetime import datetime, date, timedelta
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, Response, send_from_directory, send_file
-import pandas as pd
+
+# Load environment variables
+from dotenv import load_dotenv
+load_dotenv()
+
+# Optional heavy dependencies - import with fallbacks to reduce cold-start impact
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
+    print("Warning: pandas not available. Attendance reports will be limited.")
+
 try:
     import firebase_admin
     from firebase_admin import credentials, auth, db
@@ -13,12 +24,14 @@ except ImportError:
     FIREBASE_AVAILABLE = False
     print("Warning: Firebase admin SDK not available. Running in demo mode.")
 
-import qrcode
-import io
+try:
+    import qrcode
+    from PIL import Image  # noqa: F401 (used by qrcode)
+except ImportError:
+    qrcode = None
+    print("Warning: qrcode/Pillow not available. QR code generation disabled.")
 
-# Load environment variables
-from dotenv import load_dotenv
-load_dotenv()
+import io
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev-secret-key-change-in-production')
@@ -281,13 +294,26 @@ def attendance_report():
     records = []
     if FIREBASE_INITIALIZED:
         try:
-            dates = pd.date_range(start=start_date, end=end_date)
-            for d in dates:
-                day_data = ref.child('attendance').child(d.strftime('%Y-%m-%d')).get()
+            # Generate date list with pandas if available, else use datetime fallback
+            if pd is not None:
+                dates = pd.date_range(start=start_date, end=end_date)
+                date_list = [d.strftime('%Y-%m-%d') for d in dates]
+            else:
+                # Fallback: generate dates manually
+                start_dt = datetime.strptime(start_date, '%Y-%m-%d').date()
+                end_dt = datetime.strptime(end_date, '%Y-%m-%d').date()
+                date_list = []
+                current = start_dt
+                while current <= end_dt:
+                    date_list.append(current.isoformat())
+                    current += timedelta(days=1)
+            
+            for d in date_list:
+                day_data = ref.child('attendance').child(d).get()
                 if day_data:
                     for member_id, record in day_data.items():
                         records.append({
-                            'date': d.strftime('%Y-%m-%d'),
+                            'date': d,
                             'member_id': member_id,
                             'timestamp': record.get('timestamp', '')
                         })
@@ -766,6 +792,9 @@ def service_update():
 def start_service():
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
+    
+    if qrcode is None:
+        return jsonify({'error': 'QR code generation not available'}), 500
     
     session_id = str(uuid.uuid4())
     latitude = 0  # Will be set from frontend
