@@ -887,3 +887,147 @@ body {
     border: none;
     text-align: center;
 }
+
+/* ========== BOOTSTRAP OFFNENU SIDEBAR ========== */
+.sidebar-item,
+.sidebar-subitem {
+    display: flex;
+    align-items: center;
+    padding: 0.875rem 1.25rem;
+    color: var(--pcg-white);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border-left: 4px solid transparent;
+}
+
+.sidebar-item:hover,
+.sidebar-subitem:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--pcg-gold);
+    border-left-color: var(--pcg-gold);
+    text-decoration: none;
+}
+
+/* Subitems indented */
+.sidebar-subitem {
+    padding-left: 3.5rem;
+    font-size: 0.95rem;
+    color: rgba(254, 254, 254, 0.85);
+}
+
+.sidebar-subitem:hover {
+    color: var(--pcg-white);
+    background-color: rgba(255, 255, 255, 0.08);
+    border-left-color: var(--pcg-green);
+}
+
+/* Chevron rotate on accordion expand */
+#sidebarAccordion .accordion-button::after {
+    margin-left: auto;
+    transform: rotate(-90deg);
+    transition: transform 0.3s ease;
+    filter: invert(1);
+}
+
+#sidebarAccordion .accordion-button.collapsed::after {
+    transform: rotate(90deg);
+}
+
+#sidebarAccordion .accordion-button:not(.collapsed)::after {
+    transform: rotate(0deg);
+}
+
+/* Remove bootstrap default styling */
+#sidebarAccordion .accordion-button {
+    padding: 0;
+    background: transparent;
+    color: var(--pcg-white);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+#sidebarAccordion .accordion-button:not(.collapsed) {
+    background-color: rgba(255, 255, 255, 0.05);
+    box-shadow: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#sidebarAccordion .accordion-button:focus {
+    box-shadow: none;
+    border-color: transparent;
+}
+
+#sidebarAccordion .accordion-body {
+    padding: 0.5rem 0 0.5rem 0;
+}
+
+/* Highlighted standalone item (Service Update) */
+.sidebar-highlight {
+    background: linear-gradient(90deg, var(--pcg-green) 0%, #005028 100%);
+    border-left: 4px solid var(--pcg-gold);
+    font-weight: 600;
+}
+
+.sidebar-highlight:hover {
+    background: linear-gradient(90deg, #005028 0%, #003d20 100%);
+    color: var(--pcg-white);
+    border-left-color: var(--pcg-gold);
+}
+
+/* Divider */
+.sidebar-divider {
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.15);
+    margin: 0.75rem 1.25rem;
+}
+
+/* Logout styling */
+.sidebar-logout {
+    color: #ff6b6b !important;
+    border-left-color: #ff6b6b;
+}
+
+.sidebar-logout:hover {
+    background-color: rgba(255, 107, 107, 0.1);
+    color: #ff6b6b;
+    border-left-color: #ff6b6b;
+}
+
+/* Offcanvas styling overrides */
+.offcanvas.bg-dark {
+    background: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%);
+}
+
+.offcanvas .offcanvas-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1rem 1.25rem;
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.offcanvas .offcanvas-title {
+    color: var(--pcg-gold);
+    font-weight: 700;
+    font-family: 'Playfair Display', serif;
+}
+
+.offcanvas .btn-close-white {
+    filter: invert(1);
+}
+
+/* Hide old toggle button on mobile (replaced by navbar hamburger) */
+@media (max-width: 991.98px) {
+    .bible-toggle-btn {
+        display: none !important;
+    }
+}
+
+/* Ensure accordion chevron is visible */
+.accordion-button .chevron-icon {
+    transition: transform 0.3s ease;
+}
+
+.accordion-button:not(.collapsed) .chevron-icon {
+    transform: rotate(180deg);
+}
