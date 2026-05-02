@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Check-in - Redemption Presby</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; }
+        .checkin-card { max-width: 500px; margin: 5vh auto; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .church-logo { max-width: 120px; display: block; margin: 0 auto 1rem; }
+        .status-indicator { display: inline-block; padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; }
+        .status-checking { background: #fff3cd; color: #856404; }
+        .status-success { background: #d4edda; color: #155724; }
+        .status-error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="checkin-card bg-white">
+            <div class="text-center mb-4">
+                <img src="{{ url_for('static', filename='presby-logo.png') }}" class="church-logo" alt="Church Logo">
+                <h2 class="text-pcg-blue">Redemption Presby</h2>
+                <p class="text-muted">Attendance Check-in</p>
+            </div>
+
+            <!-- Location Status -->
+            <div id="locationStatus" class="mb-3 text-center">
+                <div class="status-indicator status-checking">
+                    Getting your location...
+                </div>
+            </div>
+
+            <!-- Error Display -->
+            <div id="errorMessage" class="alert alert-danger d-none" role="alert"></div>
+
+            <!-- Success Display -->
+            <div id="successMessage" class="alert alert-success d-none" role="alert">
+                <strong>Check-in successful!</strong><br>
+                You are recorded as present.
+            </div>
+
+            <!-- Check-in Form -->
+            <form id="checkinForm">
+                <input type="hidden" id="sessionId" value="{{ session_id }}">
+                
+                <div class="mb-3">
+                    <label for="memberName" class="form-label fw-bold">Full Name</label>
+                    <input type="text" class="form-control form-control-lg" id="memberName" 
+                           placeholder="Enter your full name" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="churchGroup" class="form-label fw-bold">Church Group</label>
+                    <select class="form-select form-select-lg" id="churchGroup" required>
+                        <option value="">Select your group</option>
+                        <option value="Youth">Youth</option>
+                        <option value="Adults">Adults</option>
+                        <option value="Men">Men's Fellowship</option>
+                        <option value="Women">Women's Fellowship</option>
+                        <option value="Children">Children</option>
+                        <option value="Seniors">Seniors</option>
+                        <option value="Choir">Choir</option>
+                        <option value="Ushers">Ushers</option>
+                        <option value="Media">Media Team</option>
+                        <option value="Security">Security</option>
+                        <option value="Guest">Guest / Visitor</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="memberId" class="form-label text-muted small">Member ID (optional)</label>
+                    <input type="text" class="form-control" id="memberId" 
+                           placeholder="If you have a member ID, enter it">
+                </div>
+
+                <button type="submit" class="btn btn-primary-custom btn-lg w-100" id="submitBtn" disabled>
+                    <span id="btnText">Confirm Check-in</span>
+                    <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                </button>
+            </form>
+
+            <div class="mt-3 text-center">
+                <small class="text-muted">
+                    <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                    Must be within 5m of service location
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const sessionId = document.getElementById('sessionId').value;
+        const locationStatus = document.getElementById('locationStatus');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const checkinForm = document.getElementById('checkinForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const btnSpinner = document.getElementById('btnSpinner');
+
+        let currentLat = null;
+        let currentLon = null;
+
+        // Get GPS location
+        function getLocation() {
+            if (!navigator.geolocation) {
+                showError('Geolocation is not supported by your browser');
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    currentLat = position.coords.latitude;
+                    currentLon = position.coords.longitude;
+                    locationStatus.innerHTML = '<div class="status-indicator status-success">Location captured ✓</div>';
+                    submitBtn.disabled = false;
+                },
+                (error) => {
+                    let msg = 'Unable to retrieve your location.';
+                    if (error.code === 1) msg = 'Location access denied. Please enable location services.';
+                    showError(msg);
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        }
+
+        function showError(msg) {
+            errorMessage.textContent = msg;
+            errorMessage.classList.remove('d-none');
+            locationStatus.innerHTML = '<div class="status-indicator status-error">Location Error</div>';
+            submitBtn.disabled = true;
+        }
+
+        function showSuccess(msg) {
+            successMessage.innerHTML = msg;
+            successMessage.classList.remove('d-none');
+            checkinForm.classList.add('d-none');
+        }
+
+        // Start location acquisition immediately
+        getLocation();
+
+        // Form submission
+        checkinForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (currentLat === null || currentLon === null) {
+                showError('Waiting for location...');
+                return;
+            }
+
+            btnText.classList.add('d-none');
+            btnSpinner.classList.remove('d-none');
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/attendance/scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        name: document.getElementById('memberName').value,
+                        church_group: document.getElementById('churchGroup').value,
+                        member_id: document.getElementById('memberId').value,
+                        latitude: currentLat,
+                        longitude: currentLon
+                    }),
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showSuccess(`<strong>Check-in successful!</strong><br>You've been marked present.<br><small>Distance: ${result.distance || 0}m from service</small>`);
+                } else {
+                    showError(result.error || 'Check-in failed. Please try again.');
+                    btnText.classList.remove('d-none');
+                    btnSpinner.classList.add('d-none');
+                    submitBtn.disabled = false;
+                }
+            } catch (err) {
+                showError('Network error. Please try again.');
+                btnText.classList.remove('d-none');
+                btnSpinner.classList.add('d-none');
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -829,48 +829,136 @@ def start_service():
         print(f"QR generation error: {e}")
         return jsonify({'error': 'Failed to generate QR code'}), 500
 
-@app.route('/publish_service', methods=['POST'], endpoint='publish_service')
-def publish_service():
-    if 'user' not in session:
-        return jsonify({'error': 'Unauthorized'}), 401
-    try:
-        data = request.get_json()
-        required_fields = ['occasion', 'date', 'theme']
-        for field in required_fields:
-            if not data.get(field):
-                return jsonify({'error': f'Missing required field: {field}'}), 400
-        
-        service_data = {
-            'occasion': data.get('occasion', ''),
-            'date': data.get('date', ''),
-            'theme': data.get('theme', ''),
-            'pastor': data.get('pastor', ''),
-            'order_of_service': data.get('order', []),
-            'presbyters_on_duty': data.get('presbyters', ''),
-            'weekly_meetings': data.get('meetings', ''),
-            'bible_text_week': data.get('bibleTextWeek', ''),
-            'updated_at': data.get('updatedAt', datetime.now().isoformat()),
-            'updated_by': session.get('email', 'unknown')
-        }
-        
-        if FIREBASE_INITIALIZED:
-            try:
-                ref.child('weekly_service').child('current').set(service_data)
-                print(f"Service update written by {session.get('email')}")
-            except Exception as e:
-                print(f"Firebase write error: {e}")
-                return jsonify({'error': 'Failed to write to database'}), 500
-        else:
-            print("Demo mode — service data not saved")
-        
-        return jsonify({'success': True, 'message': 'Service update published'}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# Test route to verify routing
 @app.route('/test_route_test', methods=['GET'], endpoint='test_route')
 def test_route():
     return jsonify({'status': 'ok', 'message': 'Test route works'})
+
+# ==================== QR & ATTENDANCE ====================
+
+@app.route('/start_service', methods=['POST'], endpoint='start_service')
+def start_service():
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    if not QRCODE_AVAILABLE:
+        return jsonify({'error': 'QR code generation not available'}), 500
+    
+    session_id = str(uuid.uuid4())
+    latitude = 0  # Will be set from frontend
+    longitude = 0
+    
+    if FIREBASE_INITIALIZED:
+        try:
+            session_data = {
+                'session_id': session_id,
+                'latitude': latitude,
+                'longitude': longitude,
+                'timestamp': datetime.now().isoformat(),
+                'created_by': session['user'],
+                'active': True
+            }
+            ref.child('sessions').child(session_id).set(session_data)
+        except Exception as e:
+            print(f"Warning: {e}")
+    
+    try:
+        # Generate QR code as SVG (pure Python, no PIL needed)
+        qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
+        # Encode a URL that members will visit when they scan
+        qr_url = f"/scan?session_id={session_id}"
+        qr.add_data(qr_url)
+        qr.make(fit=True)
+        
+        from qrcode.image.svg import SvgImage
+        img = qr.make_image(image_factory=SvgImage)
+        svg_content = img.to_string()
+        
+        return Response(svg_content, mimetype='image/svg+xml')
+    except Exception as e:
+        print(f"QR generation error: {e}")
+        return jsonify({'error': 'Failed to generate QR code'}), 500
+
+@app.route('/scan', methods=['GET'], endpoint='scan_form')
+def scan_form():
+    """Display attendance capture form for members scanning QR"""
+    session_id = request.args.get('session_id', '')
+    return render_template('scan.html', session_id=session_id)
+
+@app.route('/api/attendance/scan', methods=['POST'], endpoint='scan_attendance')
+def scan_attendance():
+    """Handle attendance submission from QR scan form"""
+    data = request.get_json()
+    session_id = data.get('session_id')
+    member_name = data.get('name', '').strip()
+    church_group = data.get('church_group', '').strip()
+    member_id = data.get('member_id', '').strip()
+    latitude = data.get('latitude')
+    longitude = data.get('longitude')
+    
+    if not session_id:
+        return jsonify({'error': 'Session ID required'}), 400
+    
+    if not member_name or not church_group:
+        return jsonify({'error': 'Name and church group are required'}), 400
+    
+    # Get service location from Firebase
+    service_lat = 0
+    service_lon = 0
+    if FIREBASE_INITIALIZED:
+        try:
+            session_data = ref.child('sessions').child(session_id).get()
+            if session_data:
+                service_lat = session_data.get('latitude', 0)
+                service_lon = session_data.get('longitude', 0)
+        except Exception as e:
+            print(f"Error fetching session: {e}")
+    
+    # Calculate distance (Haversine formula)
+    distance_m = 0
+    if latitude and longitude and service_lat and service_lon:
+        from math import radians, sin, cos, sqrt, atan2
+        R = 6371000  # Earth radius in meters
+        lat1, lon1 = radians(service_lat), radians(service_lon)
+        lat2, lon2 = radians(latitude), radians(longitude)
+        dlat = lat2 - lat1
+        dlon = lon2 - lon1
+        a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+        c = 2 * atan2(sqrt(a), sqrt(1-a))
+        distance_m = R * c
+    
+    # Check if within 5 meters
+    if distance_m > 5:
+        return jsonify({
+            'error': f'You are {int(distance_m)}m away. Please get within 5m of the service location.',
+            'distance': round(distance_m, 1)
+        }), 403
+    
+    today = date.today().isoformat()
+    
+    if FIREBASE_INITIALIZED:
+        try:
+            # Generate member/attendance ID
+            attendance_id = str(uuid.uuid4())[:8]
+            attendance_data = {
+                'id': attendance_id,
+                'session_id': session_id,
+                'member_id': member_id or attendance_id,
+                'member_name': member_name,
+                'church_group': church_group,
+                'latitude': latitude,
+                'longitude': longitude,
+                'distance_m': round(distance_m, 2),
+                'timestamp': datetime.now().isoformat(),
+                'date': today,
+                'service_type': 'sunday'
+            }
+            ref.child('attendance').child(today).child(attendance_id).set(attendance_data)
+            return jsonify({'success': True, 'attendance_id': attendance_id, 'distance': round(distance_m, 2)})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    else:
+        # Demo mode
+        return jsonify({'success': True, 'demo': True, 'distance': round(distance_m, 2)})
 
 
 
