@@ -198,17 +198,6 @@
                   console.log('App running in DEMO mode - service data will not be saved to Firebase');
               }
 
-              // Initialize Firebase if available
-              if (!DEMO_MODE) {
-                  try {
-                      firebase.initializeApp(firebaseConfig);
-                      database = firebase.database();
-                  } catch (error) {
-                      console.error('Firebase initialization failed:', error);
-                      DEMO_MODE = true;
-                  }
-              }
-
               let currentSessionId = null;
               let attendanceListener = null;
 
