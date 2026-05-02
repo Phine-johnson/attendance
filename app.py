@@ -125,14 +125,14 @@ def dashboard():
 def start_service():
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
-    
+
     # Generate a unique session ID
     session_id = str(uuid.uuid4())
-    
+
     # Hardcoded GPS coordinates for example (replace with actual logic)
     latitude = 40.7128  # Example: New York City
     longitude = -74.0060
-    
+
     # Store session data in Firebase if available
     if FIREBASE_AVAILABLE and FIREBASE_INITIALIZED:
         try:
@@ -146,10 +146,10 @@ def start_service():
         except Exception as e:
             print(f"Warning: Failed to store session in Firebase: {e}")
             # Continue anyway for demo purposes
-    
+
     # Generate QR code data
     qr_data = f"{session_id}|{latitude}|{longitude}"
-    
+
     # Generate QR code image
     qr = qrcode.QRCode(
         version=1,
@@ -159,16 +159,64 @@ def start_service():
     )
     qr.add_data(qr_data)
     qr.make(fit=True)
-    
+
     img = qr.make_image(fill_color='black', back_color='white')
-    
+
     # Save QR code to a bytes buffer
     img_buffer = io.BytesIO()
     img.save(img_buffer, format='PNG')
     img_buffer.seek(0)
-    
+
     # Return QR code as image response
     return Response(img_buffer.getvalue(), mimetype='image/png')
+
+@app.route('/publish_service', methods=['POST'])
+def publish_service():
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    try:
+        data = request.get_json()
+
+        # Basic validation
+        required_fields = ['occasion', 'date', 'theme']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+
+        # Prepare service object
+        service_data = {
+            'occasion': data.get('occasion', ''),
+            'date': data.get('date', ''),
+            'theme': data.get('theme', ''),
+            'pastor': data.get('pastor', ''),
+            'order_of_service': data.get('order', []),
+            'presbyters_on_duty': data.get('presbyters', ''),
+            'weekly_meetings': data.get('meetings', ''),
+            'bible_text_week': data.get('bibleTextWeek', ''),
+            'updated_at': data.get('updatedAt', datetime.now().isoformat()),
+            'updated_by': session.get('email', 'unknown')
+        }
+
+        # Write to Firebase Realtime Database at /weekly_service/current
+        if FIREBASE_AVAILABLE and FIREBASE_INITIALIZED:
+            try:
+                service_ref = ref.child('weekly_service').child('current')
+                service_ref.set(service_data)
+                print(f"Service update written to Firebase by {session.get('email')}")
+            except Exception as e:
+                print(f"Firebase write error: {e}")
+                return jsonify({'error': 'Failed to write to database'}), 500
+        else:
+            # Demo mode: just log
+            print("Demo mode — service data not saved to Firebase")
+            print("Service data:", json.dumps(service_data, indent=2))
+
+        return jsonify({'success': True, 'message': 'Service update published'}), 200
+
+    except Exception as e:
+        print(f"Publish service error: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/logout')
 def logout():

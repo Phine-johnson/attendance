@@ -764,3 +764,126 @@ body {
         padding: 0.9rem 1.2rem;
     }
 }
+
+/* ========== BIBLE SIDEBAR MENU & DROPDOWN ========== */
+.bible-sidebar-body {
+    padding: 1rem;
+}
+
+/* Menu panel (top-level icons) */
+.bible-form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Icon item (Bible, Service Update) */
+.bible-icon-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    color: var(--pcg-text);
+}
+
+.bible-icon-item:hover {
+    background-color: rgba(0, 33, 146, 0.08);
+}
+
+.bible-icon-item.active {
+    background-color: rgba(0, 33, 146, 0.12);
+    font-weight: 600;
+}
+
+.bible-icon-item svg {
+    flex-shrink: 0;
+}
+
+/* Dropdown toggle arrow */
+.bible-dropdown-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin-left: auto;
+    margin-right: 0.5rem;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.bible-dropdown-toggle:hover {
+    background-color: rgba(0, 33, 146, 0.1);
+}
+
+/* Dropdown menu (Bible tools) */
+.bible-dropdown-menu {
+    display: none;
+    flex-direction: column;
+    margin-top: 0.5rem;
+    margin-left: 2.5rem;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.bible-dropdown-menu.show {
+    display: flex;
+}
+
+.bible-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    color: var(--pcg-text);
+}
+
+.bible-dropdown-item:hover {
+    background-color: #f5f5f5;
+}
+
+.bible-dropdown-item svg {
+    color: var(--pcg-blue);
+}
+
+/* Reader area (panel container) */
+.bible-reader-area {
+    display: flex;
+    flex-direction: column;
+    min-height: 400px;
+}
+
+.bible-reader-area > .bible-tool-section {
+    display: none;
+}
+
+.bible-reader-area > .bible-tool-section:first-child,
+.bible-reader-area > #bibleInputSection {
+    display: block;
+}
+
+/* Service Update form specific */
+#serviceUpdatePanel h5 {
+    border-bottom: 2px solid var(--pcg-green-light);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem !important;
+}
+
+#orderOfServiceContainer .order-row input {
+    font-size: 0.9rem;
+}
+
+#orderOfServiceContainer .order-row .order-num {
+    background-color: var(--pcg-gray);
+    border: none;
+    text-align: center;
+}
