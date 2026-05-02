@@ -833,7 +833,6 @@ def start_service():
 def publish_service():
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
-    
     try:
         data = request.get_json()
         required_fields = ['occasion', 'date', 'theme']
@@ -867,6 +866,11 @@ def publish_service():
         return jsonify({'success': True, 'message': 'Service update published'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# Test route to verify routing
+@app.route('/test_route_test', methods=['GET'], endpoint='test_route')
+def test_route():
+    return jsonify({'status': 'ok', 'message': 'Test route works'})
 
 
 
