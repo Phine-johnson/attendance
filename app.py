@@ -223,6 +223,45 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
+# Placeholder routes for Bible Tools - will be implemented later
+@app.route('/bible')
+def bible_reader():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    return render_template('dashboard.html', 
+                          user=session.get('email'),
+                          firebase_api_key=os.environ.get('FIREBASE_API_KEY'),
+                          firebase_auth_domain=os.environ.get('FIREBASE_AUTH_DOMAIN'),
+                          firebase_database_url=os.environ.get('FIREBASE_DATABASE_URL'),
+                          firebase_project_id=os.environ.get('FIREBASE_PROJECT_ID'),
+                          firebase_storage_bucket=os.environ.get('FIREBASE_STORAGE_BUCKET'),
+                          firebase_messaging_sender_id=os.environ.get('FIREBASE_MESSAGING_SENDER_ID'),
+                          firebase_app_id=os.environ.get('FIREBASE_APP_ID'))
+
+@app.route('/notes')
+def notes():
+    return redirect(url_for('bible_reader'))
+
+@app.route('/history')
+def history():
+    return redirect(url_for('bible_reader'))
+
+@app.route('/bookmarks')
+def bookmarks():
+    return redirect(url_for('bible_reader'))
+
+@app.route('/highlights')
+def highlights():
+    return redirect(url_for('bible_reader'))
+
+@app.route('/search')
+def search():
+    return redirect(url_for('bible_reader'))
+
+@app.route('/service-update')
+def service_update():
+    return redirect(url_for('bible_reader'))
+
 @app.route('/get_qr_data')
 def get_qr_data():
     if 'user' not in session:
