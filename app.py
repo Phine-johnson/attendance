@@ -12,7 +12,7 @@ load_dotenv()
 # Optional heavy dependencies - import with fallbacks to reduce cold-start impact
 try:
     import pandas as pd
-except ImportError:
+except Exception:  # Catch any error during import (missing deps, binary incompat)
     pd = None
     print("Warning: pandas not available. Attendance reports will be limited.")
 
@@ -20,14 +20,14 @@ try:
     import firebase_admin
     from firebase_admin import credentials, auth, db
     FIREBASE_AVAILABLE = True
-except ImportError:
+except Exception:
     FIREBASE_AVAILABLE = False
     print("Warning: Firebase admin SDK not available. Running in demo mode.")
 
 try:
     import qrcode
     from PIL import Image  # noqa: F401 (used by qrcode)
-except ImportError:
+except Exception:
     qrcode = None
     print("Warning: qrcode/Pillow not available. QR code generation disabled.")
 
@@ -697,7 +697,7 @@ def create_schedule():
 
 # ==================== RESOURCE MANAGEMENT ====================
 
-@app.route('/resources')
+@app.route('/resources', endpoint='resources_page')
 def resources_page():
     if 'user' not in session:
         return redirect(url_for('login'))
