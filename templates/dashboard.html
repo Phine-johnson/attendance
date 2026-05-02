@@ -155,30 +155,65 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Firebase JS SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Firebase configuration
-            const firebaseConfig = {
-                apiKey: "{{ firebase_api_key }}",
-                authDomain: "{{ firebase_auth_domain }}",
-                databaseURL: "{{ firebase_database_url }}",
-                projectId: "{{ firebase_project_id }}",
-                storageBucket: "{{ firebase_storage_bucket }}",
-                messagingSenderId: "{{ firebase_messaging_sender_id }}",
-                appId: "{{ firebase_app_id }}"
-            };
+     <!-- Firebase JS SDK - load from multiple CDNs as fallback -->
+     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+     
+     <script>
+         document.addEventListener('DOMContentLoaded', function() {
+             let DEMO_MODE = false;
+             let database = null;
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+             // Get Firebase config from Flask template variables (may be empty strings)
+             const config = {
+                 apiKey: "{{ firebase_api_key }}",
+                 authDomain: "{{ firebase_auth_domain }}",
+                 databaseURL: "{{ firebase_database_url }}",
+                 projectId: "{{ firebase_project_id }}",
+                 storageBucket: "{{ firebase_storage_bucket }}",
+                 messagingSenderId: "{{ firebase_messaging_sender_id }}",
+                 appId: "{{ firebase_app_id }}"
+             };
 
-        let currentSessionId = null;
-        let attendanceListener = null;
+             // Check if Firebase library loaded AND config is valid
+             if (typeof firebase === 'undefined' || !config.apiKey || !config.databaseURL) {
+                 DEMO_MODE = true;
+                 console.warn('Firebase not available or not configured - running in DEMO MODE');
+             }
+
+             // Initialize Firebase if available
+             if (!DEMO_MODE) {
+                 try {
+                     firebase.initializeApp(config);
+                     database = firebase.database();
+                     console.log('Firebase initialized successfully');
+                 } catch (error) {
+                     console.error('Firebase init error:', error);
+                     DEMO_MODE = true;
+                 }
+             }
+
+             if (DEMO_MODE) {
+                 console.log('App running in DEMO mode - service data will not be saved to Firebase');
+             }
+
+             let currentSessionId = null;
+             let attendanceListener = null;
+
+             // Initialize Firebase if available
+             if (!DEMO_MODE) {
+                 try {
+                     firebase.initializeApp(firebaseConfig);
+                     database = firebase.database();
+                 } catch (error) {
+                     console.error('Firebase initialization failed:', error);
+                     DEMO_MODE = true;
+                 }
+             }
+
+             let currentSessionId = null;
+             let attendanceListener = null;
 
         // DOM Elements
         const startServiceBtn = document.getElementById('startServiceBtn');
