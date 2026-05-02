@@ -356,18 +356,6 @@
             document.querySelector('.bible-dropdown-menu')?.classList.remove('show');
         });
 
-        // Service Update icon click
-        document.getElementById('serviceUpdateBtn').addEventListener('click', () => {
-            bibleMenuPanel.classList.remove('active');
-            showPanel('serviceUpdatePanel');
-        });
-
-        // Back to Menu
-        backToMenuBtn.addEventListener('click', () => {
-            showPanel('bibleInputSection');
-            bibleMenuPanel.classList.add('active');
-        });
-
         // Load Bible passage
         document.getElementById('loadPassage').addEventListener('click', async () => {
             const version = document.getElementById('bibleVersion').value;
