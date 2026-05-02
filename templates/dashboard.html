@@ -27,10 +27,10 @@
             </div>
             <div class="ms-auto d-flex align-items-center">
                 <!-- Hamburger toggle for Offcanvas sidebar -->
-                <button class="btn btn-outline-light btn-lg me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas" title="Open Menu">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
-                    </svg>
+                <button class="hamburger-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas" title="Open Menu">
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
                 </button>
                 <span class="navbar-text me-3">Welcome, <strong>{{ user }}</strong></span>
                 <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm">Sign Out</a>

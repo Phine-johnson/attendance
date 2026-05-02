@@ -1016,6 +1016,48 @@ body {
     filter: invert(1);
 }
 
+/* Hamburger menu button */
+.hamburger-btn {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 45px;
+    height: 45px;
+    padding: 0;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 2px solid var(--pcg-gold);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.hamburger-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+.hamburger-line {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background-color: var(--pcg-gold);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    .hamburger-btn {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .hamburger-line {
+        width: 18px;
+    }
+}
+
 /* Hide old toggle button on mobile (replaced by navbar hamburger) */
 @media (max-width: 991.98px) {
     .bible-toggle-btn {
