@@ -26,10 +26,10 @@ except Exception:
 
 try:
     import qrcode
-    from PIL import Image  # noqa: F401 (used by qrcode)
+    QRCODE_AVAILABLE = True
 except Exception:
-    qrcode = None
-    print("Warning: qrcode/Pillow not available. QR code generation disabled.")
+    QRCODE_AVAILABLE = False
+    print("Warning: qrcode not available. QR code generation disabled.")
 
 import io
 
@@ -37,7 +37,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev-secret-key-change-in-production')
 
 # Serve static files from 'static' folder
-@app.route('/static/<path:filename>')
+@app.route('/static/<path:filename>', endpoint='static_files')
 def static_files(filename):
     return send_from_directory(os.path.join(app.root_path, 'static'), filename)
 
@@ -69,7 +69,7 @@ if FIREBASE_AVAILABLE:
         FIREBASE_INITIALIZED = False
         ref = None
 
-@app.route('/')
+@app.route('/', endpoint='index')
 def index():
     if 'user' in session:
         return redirect(url_for('dashboard'))
@@ -77,7 +77,7 @@ def index():
 
 # ==================== AUTH ROUTES ====================
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET', 'POST'], endpoint='login')
 def login():
     if request.method == 'POST':
         email = request.form['email']
@@ -107,14 +107,14 @@ def login():
             return redirect(url_for('dashboard'))
     return render_template('login.html')
 
-@app.route('/logout')
+@app.route('/logout', endpoint='logout')
 def logout():
     session.clear()
     return redirect(url_for('login'))
 
 # ==================== DASHBOARD ROUTE ====================
 
-@app.route('/dashboard')
+@app.route('/dashboard', endpoint='dashboard')
 def dashboard():
     if 'user' not in session:
         return redirect(url_for('login'))
@@ -163,7 +163,7 @@ def dashboard():
 
 # ==================== MEMBER MANAGEMENT ====================
 
-@app.route('/members')
+@app.route('/members', endpoint='members_list')
 def members_list():
     if 'user' not in session:
         return redirect(url_for('login'))
@@ -180,7 +180,7 @@ def members_list():
     
     return render_template('members.html', members=members, user=session.get('email'))
 
-@app.route('/api/members', methods=['POST'])
+@app.route('/api/members', methods=['POST'], endpoint='add_member')
 def add_member():
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
@@ -215,7 +215,7 @@ def add_member():
         # Demo mode
         return jsonify({'success': True, 'member_id': member_id, 'demo': True})
 
-@app.route('/api/members/<member_id>', methods=['PUT'])
+@app.route('/api/members/<member_id>', methods=['PUT'], endpoint='update_member')
 def update_member(member_id):
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
@@ -229,7 +229,7 @@ def update_member(member_id):
             return jsonify({'error': str(e)}), 500
     return jsonify({'success': True, 'demo': True})
 
-@app.route('/api/members/<member_id>', methods=['DELETE'])
+@app.route('/api/members/<member_id>', methods=['DELETE'], endpoint='delete_member')
 def delete_member(member_id):
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
@@ -242,7 +242,7 @@ def delete_member(member_id):
             return jsonify({'error': str(e)}), 500
     return jsonify({'success': True})
 
-@app.route('/api/members/import', methods=['POST'])
+@app.route('/api/members/import', methods=['POST'], endpoint='import_members')
 def import_members():
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
@@ -282,7 +282,7 @@ def import_members():
 
 # ==================== ATTENDANCE & REPORTS ====================
 
-@app.route('/attendance')
+@app.route('/attendance', endpoint='attendance_report')
 def attendance_report():
     if 'user' not in session:
         return redirect(url_for('login'))
@@ -322,7 +322,7 @@ def attendance_report():
     
     return render_template('attendance.html', records=records, start=start_date, end=end_date, user=session.get('email'))
 
-@app.route('/api/attendance/record', methods=['POST'])
+@app.route('/api/attendance/record', methods=['POST'], endpoint='record_attendance')
 def record_attendance():
     """Record attendance for a member (via QR scan or manual entry)"""
     data = request.get_json()
@@ -342,7 +342,7 @@ def record_attendance():
             return jsonify({'error': str(e)}), 500
     return jsonify({'success': True, 'demo': True})
 
-@app.route('/api/attendance/stats')
+@app.route('/api/attendance/stats', endpoint='attendance_stats')
 def attendance_stats():
     """Get attendance statistics for charts"""
     if 'user' not in session:
@@ -371,7 +371,7 @@ def attendance_stats():
 
 # ==================== EVENTS ====================
 
-@app.route('/events')
+@app.route('/events', endpoint='events_list')
 def events_list():
     if 'user' not in session:
         return redirect(url_for('login'))
@@ -388,7 +388,7 @@ def events_list():
     
     return render_template('events.html', events=events, user=session.get('email'))
 
-@app.route('/api/events', methods=['POST'])
+@app.route('/api/events', methods=['POST'], endpoint='create_event')
 def create_event():
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
@@ -419,7 +419,7 @@ def create_event():
 
 # ==================== SMALL GROUPS ====================
 
-@app.route('/groups')
+@app.route('/groups', endpoint='groups_list')
 def groups_list():
     if 'user' not in session:
         return redirect(url_for('login'))
@@ -440,7 +440,7 @@ def groups_list():
     
     return render_template('groups.html', groups=groups, members=members_map, user=session.get('email'))
 
-@app.route('/api/groups', methods=['POST'])
+@app.route('/api/groups', methods=['POST'], endpoint='create_group')
 def create_group():
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
@@ -468,7 +468,7 @@ def create_group():
             return jsonify({'error': str(e)}), 500
     return jsonify({'success': True, 'demo': True})
 
-@app.route('/api/groups/<group_id>/members', methods=['POST'])
+@app.route('/api/groups/<group_id>/members', methods=['POST'], endpoint='add_group_member')
 def add_group_member(group_id):
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
@@ -491,7 +491,7 @@ def add_group_member(group_id):
 
 # ==================== DONATIONS ====================
 
-@app.route('/donations')
+@app.route('/donations', endpoint='donations_page')
 def donations_page():
     if 'user' not in session:
         return redirect(url_for('login'))
@@ -511,7 +511,7 @@ def donations_page():
     
     return render_template('donations.html', donations=donations, summary=summary, user=session.get('email'))
 
-@app.route('/api/donations', methods=['POST'])
+@app.route('/api/donations', methods=['POST'], endpoint='record_donation')
 def record_donation():
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
@@ -539,7 +539,7 @@ def record_donation():
             return jsonify({'error': str(e)}), 500
     return jsonify({'success': True, 'demo': True})
 
-@app.route('/api/donations/export')
+@app.route('/api/donations/export', endpoint='export_donations')
 def export_donations():
     if 'user' not in session:
         return redirect(url_for('login'))
@@ -575,7 +575,7 @@ def export_donations():
 
 # ==================== COMMUNICATIONS ====================
 
-@app.route('/communications')
+@app.route('/communications', endpoint='communications_page')
 def communications_page():
     if 'user' not in session:
         return redirect(url_for('login'))
@@ -599,7 +599,7 @@ def communications_page():
     
     return render_template('communications.html', announcements=announcements, prayer_requests=prayer_requests, user=session.get('email'))
 
-@app.route('/api/announcements', methods=['POST'])
+@app.route('/api/announcements', methods=['POST'], endpoint='create_announcement')
 def create_announcement():
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
@@ -626,7 +626,7 @@ def create_announcement():
             return jsonify({'error': str(e)}), 500
     return jsonify({'success': True})
 
-@app.route('/api/prayer-requests', methods=['POST'])
+@app.route('/api/prayer-requests', methods=['POST'], endpoint='submit_prayer_request')
 def submit_prayer_request():
     data = request.get_json()
     req_id = str(uuid.uuid4())[:8]
@@ -651,7 +651,7 @@ def submit_prayer_request():
 
 # ==================== VOLUNTEER SCHEDULING ====================
 
-@app.route('/volunteers')
+@app.route('/volunteers', endpoint='volunteers_page')
 def volunteers_page():
     if 'user' not in session:
         return redirect(url_for('login'))
@@ -669,7 +669,7 @@ def volunteers_page():
     
     return render_template('volunteers.html', schedules=schedules, roles=roles, user=session.get('email'))
 
-@app.route('/api/volunteers/schedule', methods=['POST'])
+@app.route('/api/volunteers/schedule', methods=['POST'], endpoint='create_schedule')
 def create_schedule():
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
@@ -719,7 +719,7 @@ def resources_page():
     
     return render_template('resources.html', inventory=inventory, bookings=bookings, user=session.get('email'))
 
-@app.route('/api/inventory', methods=['POST'])
+@app.route('/api/inventory', methods=['POST'], endpoint='add_inventory')
 def add_inventory():
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
@@ -747,7 +747,7 @@ def add_inventory():
 
 # ==================== BIBLE TOOLS ROUTES ====================
 
-@app.route('/bible')
+@app.route('/bible', endpoint='bible_reader')
 def bible_reader():
     if 'user' not in session:
         return redirect(url_for('login'))
@@ -762,42 +762,42 @@ def bible_reader():
         firebase_app_id=os.environ.get('FIREBASE_APP_ID')
     )
 
-@app.route('/notes')
+@app.route('/notes', endpoint='notes')
 def notes():
     return redirect(url_for('bible_reader'))
 
-@app.route('/history')
+@app.route('/history', endpoint='history')
 def history():
     return redirect(url_for('bible_reader'))
 
-@app.route('/bookmarks')
+@app.route('/bookmarks', endpoint='bookmarks')
 def bookmarks():
     return redirect(url_for('bible_reader'))
 
-@app.route('/highlights')
+@app.route('/highlights', endpoint='highlights')
 def highlights():
     return redirect(url_for('bible_reader'))
 
-@app.route('/search')
+@app.route('/search', endpoint='search')
 def search():
     return redirect(url_for('bible_reader'))
 
-@app.route('/service-update')
+@app.route('/service-update', endpoint='service_update')
 def service_update():
     return redirect(url_for('bible_reader'))
 
 # ==================== QR & ATTENDANCE ====================
 
-@app.route('/start_service', methods=['POST'])
+@app.route('/start_service', methods=['POST'], endpoint='start_service')
 def start_service():
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
     
-    if qrcode is None:
+    if not QRCODE_AVAILABLE:
         return jsonify({'error': 'QR code generation not available'}), 500
     
     session_id = str(uuid.uuid4())
-    latitude = 0  # Will be set from frontend
+    latitude = 0
     longitude = 0
     
     if FIREBASE_INITIALIZED:
@@ -814,19 +814,22 @@ def start_service():
         except Exception as e:
             print(f"Warning: {e}")
     
-    qr_data = f"{session_id}|{latitude}|{longitude}"
-    qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
-    qr.add_data(qr_data)
-    qr.make(fit=True)
-    img = qr.make_image(fill_color='black', back_color='white')
-    
-    img_buffer = io.BytesIO()
-    img.save(img_buffer, format='PNG')
-    img_buffer.seek(0)
-    
-    return Response(img_buffer.getvalue(), mimetype='image/png')
+    try:
+        # Generate QR code as SVG (pure Python, no PIL needed)
+        qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
+        qr.add_data(f"{session_id}|{latitude}|{longitude}")
+        qr.make(fit=True)
+        
+        from qrcode.image.svg import SvgImage
+        img = qr.make_image(image_factory=SvgImage)
+        svg_content = img.to_string()
+        
+        return Response(svg_content, mimetype='image/svg+xml')
+    except Exception as e:
+        print(f"QR generation error: {e}")
+        return jsonify({'error': 'Failed to generate QR code'}), 500
 
-@app.route('/publish_service', methods=['POST'])
+@app.route('/publish_service', methods=['POST'], endpoint='publish_service')
 def publish_service():
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
