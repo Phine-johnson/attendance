@@ -796,9 +796,12 @@ def start_service():
     if not QRCODE_AVAILABLE:
         return jsonify({'error': 'QR code generation not available'}), 500
     
+    # Get service location from request (admin's GPS when starting service)
+    data = request.get_json() or {}
+    latitude = data.get('latitude', 0)
+    longitude = data.get('longitude', 0)
+    
     session_id = str(uuid.uuid4())
-    latitude = 0
-    longitude = 0
     
     if FIREBASE_INITIALIZED:
         try:
@@ -817,7 +820,8 @@ def start_service():
     try:
         # Generate QR code as SVG (pure Python, no PIL needed)
         qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
-        qr.add_data(f"{session_id}|{latitude}|{longitude}")
+        qr_url = request.host_url.rstrip('/') + f'/scan?session_id={session_id}'
+        qr.add_data(qr_url)
         qr.make(fit=True)
         
         from qrcode.image.svg import SvgImage

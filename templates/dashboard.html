@@ -331,12 +331,32 @@
         // Start Service Button Click Handler
         startServiceBtn.addEventListener('click', async () => {
             try {
+                // Get current GPS location first
+                let lat = 0, lon = 0;
+                if (navigator.geolocation) {
+                    try {
+                        const position = await new Promise((resolve, reject) => {
+                            navigator.geolocation.getCurrentPosition(resolve, reject, {
+                                enableHighAccuracy: true,
+                                timeout: 10000,
+                                maximumAge: 0
+                            });
+                        });
+                        lat = position.coords.latitude;
+                        lon = position.coords.longitude;
+                        console.log('Service location:', lat, lon);
+                    } catch (geoErr) {
+                        console.warn('Could not get GPS, using 0,0');
+                    }
+                }
+
                 const response = await fetch('/start_service', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    credentials: 'include'
+                    credentials: 'include',
+                    body: JSON.stringify({ latitude: lat, longitude: lon })
                 });
 
                 if (response.ok) {
