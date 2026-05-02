@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Membership Milestones - Redemption Presby Congregation</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=7">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <button class="hamburger-btn me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">
+                    <span class="hamburger-line"></span><span class="hamburger-line"></span><span class="hamburger-line"></span>
+                </button>
+                <div class="d-flex align-items-center">
+                    <div class="logo-img d-flex align-items-center justify-content-center"><img src="{{ url_for('static', filename='presby-logo.png') }}?v=3" alt="Logo"></div>
+                    <div><div class="church-name">Redemption Presby</div><div class="church-subtitle">Congregation</div></div>
+                </div>
+            </div>
+            <div class="ms-auto d-flex align-items-center">
+                <span class="navbar-text me-3">Welcome, <strong>{{ user }}</strong></span>
+                <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm">Sign Out</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div>
+                        <h2 class="text-pcg-blue fw-bold mb-1" style="font-family: 'Playfair Display', serif;">Baptism & Membership Milestones</h2>
+                        <div class="divider-custom" style="width: 100%; margin: 0 0 1rem 0;"></div>
+                    </div>
+                    <button class="btn btn-custom-primary" data-bs-toggle="modal" data-bs-target="#milestoneModal">
+                        <svg width="18" height="18" class="me-1" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 14.59L12 11.17l-1.41 4.59L7.82 14l4.59-.61-.61-4.59 1.41 4.59L16.18 14z"/></svg>
+                        Add Milestone
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-custom">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-custom mb-0">
+                                <thead>
+                                    <tr><th>Date</th><th>Member</th><th>Type</th><th>Description</th><th>Recorded By</th></tr>
+                                </thead>
+                                <tbody>
+                                    {% for m in milestones %}
+                                    <tr>
+                                        <td>{{ m.date }}</td>
+                                        <td><span class="badge bg-secondary">{{ m.member_id }}</span></td>
+                                        <td><span class="badge bg-pcg-blue">{{ m.type|capitalize }}</span></td>
+                                        <td>{{ m.description }}</td>
+                                        <td>{{ m.recorded_by }}</td>
+                                    </tr>
+                                    {% else %}
+                                    <tr><td colspan="5" class="text-center text-muted py-4">No milestones recorded</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="milestoneModal" tabindex="-1">
+        <div class="modal-dialog"><div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title text-pcg-blue">Add Milestone</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="milestoneForm">
+                    <div class="mb-3"><label class="form-label fw-bold text-pcg-blue">Member ID</label>
+                    <input type="text" class="form-control form-control-custom" name="member_id" required></div>
+                    <div class="mb-3"><label class="form-label fw-bold text-pcg-blue">Type</label>
+                    <select class="form-select form-control-custom" name="type">
+                        <option value="baptism">Baptism</option><option value="membership">Membership</option>
+                        <option value="anniversary">Anniversary</option></select></div>
+                    <div class="mb-3"><label class="form-label fw-bold text-pcg-blue">Date</label>
+                    <input type="date" class="form-control form-control-custom" name="date" required></div>
+                    <div class="mb-3"><label class="form-label fw-bold text-pcg-blue">Description</label>
+                    <textarea class="form-control form-control-custom" name="description" rows="2"></textarea></div>
+                    <button type="submit" class="btn btn-custom-primary">Add</button>
+                </form>
+            </div>
+        </div></div>
+    </div>
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="sidebarOffcanvas"><div class="offcanvas-header"><h5 class="offcanvas-title">Menu</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button></div>
+        <div class="offcanvas-body p-0"><nav class="navbar-dark">
+            <div class="sidebar-item" onclick="location.href='{{ url_for('dashboard') }}'">Dashboard</div>
+            <div class="sidebar-item" onclick="location.href='{{ url_for('members') }}'">Members</div>
+            <div class="sidebar-item" onclick="location.href='{{ url_for('visits') }}'">Pastoral Visits</div>
+            <div class="sidebar-item sidebar-highlight" onclick="location.href='{{ url_for('milestones') }}'">Milestones</div>
+            <div class="sidebar-item" onclick="location.href='{{ url_for('reports') }}'">Reports</div>
+            <div class="sidebar-item" onclick="location.href='{{ url_for('communications') }}'">Communications</div>
+        </nav></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('milestoneForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const data = {};
+            new FormData(this).forEach((v,k) => data[k] = v);
+            fetch('/api/milestones', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)})
+                .then(r => r.json()).then(d => { if(d.success) location.reload(); });
+        });
+    </script>
+</body>
+</html>

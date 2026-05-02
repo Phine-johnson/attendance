@@ -39,19 +39,27 @@
         <!-- Page Header -->
         <div class="row mb-4">
             <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                     <div>
                         <h2 class="text-pcg-blue fw-bold mb-1" style="font-family: 'Playfair Display', serif;">
                             Donation Tracking
                         </h2>
                         <div class="divider-custom" style="width: 100%; margin: 0 0 1rem 0;"></div>
                     </div>
-                    <button class="btn btn-custom-primary" data-bs-toggle="modal" data-bs-target="#recordDonationModal">
-                        <svg width="18" height="18" class="me-1" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 14.59L12 11.17l-1.41 4.59L7.82 14l4.59-.61-.61-4.59 1.41 4.59L16.18 14z"/>
-                        </svg>
-                        Record Donation
-                    </button>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a href="{{ url_for('donation_reports') }}" class="btn btn-outline-pcg">
+                            <svg width="18" height="18" class="me-1" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4zM5 13h2v2H5v-2zm12 0h2v2h-2v-2z"/>
+                            </svg>
+                            Reports & Analytics
+                        </a>
+                        <button class="btn btn-custom-primary" data-bs-toggle="modal" data-bs-target="#recordDonationModal">
+                            <svg width="18" height="18" class="me-1" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 14.59L12 11.17l-1.41 4.59L7.82 14l4.59-.61-.61-4.59 1.41 4.59L16.18 14z"/>
+                            </svg>
+                            Record Donation
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
