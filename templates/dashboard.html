@@ -982,48 +982,50 @@
 
               // Wait for modal to be shown before initializing scanner
               document.getElementById('scanModal').addEventListener('shown.bs.modal', function initScanner() {
-                  const html5QrCode = new Html5Qrcode("qr-reader");
-                  const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-
-                  // Try rear camera first, fall back to any camera
-                  html5QrCode.start(
-                      { facingMode: "environment" },
-                      config,
-                      (decodedText) => {
-                          handleScannedQR(decodedText);
-                          html5QrCode.stop().catch(console.error);
-                          modal.hide();
-                      },
-                      (errorMessage) => {
-                          // Scanning errors are normal while looking for QR
+                  let html5QrCode = null;
+                  
+                  function startScanner(cameraConfig) {
+                      try {
+                          html5QrCode = new Html5Qrcode("qr-reader");
+                      } catch (e) {
+                          console.error('Failed to create Html5Qrcode:', e);
+                          document.getElementById('scan-result').innerHTML = 
+                              '<p class="text-danger">Scanner initialization failed. Please refresh.</p>';
+                          return Promise.reject(e);
                       }
-                  ).catch((err) => {
-                      // Try any available camera as fallback
-                      console.warn('Rear camera failed, trying any camera:', err);
-                      html5QrCode.start(
-                          { facingMode: "any" },
-                          config,
+                      
+                      const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+                      return html5QrCode.start(cameraConfig, config,
                           (decodedText) => {
                               handleScannedQR(decodedText);
-                              html5QrCode.stop().catch(console.error);
+                              html5QrCode.stop().catch(() => {});
                               modal.hide();
                           },
                           (errorMessage) => {}
-).catch((err2) => {
-                           console.error('Camera start error:', err2);
-                           let errorMsg = 'Camera access denied. ';
-                           if (!window.isSecureContext) {
-                               errorMsg += 'HTTPS required. ';
-                           }
-                           errorMsg += 'Please allow camera permissions.';
-                           document.getElementById('scan-result').innerHTML = 
-                               '<p class="text-danger">' + errorMsg + '</p>';
-                       });
-                  });
+                      );
+                  }
+                  
+                  // Try rear camera, then front camera, then no constraint
+                  startScanner({ facingMode: "environment" })
+                      .catch((err) => {
+                          console.warn('Environment camera failed:', err);
+                          return startScanner({ facingMode: "user" });
+                      })
+                      .catch((err) => {
+                          console.warn('User camera failed:', err);
+                          return startScanner({}); // No constraint
+                      })
+                      .catch((err) => {
+                          console.error('All camera attempts failed:', err);
+                          document.getElementById('scan-result').innerHTML = 
+                              '<p class="text-danger">Cannot access camera. Please check permissions and ensure no other app is using the camera.</p>';
+                      });
 
                   // Cleanup when modal is hidden
                   document.getElementById('scanModal').addEventListener('hidden.bs.modal', function cleanup() {
-                      html5QrCode.stop().catch(() => {});
+                      if (html5QrCode) {
+                          html5QrCode.stop().catch(() => {});
+                      }
                   }, { once: true });
               }, { once: true });
           });
