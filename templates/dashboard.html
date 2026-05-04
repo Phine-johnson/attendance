@@ -980,11 +980,19 @@
               const modal = new bootstrap.Modal(document.getElementById('scanModal'));
               modal.show();
 
+              // Check secure context first
+              if (!window.isSecureContext) {
+                  document.getElementById('scan-result').innerHTML = 
+                      '<p class="text-danger">Camera requires HTTPS. Please use the deployed URL (not localhost).</p>';
+                  return;
+              }
+
               // Wait for modal to be shown before initializing scanner
               document.getElementById('scanModal').addEventListener('shown.bs.modal', function initScanner() {
                   let html5QrCode = null;
                   
                   function startScanner(cameraConfig) {
+                      console.log('Trying camera with config:', cameraConfig);
                       try {
                           html5QrCode = new Html5Qrcode("qr-reader");
                       } catch (e) {
@@ -1001,7 +1009,9 @@
                               html5QrCode.stop().catch(() => {});
                               modal.hide();
                           },
-                          (errorMessage) => {}
+                          (errorMessage) => {
+                              console.log('Scan callback (normal):', errorMessage);
+                          }
                       );
                   }
                   
@@ -1017,8 +1027,15 @@
                       })
                       .catch((err) => {
                           console.error('All camera attempts failed:', err);
-                          document.getElementById('scan-result').innerHTML = 
-                              '<p class="text-danger">Cannot access camera. Please check permissions and ensure no other app is using the camera.</p>';
+                          let msg = 'Cannot access camera. ';
+                          if (err.name === 'NotAllowedError') {
+                              msg += 'Please allow camera permission when prompted.';
+                          } else if (err.name === 'NotFoundError') {
+                              msg += 'No camera found on this device.';
+                          } else {
+                              msg += 'Please check permissions and ensure no other app is using the camera.';
+                          }
+                          document.getElementById('scan-result').innerHTML = '<p class="text-danger">' + msg + '</p>';
                       });
 
                   // Cleanup when modal is hidden
