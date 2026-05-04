@@ -864,20 +864,21 @@ def volunteers_page():
 def create_schedule():
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
-    
+
     data = request.get_json()
     schedule_id = str(uuid.uuid4())[:8]
-    
+
     schedule_data = {
         'id': schedule_id,
         'role': data.get('role', ''),
         'date': data.get('date', ''),
-        'assigned_to': data.get('assigned_to', ''),
+        'time': data.get('time', ''),
+        'assigned_to': data.get('member_id', ''),
         'status': 'scheduled',
         'created_by': session.get('email', ''),
         'created_at': datetime.now().isoformat()
     }
-    
+
     if FIREBASE_INITIALIZED:
         try:
             ref.child('schedules').child(schedule_id).set(schedule_data)
@@ -885,6 +886,58 @@ def create_schedule():
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     return jsonify({'success': True, 'demo': True})
+
+@app.route('/api/volunteers/schedule', methods=['GET'])
+def get_schedules():
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    schedules = []
+    if FIREBASE_INITIALIZED:
+        try:
+            data = ref.child('schedules').get()
+            if data:
+                schedules = [{'id': k, **v} for k, v in data.items()]
+                schedules.sort(key=lambda x: x.get('date', ''), reverse=True)
+        except Exception as e:
+            print(f"Error fetching schedules: {e}")
+
+    return jsonify({'schedules': schedules})
+
+@app.route('/api/volunteers/schedule/<schedule_id>', methods=['PUT'])
+def update_schedule(schedule_id):
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    data = request.get_json()
+    if FIREBASE_INITIALIZED:
+        try:
+            update_data = {
+                'role': data.get('role'),
+                'date': data.get('date'),
+                'time': data.get('time'),
+                'assigned_to': data.get('member_id')
+            }
+            # Remove None values
+            update_data = {k: v for k, v in update_data.items() if v is not None}
+            ref.child('schedules').child(schedule_id).update(update_data)
+            return jsonify({'success': True})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    return jsonify({'success': True, 'demo': True})
+
+@app.route('/api/volunteers/schedule/<schedule_id>', methods=['DELETE'])
+def delete_schedule(schedule_id):
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    if FIREBASE_INITIALIZED:
+        try:
+            ref.child('schedules').child(schedule_id).delete()
+            return jsonify({'success': True})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    return jsonify({'success': True})
 
 # ==================== RESOURCE MANAGEMENT ====================
 
