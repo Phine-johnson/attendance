@@ -198,12 +198,12 @@
                              </svg>
                              Start Service
                          </button>
-                         <button id="scanMemberBtn" class="btn btn-outline-secondary btn-lg w-100" data-bs-toggle="modal" data-bs-target="#scanModal">
-                             <svg width="20" height="20" class="me-2" fill="currentColor" viewBox="0 0 24 24">
-                                 <path d="M3 3h6v6H3V3zm2 2v2h2V5H5zm8-2h6v6h-6V3zm2 2v2h2V5h-2zM3 13h6v6H3v-6zm2 2v2h2v-2H5zm8-2h6v6h-6v-6zm2 2v2h2v-2h-2zm-8-5h4v4H8V8zm5 0h4v4h-4V8z"/>
-                             </svg>
-                             Scan Member ID
-                         </button>
+<button id="scanMemberBtn" class="btn btn-outline-secondary btn-lg w-100">
+                              <svg width="20" height="20" class="me-2" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M3 3h6v6H3V3zm2 2v2h2V5H5zm8-2h6v6h-6V3zm2 2v2h2V5h-2zM3 13h6v6H3v-6zm2 2v2h2v-2H5zm8-2h6v6h-6v-6zm2 2v2h2v-2h-2zm-8-5h4v4H8V8zm5 0h4v4h-4V8z"/>
+                              </svg>
+                              Scan Member ID
+                          </button>
                      </div>
                  </div>
              </div>
@@ -952,8 +952,15 @@
      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
      <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
-     <script>
-         // Toast notification function
+<script>
+          // Check html5-qrcode is loaded
+          if (typeof Html5Qrcode === 'undefined') {
+              console.error('html5-qrcode library not loaded');
+              document.getElementById('qr-reader').innerHTML = 
+                  '<p class="text-danger">Scanner library failed to load. Please refresh the page.</p>';
+          }
+
+          // Toast notification function
          function showToast(message, isSuccess = true) {
              const toastEl = document.getElementById('successToast');
              const toastMessage = document.getElementById('toastMessage');
@@ -963,41 +970,53 @@
              toast.show();
          }
 
-         // Handle Scan Member button click
-         document.getElementById('scanMemberBtn').addEventListener('click', function() {
-             const modal = new bootstrap.Modal(document.getElementById('scanModal'));
-             modal.show();
+// Handle Scan Member button click
+          document.getElementById('scanMemberBtn').addEventListener('click', function() {
+              const modal = new bootstrap.Modal(document.getElementById('scanModal'));
+              modal.show();
 
-             // Wait for modal to be shown before initializing scanner
-             document.getElementById('scanModal').addEventListener('shown.bs.modal', function initScanner() {
-                 const html5QrCode = new Html5Qrcode("qr-reader");
-                 const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+              // Wait for modal to be shown before initializing scanner
+              document.getElementById('scanModal').addEventListener('shown.bs.modal', function initScanner() {
+                  const html5QrCode = new Html5Qrcode("qr-reader");
+                  const config = { fps: 10, qrbox: { width: 250, height: 250 } };
 
-                 html5QrCode.start(
-                     { facingMode: "environment" },
-                     config,
-                     (decodedText) => {
-                         // Success callback - process the scanned QR code
-                         handleScannedQR(decodedText);
-                         html5QrCode.stop().catch(console.error);
-                         modal.hide();
-                     },
-                     (errorMessage) => {
-                         // Error callback - ignore, just trying to scan
-                     }
-                 ).catch((err) => {
-                     console.error('Camera start error:', err);
-                     document.getElementById('scan-result').innerHTML = '<p class="text-danger">Camera access denied. Please allow camera permissions.</p>';
-                 });
+                  // Try rear camera first, fall back to any camera
+                  html5QrCode.start(
+                      { facingMode: "environment" },
+                      config,
+                      (decodedText) => {
+                          handleScannedQR(decodedText);
+                          html5QrCode.stop().catch(console.error);
+                          modal.hide();
+                      },
+                      (errorMessage) => {
+                          // Scanning errors are normal while looking for QR
+                      }
+                  ).catch((err) => {
+                      // Try any available camera as fallback
+                      console.warn('Rear camera failed, trying any camera:', err);
+                      html5QrCode.start(
+                          { facingMode: "any" },
+                          config,
+                          (decodedText) => {
+                              handleScannedQR(decodedText);
+                              html5QrCode.stop().catch(console.error);
+                              modal.hide();
+                          },
+                          (errorMessage) => {}
+                      ).catch((err2) => {
+                          console.error('Camera start error:', err2);
+                          document.getElementById('scan-result').innerHTML = 
+                              '<p class="text-danger">Camera access denied. Please allow camera permissions and use HTTPS.</p>';
+                      });
+                  });
 
-                 // Cleanup when modal is hidden
-                 document.getElementById('scanModal').addEventListener('hidden.bs.modal', function cleanup() {
-                     html5QrCode.stop().catch(() => {});
-                     document.getElementById('scanModal').removeEventListener('shown.bs.modal', initScanner);
-                     document.getElementById('scanModal').removeEventListener('hidden.bs.modal', cleanup);
-                 }, { once: true });
-             }, { once: true });
-         });
+                  // Cleanup when modal is hidden
+                  document.getElementById('scanModal').addEventListener('hidden.bs.modal', function cleanup() {
+                      html5QrCode.stop().catch(() => {});
+                  }, { once: true });
+              }, { once: true });
+          });
 
          // Process scanned QR code data
          async function handleScannedQR(qrData) {
