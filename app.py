@@ -765,17 +765,20 @@ def service_update():
 def start_service():
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
-    
+
+    data = request.get_json() or {}
     session_id = str(uuid.uuid4())
-    latitude = 0  # Will be set from frontend
-    longitude = 0
-    
+    proximity_limit = 3
+    latitude = data.get('latitude', 0)
+    longitude = data.get('longitude', 0)
+
     if FIREBASE_INITIALIZED:
         try:
             session_data = {
                 'session_id': session_id,
                 'latitude': latitude,
                 'longitude': longitude,
+                'limit': proximity_limit,
                 'timestamp': datetime.now().isoformat(),
                 'created_by': session['user'],
                 'active': True
@@ -783,18 +786,86 @@ def start_service():
             ref.child('sessions').child(session_id).set(session_data)
         except Exception as e:
             print(f"Warning: {e}")
-    
-    qr_data = f"{session_id}|{latitude}|{longitude}"
+
+    qr_data = json.dumps({
+        'sid': session_id,
+        'lat': latitude,
+        'lng': longitude,
+        'limit': proximity_limit
+    })
+
     qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
     qr.add_data(qr_data)
     qr.make(fit=True)
-    img = qr.make_image(fill_color='black', back_color='white')
-    
-    img_buffer = io.BytesIO()
-    img.save(img_buffer, format='PNG')
-    img_buffer.seek(0)
-    
-    return Response(img_buffer.getvalue(), mimetype='image/png')
+
+    try:
+        from qrcode.image.svg import SvgImage
+        img = qr.make_image(image_factory=SvgImage)
+        svg_content = img.to_string()
+        return Response(svg_content, mimetype='image/svg+xml')
+    except Exception as e:
+        print(f'QR generation error: {e}')
+        return jsonify({'error': 'Failed to generate QR code'}), 500
+
+@app.route('/api/attendance/scan', methods=['POST'])
+def scan_attendance():
+    data = request.get_json()
+    session_id = data.get('session_id')
+    latitude = data.get('latitude')
+    longitude = data.get('longitude')
+    member_name = data.get('name')
+    member_type = data.get('member_type', 'Member')
+
+    if not session_id or latitude is None or longitude is None:
+        return jsonify({'error': 'Missing required fields'}), 400
+
+    session_data = None
+    if FIREBASE_INITIALIZED:
+        try:
+            session_data = ref.child('sessions').child(session_id).get()
+            if not session_data:
+                return jsonify({'error': 'Invalid session'}), 400
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    if not session_data:
+        return jsonify({'error': 'Session not found'}), 404
+
+    import math
+    def haversine(lat1, lon1, lat2, lon2):
+        R = 6371000
+        phi1 = math.radians(lat1)
+        phi2 = math.radians(lat2)
+        delta_phi = math.radians(lat2 - lat1)
+        delta_lambda = math.radians(lon2 - lon1)
+        a = math.sin(delta_phi/2)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda/2)**2
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+        return R * c
+
+    distance = haversine(latitude, longitude, session_data.get('latitude', 0), session_data.get('longitude', 0))
+    limit = session_data.get('limit', 3)
+
+    if distance > limit:
+        return jsonify({'error': f'Too far! Please move closer to the Admin. (Distance: {distance:.1f}m)'}), 403
+
+    if FIREBASE_INITIALIZED:
+        try:
+            checkin_id = str(uuid.uuid4())[:8]
+            checkin_data = {
+                'id': checkin_id,
+                'session_id': session_id,
+                'member_name': member_name,
+                'member_type': member_type,
+                'distance': round(distance, 1),
+                'timestamp': datetime.now().isoformat(),
+                'latitude': latitude,
+                'longitude': longitude
+            }
+            ref.child('checkins').child(checkin_id).set(checkin_data)
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    return jsonify({'success': True, 'message': f'Check-in successful! Distance: {distance:.1f}m'})
 
 @app.route('/publish_service', methods=['POST'])
 def publish_service():
