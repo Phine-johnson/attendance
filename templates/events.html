@@ -65,26 +65,8 @@
                     <option value="wedding">Wedding</option>
                     <option value="funeral">Funeral</option>
                     <option value="meeting">Meeting</option>
+                    <option value="special">Special Event</option>
                 </select>
-            </div>
-        </div>
-
-        <!-- Calendar Grid -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card card-custom">
-                    <div class="card-header d-flex align-items-center">
-                        <svg width="24" height="24" class="me-2" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V9h14v10z"/>
-                        </svg>
-                        Event Calendar
-                    </div>
-                    <div class="card-body">
-                        <div class="event-calendar" style="min-height: 300px; background-color: var(--pcg-white); border-radius: 8px; padding: 20px;">
-                            <p class="text-muted text-center">Calendar view will be implemented here</p>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -92,47 +74,18 @@
         <div class="row">
             <div class="col-12">
                 <div class="card card-custom">
-                    <div class="card-header d-flex align-items-center">
-                        <svg width="24" height="24" class="me-2" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
-                        </svg>
-                        Upcoming Events
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <svg width="24" height="24" class="me-2" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                            </svg>
+                            Upcoming Events
+                            <span class="badge bg-pcg-blue ms-2" id="eventCount">0</span>
+                        </div>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-lg-4 col-md-6 mb-3">
-                                <div class="card card-custom h-100">
-                                    <div class="card-body">
-                                        <h5 class="text-pcg-blue">Sunday Service</h5>
-                                        <p class="text-muted mb-2">May 4, 2026 - 9:00 AM</p>
-                                        <p class="mb-2"><span class="badge bg-pcg-green">Public</span></p>
-                                        <p class="small">Main sanctuary service with worship and teaching.</p>
-                                        <button class="btn btn-sm btn-outline-primary">Edit</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-4 col-md-6 mb-3">
-                                <div class="card card-custom h-100">
-                                    <div class="card-body">
-                                        <h5 class="text-pcg-blue">Prayer Meeting</h5>
-                                        <p class="text-muted mb-2">May 6, 2026 - 7:00 PM</p>
-                                        <p class="mb-2"><span class="badge bg-secondary">Private</span></p>
-                                        <p class="small">Mid-week prayer and fellowship.</p>
-                                        <button class="btn btn-sm btn-outline-primary">Edit</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-4 col-md-6 mb-3">
-                                <div class="card card-custom h-100">
-                                    <div class="card-body">
-                                        <h5 class="text-pcg-blue">Youth Conference</h5>
-                                        <p class="text-muted mb-2">May 15-17, 2026</p>
-                                        <p class="mb-2"><span class="badge bg-pcg-blue">Special</span></p>
-                                        <p class="small">Annual youth gathering with guest speakers.</p>
-                                        <button class="btn btn-sm btn-outline-primary">Edit</button>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="row" id="eventsContainer">
+                            <!-- Events will be loaded dynamically -->
                         </div>
                     </div>
                 </div>
@@ -148,7 +101,7 @@
                     <h5 class="modal-title text-pcg-blue" id="createEventModalLabel">Create New Event</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ url_for('create_event') }}" method="POST">
+                <form id="createEventForm">
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label fw-bold text-pcg-blue">Event Title</label>
@@ -168,12 +121,12 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold text-pcg-blue">Event Type</label>
-                            <select class="form-select form-control-custom" name="event_type" required>
+                            <select class="form-select form-control-custom" name="type" required>
                                 <option value="sunday">Sunday Service</option>
                                 <option value="wedding">Wedding</option>
                                 <option value="funeral">Funeral</option>
                                 <option value="meeting">Meeting</option>
-                                <option value="other">Other</option>
+                                <option value="special">Special Event</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -186,6 +139,77 @@
                         <button type="submit" class="btn btn-custom-primary">Create Event</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Event Modal -->
+    <div class="modal fade" id="editEventModal" tabindex="-1" aria-labelledby="editEventModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-pcg-blue" id="editEventModalLabel">Edit Event</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editEventForm">
+                    <input type="hidden" name="event_id" id="editEventId">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Event Title</label>
+                            <input type="text" class="form-control form-control-custom" name="title" id="editTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Date</label>
+                            <input type="date" class="form-control form-control-custom" name="date" id="editDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Time</label>
+                            <input type="time" class="form-control form-control-custom" name="time" id="editTime" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Location</label>
+                            <input type="text" class="form-control form-control-custom" name="location" id="editLocation" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Event Type</label>
+                            <select class="form-select form-control-custom" name="type" id="editType" required>
+                                <option value="sunday">Sunday Service</option>
+                                <option value="wedding">Wedding</option>
+                                <option value="funeral">Funeral</option>
+                                <option value="meeting">Meeting</option>
+                                <option value="special">Special Event</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Description</label>
+                            <textarea class="form-control form-control-custom" name="description" id="editDescription" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-custom-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger" id="deleteModalLabel">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Delete event <strong id="deleteEventName"></strong>?</p>
+                    <p class="text-muted small">This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                </div>
             </div>
         </div>
     </div>
@@ -204,37 +228,43 @@
                     </svg>
                     Dashboard
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('members') }}'">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('members_list') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.76 0-8 1.34-8 4v3h16v-3c0-2.66-5.24-4-8-4z"/>
                     </svg>
                     Members
                 </div>
-                <div class="sidebar-item sidebar-highlight" onclick="location.href='{{ url_for('attendance') }}'">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('attendance_report') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H8v-2h4v2zm0-4H8v-2h4v2zm0-4H8V6h4v2zm5 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V6h2v2z"/>
                     </svg>
                     Attendance
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('groups') }}'">
+                <div class="sidebar-item sidebar-highlight" onclick="location.href='{{ url_for('events_list') }}'">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V9h14v10z"/>
+                    </svg>
+                    Events
+                </div>
+                <div class="sidebar-item" onclick="location.href='{{ url_for('groups_list') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.76 0-8 1.34-8 4v3h16v-3c0-2.66-5.24-4-8-4z"/>
                     </svg>
                     Groups
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('donations') }}'">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('donations_page') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 14.59L12 11.17l-1.41 4.59L7.82 14l4.59-.61-.61-4.59 1.41 4.59L16.18 14z"/>
                     </svg>
                     Donations
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('communications') }}'">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('communications_page') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
                     </svg>
                     Communications
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('volunteers') }}'">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('volunteers_page') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                     </svg>
@@ -252,5 +282,202 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let allEvents = [];
+
+            // Load events
+            async function loadEvents() {
+                try {
+                    const response = await fetch('/api/events');
+                    if (response.ok) {
+                        const data = await response.json();
+                        allEvents = data.events || [];
+                        renderEvents(allEvents);
+                    }
+                } catch (error) {
+                    console.error('Error loading events:', error);
+                    // Fallback: try server-side rendered events
+                    const initialEvents = {{ events|tojson }};
+                    allEvents = initialEvents || [];
+                    renderEvents(allEvents);
+                }
+            }
+
+            function renderEvents(events) {
+                const container = document.getElementById('eventsContainer');
+                const eventCount = document.getElementById('eventCount');
+                eventCount.textContent = events.length;
+
+                const filter = document.getElementById('eventTypeFilter').value;
+                const filtered = filter === 'all' ? events : events.filter(e => e.type === filter);
+
+                container.innerHTML = '';
+
+                if (filtered.length === 0) {
+                    container.innerHTML = '<div class="col-12 text-center text-muted py-5"><p>No events found.</p></div>';
+                    return;
+                }
+
+                // Sort by date (upcoming first)
+                filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                filtered.forEach(event => {
+                    const eventDate = new Date(event.date);
+                    const formattedDate = eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    const typeBadge = getTypeBadge(event.type);
+
+                    const col = document.createElement('div');
+                    col.className = 'col-lg-4 col-md-6 mb-3';
+                    col.innerHTML = `
+                        <div class="card card-custom h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h5 class="text-pcg-blue mb-0">${event.title}</h5>
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-outline-primary edit-btn" data-id="${event.id}" title="Edit">
+                                            <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${event.id}" data-name="${event.title}" title="Delete">
+                                            <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2v-12H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <p class="text-muted mb-2">
+                                    <svg width="16" height="16" class="me-1" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V9h14v10z"/></svg>
+                                    ${formattedDate}
+                                </p>
+                                <p class="mb-2">
+                                    <svg width="16" height="16" class="me-1" fill="currentColor" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                                    ${event.time || 'TBA'}
+                                </p>
+                                <p class="mb-2">
+                                    <svg width="16" height="16" class="me-1" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                                    ${event.location || 'TBA'}
+                                </p>
+                                <div class="mt-2">${typeBadge}</div>
+                                ${event.description ? `<p class="small text-muted mt-2">${event.description}</p>` : ''}
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(col);
+                });
+
+                // Attach edit/delete listeners
+                document.querySelectorAll('.edit-btn').forEach(btn => {
+                    btn.addEventListener('click', () => openEditModal(btn.dataset.id));
+                });
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', () => openDeleteModal(btn.dataset.id, btn.dataset.name));
+                });
+            }
+
+            function getTypeBadge(type) {
+                const badges = {
+                    'sunday': '<span class="badge bg-pcg-green">Sunday Service</span>',
+                    'wedding': '<span class="badge bg-pcg-blue">Wedding</span>',
+                    'funeral': '<span class="badge bg-secondary">Funeral</span>',
+                    'meeting': '<span class="badge bg-pcg-gold">Meeting</span>',
+                    'special': '<span class="badge bg-danger">Special Event</span>'
+                };
+                return badges[type] || `<span class="badge bg-secondary">${type}</span>`;
+            }
+
+            // Filter
+            document.getElementById('eventTypeFilter').addEventListener('change', () => renderEvents(allEvents));
+
+            // Create Event
+            document.getElementById('createEventForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData.entries());
+
+                try {
+                    const response = await fetch('/api/events', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    if (response.ok) {
+                        bootstrap.Modal.getInstance(document.getElementById('createEventModal')).hide();
+                        loadEvents();
+                        e.target.reset();
+                    } else {
+                        alert('Failed to create event');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            });
+
+            // Edit Event
+            let editingEventId = null;
+            async function openEditModal(eventId) {
+                const event = allEvents.find(e => e.id === eventId);
+                if (!event) return;
+
+                editingEventId = eventId;
+                document.getElementById('editEventId').value = event.id;
+                document.getElementById('editTitle').value = event.title || '';
+                document.getElementById('editDate').value = event.date || '';
+                document.getElementById('editTime').value = event.time || '';
+                document.getElementById('editLocation').value = event.location || '';
+                document.getElementById('editType').value = event.type || 'sunday';
+                document.getElementById('editDescription').value = event.description || '';
+
+                new bootstrap.Modal(document.getElementById('editEventModal')).show();
+            }
+
+            document.getElementById('editEventForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const eventId = document.getElementById('editEventId').value;
+                const data = Object.fromEntries(formData.entries());
+
+                try {
+                    const response = await fetch(`/api/events/${eventId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    if (response.ok) {
+                        bootstrap.Modal.getInstance(document.getElementById('editEventModal')).hide();
+                        loadEvents();
+                        editingEventId = null;
+                    } else {
+                        alert('Failed to update event');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            });
+
+            // Delete Event
+            let deleteEventId = null;
+            function openDeleteModal(eventId, eventName) {
+                deleteEventId = eventId;
+                document.getElementById('deleteEventName').textContent = eventName;
+                new bootstrap.Modal(document.getElementById('deleteModal')).show();
+            }
+
+            document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+                if (!deleteEventId) return;
+                try {
+                    const response = await fetch(`/api/events/${deleteEventId}`, { method: 'DELETE' });
+                    if (response.ok) {
+                        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+                        loadEvents();
+                        deleteEventId = null;
+                    } else {
+                        alert('Failed to delete event');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            });
+
+            loadEvents();
+        });
+    </script>
 </body>
 </html>

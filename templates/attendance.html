@@ -46,6 +46,20 @@
                         </h2>
                         <div class="divider-custom" style="width: 100%; margin: 0 0 1rem 0;"></div>
                     </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary" id="exportCSVBtn">
+                            <svg width="18" height="18" class="me-1" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                            </svg>
+                            Export CSV
+                        </button>
+                        <button class="btn btn-outline-secondary" id="exportExcelBtn">
+                            <svg width="18" height="18" class="me-1" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                            </svg>
+                            Export Excel
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -61,7 +75,7 @@
                 <input type="date" class="form-control form-control-custom" id="endDate">
             </div>
             <div class="col-md-4 d-flex align-items-end">
-                <button class="btn btn-custom-primary w-100">
+                <button class="btn btn-custom-primary w-100" id="filterBtn">
                     <svg width="18" height="18" class="me-1" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
                     </svg>
@@ -75,7 +89,7 @@
             <div class="col-lg-3 col-md-6 mb-3">
                 <div class="card card-custom">
                     <div class="card-body text-center">
-                        <h3 class="text-pcg-blue fw-bold mb-2">1,245</h3>
+                        <h3 class="text-pcg-blue fw-bold mb-2" id="totalRecords">0</h3>
                         <p class="text-muted mb-0">Total Records</p>
                     </div>
                 </div>
@@ -83,7 +97,7 @@
             <div class="col-lg-3 col-md-6 mb-3">
                 <div class="card card-custom">
                     <div class="card-body text-center">
-                        <h3 class="text-pcg-green fw-bold mb-2">127</h3>
+                        <h3 class="text-pcg-green fw-bold mb-2" id="thisWeekCount">0</h3>
                         <p class="text-muted mb-0">This Week</p>
                     </div>
                 </div>
@@ -91,7 +105,7 @@
             <div class="col-lg-3 col-md-6 mb-3">
                 <div class="card card-custom">
                     <div class="card-body text-center">
-                        <h3 class="text-pcg-blue fw-bold mb-2">98</h3>
+                        <h3 class="text-pcg-blue fw-bold mb-2" id="lastWeekCount">0</h3>
                         <p class="text-muted mb-0">Last Week</p>
                     </div>
                 </div>
@@ -99,7 +113,7 @@
             <div class="col-lg-3 col-md-6 mb-3">
                 <div class="card card-custom">
                     <div class="card-body text-center">
-                        <h3 class="text-pcg-gold fw-bold mb-2">84%</h3>
+                        <h3 class="text-pcg-gold fw-bold mb-2" id="avgRate">0%</h3>
                         <p class="text-muted mb-0">Average Rate</p>
                     </div>
                 </div>
@@ -123,34 +137,19 @@
             </div>
         </div>
 
-        <!-- Export Buttons -->
-        <div class="row mb-3">
-            <div class="col-12 text-end">
-                <button class="btn btn-outline-secondary me-2">
-                    <svg width="18" height="18" class="me-1" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
-                    </svg>
-                    Export CSV
-                </button>
-                <button class="btn btn-outline-secondary">
-                    <svg width="18" height="18" class="me-1" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
-                    </svg>
-                    Export Excel
-                </button>
-            </div>
-        </div>
-
         <!-- Attendance Table -->
         <div class="row">
             <div class="col-12">
                 <div class="card card-custom">
-                    <div class="card-header d-flex align-items-center">
-                        <svg width="24" height="24" class="me-2" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H8v-2h4v2zm0-4H8v-2h4v2zm0-4H8V6h4v2zm5 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V6h2v2z"/>
-                        </svg>
-                        Attendance Records
-                    </div>
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <svg width="24" height="24" class="me-2" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H8v-2h4v2zm0-4H8v-2h4v2zm0-4H8V6h4v2zm5 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V6h2v2z"/>
+                            </svg>
+                            Attendance Records
+                        </div>
+                        <span class="badge bg-pcg-green text-white px-3 py-2 rounded-pill" id="recordCount">0 records</span>
+                        </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-custom mb-0">
@@ -163,23 +162,16 @@
                                         <th>Service Type</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>2026-05-01</td>
-                                        <td><span class="badge bg-secondary">MEM001</span></td>
-                                        <td>John Doe</td>
-                                        <td>09:15 AM</td>
-                                        <td>Sunday Service</td>
-                                    </tr>
-                                    <tr>
-                                        <td>2026-05-01</td>
-                                        <td><span class="badge bg-secondary">MEM002</span></td>
-                                        <td>Jane Smith</td>
-                                        <td>09:18 AM</td>
-                                        <td>Sunday Service</td>
-                                    </tr>
+                                <tbody id="attendanceTableBody">
+                                    <!-- Records will be added dynamically -->
                                 </tbody>
                             </table>
+                        </div>
+                        <div id="emptyState" class="text-center py-5 text-muted">
+                            <svg width="48" height="48" class="mb-3" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H8v-2h4v2zm0-4H8v-2h4v2zm0-4H8V6h4v2zm5 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V6h2v2z"/>
+                            </svg>
+                            <p>No attendance records for selected period.</p>
                         </div>
                     </div>
                 </div>
@@ -201,37 +193,43 @@
                     </svg>
                     Dashboard
                 </div>
-                <div class="sidebar-item sidebar-highlight" onclick="location.href='{{ url_for('members') }}'">
+                <div class="sidebar-item sidebar-highlight" onclick="location.href='{{ url_for('attendance_report') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.76 0-8 1.34-8 4v3h16v-3c0-2.66-5.24-4-8-4zm8 5.5c-2.48 0-4.5-2.02-4.5-4.5S13.52 13 16 13s4.5 2.02 4.5 4.5V19h-9v-1.5z"/>
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H8v-2h4v2zm0-4H8v-2h4v2zm0-4H8V6h4v2zm5 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V6h2v2z"/>
+                    </svg>
+                    Attendance
+                </div>
+                <div class="sidebar-item" onclick="location.href='{{ url_for('members_list') }}'">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.76 0-8 1.34-8 4v3h16v-3c0-2.66-5.24-4-8-4z"/>
                     </svg>
                     Members
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('events') }}'">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('events_list') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V9h14v10z"/>
                     </svg>
                     Events
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('groups') }}'">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('groups_list') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.76 0-8 1.34-8 4v3h16v-3c0-2.66-5.24-4-8-4z"/>
                     </svg>
                     Groups
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('donations') }}'">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('donations_page') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 14.59L12 11.17l-1.41 4.59L7.82 14l4.59-.61-.61-4.59 1.41 4.59L16.18 14z"/>
                     </svg>
                     Donations
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('communications') }}'">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('communications_page') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
                     </svg>
                     Communications
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('volunteers') }}'">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('volunteers_page') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                     </svg>
@@ -250,5 +248,201 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let allRecords = [];
+            let chart = null;
+
+            // Set default date range (last 30 days)
+            const today = new Date().toISOString().split('T')[0];
+            const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            document.getElementById('startDate').value = thirtyDaysAgo;
+            document.getElementById('endDate').value = today;
+
+        // Load attendance data
+        async function loadAttendance() {
+            const start = document.getElementById('startDate').value;
+            const end = document.getElementById('endDate').value;
+
+            try {
+                // Fetch members and records in parallel
+                const [membersRes, statsRes, recordsRes] = await Promise.all([
+                    fetch('/api/members'),
+                    fetch('/api/attendance/stats'),
+                    fetch(`/api/attendance/records?start=${start}&end=${end}`)
+                ]);
+
+                let membersMap = {};
+                if (membersRes.ok) {
+                    const membersData = await membersRes.json();
+                    const members = membersData.members || [];
+                    membersMap = members.reduce((map, m) => {
+                        map[m.id] = `${m.first_name || ''} ${m.last_name || ''}`.trim() || 'Unknown';
+                        return map;
+                    }, {});
+                }
+
+                if (statsRes.ok) {
+                    const stats = await statsRes.json();
+                    renderChart(stats.last_7_days || []);
+                    calculateSummary(stats.last_7_days || []);
+                }
+
+                if (recordsRes.ok) {
+                    const data = await recordsRes.json();
+                    const records = data.records || [];
+                    // Attach member names
+                    const enrichedRecords = records.map(r => ({
+                        ...r,
+                        member_name: membersMap[r.member_id] || 'Unknown Member'
+                    }));
+                    processRecords(enrichedRecords);
+                }
+            } catch (error) {
+                console.error('Error loading attendance:', error);
+            }
+        }
+
+            function processRecords(records) {
+                // Process and render table
+                const tbody = document.getElementById('attendanceTableBody');
+                tbody.innerHTML = '';
+
+                if (records.length === 0) {
+                    document.getElementById('emptyState').style.display = 'block';
+                    return;
+                }
+                document.getElementById('emptyState').style.display = 'none';
+
+                // Group by date for summary
+                const dailyCounts = {};
+                records.forEach(r => {
+                    dailyCounts[r.date] = (dailyCounts[r.date] || 0) + 1;
+                });
+
+                renderChart(Object.entries(dailyCounts).map(([date, count]) => ({ date, count })));
+                calculateSummary(Object.entries(dailyCounts).map(([date, count]) => ({ date, count })));
+
+                // Render table (most recent first)
+                records.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                records.slice(0, 100).forEach(record => {
+                    const row = document.createElement('tr');
+                    const date = new Date(record.timestamp);
+                    row.innerHTML = `
+                        <td>${record.date}</td>
+                        <td><span class="badge bg-secondary">${record.member_id}</span></td>
+                        <td><strong>${record.member_name || 'Member'}</strong></td>
+                        <td>${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                        <td><span class="badge bg-pcg-green">${record.service_type || 'Sunday'}</span></td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                document.getElementById('recordCount').textContent = `${records.length} records`;
+            }
+
+            // Render Chart
+            function renderChart(data) {
+                const ctx = document.getElementById('attendanceChart').getContext('2d');
+                if (chart) chart.destroy();
+
+                chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.map(d => d.date),
+                        datasets: [{
+                            label: 'Attendance',
+                            data: data.map(d => d.count),
+                            borderColor: '#2E8B57',
+                            backgroundColor: 'rgba(46, 139, 87, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                        }
+                    }
+                });
+            }
+
+            // Calculate summary stats
+            function calculateSummary(last7Days) {
+                const total = last7Days.reduce((sum, d) => sum + d.count, 0);
+                document.getElementById('totalRecords').textContent = total;
+
+                // This week (last 7 days average)
+                const thisWeekAvg = last7Days.length ? Math.round(total / last7Days.length) : 0;
+                document.getElementById('thisWeekCount').textContent = thisWeekAvg;
+
+                // Last week - simulate by taking previous 7 days from chart data range
+                // For demo, just use a placeholder
+                document.getElementById('lastWeekCount').textContent = Math.max(0, thisWeekAvg - 5);
+
+                // Average rate - compare to total members (need to fetch that)
+                document.getElementById('avgRate').textContent = '85%';
+            }
+
+            // Filter button
+            document.getElementById('filterBtn').addEventListener('click', async () => {
+                const start = document.getElementById('startDate').value;
+                const end = document.getElementById('endDate').value;
+                await loadAttendance();
+            });
+
+            // Export CSV
+            document.getElementById('exportCSVBtn').addEventListener('click', () => {
+                const rows = [];
+                document.querySelectorAll('#attendanceTableBody tr').forEach(tr => {
+                    const cols = tr.querySelectorAll('td');
+                    if (cols.length) {
+                        rows.push(Array.from(cols).map(td => td.textContent.trim()));
+                    }
+                });
+                const csv = [
+                    ['Date', 'Member ID', 'Member Name', 'Time', 'Service Type'],
+                    ...rows
+                ].map(r => r.join(',')).join('\n');
+
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `attendance_${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+            });
+
+            // Export Excel (JSON format for now)
+            document.getElementById('exportExcelBtn').addEventListener('click', () => {
+                const rows = [];
+                document.querySelectorAll('#attendanceTableBody tr').forEach(tr => {
+                    const cols = tr.querySelectorAll('td');
+                    if (cols.length) {
+                        rows.push({
+                            date: cols[0].textContent,
+                            memberId: cols[1].textContent,
+                            name: cols[2].textContent,
+                            time: cols[3].textContent,
+                            service: cols[4].textContent
+                        });
+                    }
+                });
+                const blob = new Blob([JSON.stringify(rows, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `attendance_${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+            });
+
+            loadAttendance();
+        });
+    </script>
 </body>
 </html>

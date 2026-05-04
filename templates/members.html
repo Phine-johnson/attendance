@@ -54,8 +54,8 @@
         <div class="row mb-4">
             <div class="col-md-6">
                 <div class="input-group">
-                    <input type="text" class="form-control form-control-custom" id="searchInput" placeholder="Search members...">
-                    <button class="btn btn-custom-primary" type="button">
+                    <input type="text" class="form-control form-control-custom" id="searchInput" placeholder="Search members by name, ID, or email...">
+                    <button class="btn btn-custom-primary" type="button" id="searchBtn">
                         <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
                         </svg>
@@ -77,12 +77,12 @@
                     Add Member
                 </button>
                 <div class="btn-group">
-                    <button class="btn btn-outline-secondary btn-sm" title="Import CSV">
+                    <button class="btn btn-outline-secondary btn-sm" title="Import CSV" data-bs-toggle="modal" data-bs-target="#importModal">
                         <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M5 20h14v-2H5v2zm0-12h14v-2H5v2zm0 6h14v-2H5v2z"/>
                         </svg>
                     </button>
-                    <button class="btn btn-outline-secondary btn-sm" title="Export CSV">
+                    <button class="btn btn-outline-secondary btn-sm" title="Export CSV" id="exportBtn">
                         <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
                         </svg>
@@ -100,6 +100,7 @@
                             <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.76 0-8 1.34-8 4v3h16v-3c0-2.66-5.24-4-8-4zm8 5.5c-2.48 0-4.5-2.02-4.5-4.5S13.52 13 16 13s4.5 2.02 4.5 4.5V19h-9v-1.5z"/>
                         </svg>
                         Members Directory
+                        <span class="badge bg-pcg-blue ms-2" id="memberCount">0</span>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -115,46 +116,15 @@
                                     </tr>
                                 </thead>
                                 <tbody id="membersTableBody">
-                                    <tr>
-                                        <td><span class="badge bg-secondary">MEM001</span></td>
-                                        <td><strong>John Doe</strong></td>
-                                        <td>john.doe@example.com</td>
-                                        <td>(555) 123-4567</td>
-                                        <td><span class="status-indicator status-active">Active</span></td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary me-1" title="Edit">
-                                                <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                                                </svg>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger" title="Delete">
-                                                <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2v-12H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                                                </svg>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td><span class="badge bg-secondary">MEM002</span></td>
-                                        <td><strong>Jane Smith</strong></td>
-                                        <td>jane.smith@example.com</td>
-                                        <td>(555) 234-5678</td>
-                                        <td><span class="status-indicator status-inactive">Inactive</span></td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary me-1" title="Edit">
-                                                <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                                                </svg>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger" title="Delete">
-                                                <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2v-12H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                                                </svg>
-                                            </button>
-                                        </td>
-                                    </tr>
+                                    <!-- Members will be loaded dynamically -->
                                 </tbody>
                             </table>
+                        </div>
+                        <div id="emptyState" class="text-center py-5 text-muted" style="display: none;">
+                            <svg width="48" height="48" class="mb-3" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.76 0-8 1.34-8 4v3h16v-3c0-2.66-5.24-4-8-4z"/>
+                            </svg>
+                            <p>No members found.</p>
                         </div>
                     </div>
                 </div>
@@ -165,16 +135,8 @@
         <div class="row mt-3">
             <div class="col-12">
                 <nav aria-label="Page navigation">
-                    <ul class="pagination justify-content-center">
-                        <li class="page-item disabled">
-                            <a class="page-link" href="#" tabindex="-1">Previous</a>
-                        </li>
-                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                        <li class="page-item"><a class="page-link" href="#">2</a></li>
-                        <li class="page-item"><a class="page-link" href="#">3</a></li>
-                        <li class="page-item">
-                            <a class="page-link" href="#">Next</a>
-                        </li>
+                    <ul class="pagination justify-content-center" id="pagination">
+                        <!-- Pagination will be added dynamically -->
                     </ul>
                 </nav>
             </div>
@@ -189,11 +151,19 @@
                     <h5 class="modal-title text-pcg-blue" id="addMemberModalLabel">Add New Member</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ url_for('add_member') }}" method="POST">
+                <form id="addMemberForm">
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label fw-bold text-pcg-blue">Full Name</label>
-                            <input type="text" class="form-control form-control-custom" name="full_name" required>
+                            <label class="form-label fw-bold text-pcg-blue">Member ID</label>
+                            <input type="text" class="form-control form-control-custom" name="memberId" id="memberIdInput" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">First Name</label>
+                            <input type="text" class="form-control form-control-custom" name="firstName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Last Name</label>
+                            <input type="text" class="form-control form-control-custom" name="lastName" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold text-pcg-blue">Email</label>
@@ -204,11 +174,24 @@
                             <input type="tel" class="form-control form-control-custom" name="phone">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-bold text-pcg-blue">Status</label>
-                            <select class="form-select form-control-custom" name="status">
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
+                            <label class="form-label fw-bold text-pcg-blue">Date of Birth</label>
+                            <input type="date" class="form-control form-control-custom" name="dateOfBirth">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Address</label>
+                            <textarea class="form-control form-control-custom" name="address" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Family ID</label>
+                            <input type="text" class="form-control form-control-custom" name="familyId" placeholder="Optional - group family members">
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" name="baptized" id="baptizedCheck">
+                            <label class="form-check-label" for="baptizedCheck">Baptized</label>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Join Date</label>
+                            <input type="date" class="form-control form-control-custom" name="joinDate" value="{{ date.today().isoformat() if date else '' }}">
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -216,6 +199,99 @@
                         <button type="submit" class="btn btn-custom-primary">Add Member</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Member Modal -->
+    <div class="modal fade" id="editMemberModal" tabindex="-1" aria-labelledby="editMemberModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-pcg-blue" id="editMemberModalLabel">Edit Member</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editMemberForm">
+                    <input type="hidden" name="member_id" id="editMemberId">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Member ID</label>
+                            <input type="text" class="form-control form-control-custom" name="memberId" id="editMemberIdInput" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">First Name</label>
+                            <input type="text" class="form-control form-control-custom" name="firstName" id="editFirstName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Last Name</label>
+                            <input type="text" class="form-control form-control-custom" name="lastName" id="editLastName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Email</label>
+                            <input type="email" class="form-control form-control-custom" name="email" id="editEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Phone</label>
+                            <input type="tel" class="form-control form-control-custom" name="phone" id="editPhone">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Status</label>
+                            <select class="form-select form-control-custom" name="status" id="editStatus">
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-custom-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import CSV Modal -->
+    <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-pcg-blue" id="importModalLabel">Import Members from CSV</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="importForm" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">CSV File</label>
+                            <input type="file" class="form-control" name="file" accept=".csv" required>
+                            <small class="text-muted">CSV must have headers: member_id,first_name,last_name,email,phone</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-custom-primary">Import</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger" id="deleteModalLabel">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Delete member <strong id="deleteMemberName"></strong>?</p>
+                    <p class="text-muted small">This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                </div>
             </div>
         </div>
     </div>
@@ -234,37 +310,43 @@
                     </svg>
                     Dashboard
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('attendance') }}'">
+                <div class="sidebar-item sidebar-highlight" onclick="location.href='{{ url_for('members_list') }}'">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.76 0-8 1.34-8 4v3h16v-3c0-2.66-5.24-4-8-4z"/>
+                    </svg>
+                    Members
+                </div>
+                <div class="sidebar-item" onclick="location.href='{{ url_for('attendance_report') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H8v-2h4v2zm0-4H8v-2h4v2zm0-4H8V6h4v2zm5 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V6h2v2z"/>
                     </svg>
                     Attendance
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('events') }}'">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('events_list') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V9h14v10z"/>
                     </svg>
                     Events
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('groups') }}'">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('groups_list') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.76 0-8 1.34-8 4v3h16v-3c0-2.66-5.24-4-8-4z"/>
                     </svg>
                     Groups
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('donations') }}'">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('donations_page') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 14.59L12 11.17l-1.41 4.59L7.82 14l4.59-.61-.61-4.59 1.41 4.59L16.18 14z"/>
                     </svg>
                     Donations
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('communications') }}'">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('communications_page') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
                     </svg>
                     Communications
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('volunteers') }}'">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('volunteers_page') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                     </svg>
@@ -282,5 +364,270 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let allMembers = [];
+            let filteredMembers = [];
+            let currentPage = 1;
+            const membersPerPage = 20;
+
+            // Fetch members from API
+            async function loadMembers() {
+                try {
+                    const response = await fetch('/api/members');
+                    if (response.ok) {
+                        const data = await response.json();
+                        allMembers = data.members || [];
+                        filteredMembers = [...allMembers];
+                        renderMembers();
+                        updateMemberCount();
+                    }
+                } catch (error) {
+                    console.error('Error loading members:', error);
+                    // Fallback: server-side rendered members
+                    const initialMembers = {{ members|tojson }};
+                    allMembers = initialMembers || [];
+                    filteredMembers = [...allMembers];
+                    renderMembers();
+                    updateMemberCount();
+                }
+            }
+
+            // Render members table
+            function renderMembers() {
+                const tbody = document.getElementById('membersTableBody');
+                const emptyState = document.getElementById('emptyState');
+                tbody.innerHTML = '';
+
+                if (filteredMembers.length === 0) {
+                    emptyState.style.display = 'block';
+                    return;
+                }
+                emptyState.style.display = 'none';
+
+                const start = (currentPage - 1) * membersPerPage;
+                const end = start + membersPerPage;
+                const pageMembers = filteredMembers.slice(start, end);
+
+                pageMembers.forEach(member => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><span class="badge bg-secondary">${member.member_id || member.id}</span></td>
+                        <td><strong>${member.first_name} ${member.last_name}</strong></td>
+                        <td>${member.email || ''}</td>
+                        <td>${member.phone || ''}</td>
+                        <td><span class="status-indicator ${member.status === 'active' ? 'status-active' : 'status-inactive'}">${member.status || 'active'}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1 edit-btn" data-id="${member.id}" title="Edit">
+                                <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${member.id}" data-name="${member.first_name} ${member.last_name}" title="Delete">
+                                <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2v-12H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                                </svg>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                // Attach event listeners to edit/delete buttons
+                document.querySelectorAll('.edit-btn').forEach(btn => {
+                    btn.addEventListener('click', () => openEditModal(btn.dataset.id));
+                });
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', () => openDeleteModal(btn.dataset.id, btn.dataset.name));
+                });
+
+                updatePagination();
+            }
+
+            function updateMemberCount() {
+                document.getElementById('memberCount').textContent = filteredMembers.length;
+            }
+
+            function updatePagination() {
+                const totalPages = Math.ceil(filteredMembers.length / membersPerPage);
+                const pagination = document.getElementById('pagination');
+                pagination.innerHTML = '';
+
+                for (let i = 1; i <= totalPages; i++) {
+                    const li = document.createElement('li');
+                    li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                    li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                    li.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        currentPage = i;
+                        renderMembers();
+                    });
+                    pagination.appendChild(li);
+                }
+            }
+
+            // Search
+            document.getElementById('searchBtn').addEventListener('click', performSearch);
+            document.getElementById('searchInput').addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') performSearch();
+            });
+
+            function performSearch() {
+                const query = document.getElementById('searchInput').value.toLowerCase();
+                const status = document.getElementById('statusFilter').value;
+
+                filteredMembers = allMembers.filter(m => {
+                    const matchesSearch = !query ||
+                        (m.first_name?.toLowerCase().includes(query)) ||
+                        (m.last_name?.toLowerCase().includes(query)) ||
+                        (m.member_id?.toLowerCase().includes(query)) ||
+                        (m.email?.toLowerCase().includes(query));
+                    const matchesStatus = status === 'all' || m.status === status;
+                    return matchesSearch && matchesStatus;
+                });
+                currentPage = 1;
+                renderMembers();
+            }
+
+            document.getElementById('statusFilter').addEventListener('change', performSearch);
+
+            // Add Member Form
+            document.getElementById('addMemberForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData.entries());
+
+                try {
+                    const response = await fetch('/api/members', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    if (response.ok) {
+                        bootstrap.Modal.getInstance(document.getElementById('addMemberModal')).hide();
+                        loadMembers();
+                        e.target.reset();
+                    } else {
+                        alert('Failed to add member');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            });
+
+            // Edit Member
+            async function openEditModal(memberId) {
+                const member = allMembers.find(m => m.id === memberId);
+                if (!member) return;
+
+                document.getElementById('editMemberId').value = member.id;
+                document.getElementById('editMemberIdInput').value = member.member_id || member.id;
+                document.getElementById('editFirstName').value = member.first_name || '';
+                document.getElementById('editLastName').value = member.last_name || '';
+                document.getElementById('editEmail').value = member.email || '';
+                document.getElementById('editPhone').value = member.phone || '';
+                document.getElementById('editStatus').value = member.status || 'active';
+
+                new bootstrap.Modal(document.getElementById('editMemberModal')).show();
+            }
+
+            document.getElementById('editMemberForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const memberId = document.getElementById('editMemberId').value;
+                const data = Object.fromEntries(formData.entries());
+                delete data.member_id; // not needed for update
+
+                try {
+                    const response = await fetch(`/api/members/${memberId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    if (response.ok) {
+                        bootstrap.Modal.getInstance(document.getElementById('editMemberModal')).hide();
+                        loadMembers();
+                    } else {
+                        alert('Failed to update member');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            });
+
+            // Delete Member
+            let deleteMemberId = null;
+            function openDeleteModal(memberId, memberName) {
+                deleteMemberId = memberId;
+                document.getElementById('deleteMemberName').textContent = memberName;
+                new bootstrap.Modal(document.getElementById('deleteModal')).show();
+            }
+
+            document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+                if (!deleteMemberId) return;
+                try {
+                    const response = await fetch(`/api/members/${deleteMemberId}`, { method: 'DELETE' });
+                    if (response.ok) {
+                        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+                        loadMembers();
+                        deleteMemberId = null;
+                    } else {
+                        alert('Failed to delete member');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            });
+
+            // Import CSV
+            document.getElementById('importForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+
+                try {
+                    const response = await fetch('/api/members/import', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        bootstrap.Modal.getInstance(document.getElementById('importModal')).hide();
+                        loadMembers();
+                        e.target.reset();
+                        alert(`Imported ${result.imported} members`);
+                    } else {
+                        alert('Import failed');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            });
+
+            // Export CSV
+            document.getElementById('exportBtn').addEventListener('click', () => {
+                const csv = [
+                    ['Member ID', 'First Name', 'Last Name', 'Email', 'Phone', 'Status'],
+                    ...filteredMembers.map(m => [
+                        m.member_id || m.id,
+                        m.first_name || '',
+                        m.last_name || '',
+                        m.email || '',
+                        m.phone || '',
+                        m.status || 'active'
+                    ])
+                ].map(row => row.join(',')).join('\n');
+
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `members_${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+            });
+
+            // Initialize
+            loadMembers();
+        });
+    </script>
 </body>
 </html>

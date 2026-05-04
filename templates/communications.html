@@ -71,7 +71,7 @@
                                 Create Announcement
                             </div>
                             <div class="card-body">
-                                <form action="{{ url_for('create_announcement') }}" method="POST">
+                                <form id="createAnnouncementForm">
                                     <div class="mb-3">
                                         <label class="form-label fw-bold text-pcg-blue">Title</label>
                                         <input type="text" class="form-control form-control-custom" name="title" required>
@@ -87,6 +87,13 @@
                                             <option value="group">Specific Group</option>
                                         </select>
                                     </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold text-pcg-blue">Priority</label>
+                                        <select class="form-select form-control-custom" name="priority">
+                                            <option value="normal">Normal</option>
+                                            <option value="high">High</option>
+                                        </select>
+                                    </div>
                                     <button type="submit" class="btn btn-custom-primary">Send Announcement</button>
                                 </form>
                             </div>
@@ -94,22 +101,18 @@
                     </div>
                     <div class="col-lg-6 mb-4">
                         <div class="card card-custom">
-                            <div class="card-header d-flex align-items-center">
-                                <svg width="24" height="24" class="me-2" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H8v-2h4v2zm0-4H8v-2h4v2zm0-4H8V6h4v2zm5 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V6h2v2z"/>
-                                </svg>
-                                Sent Announcements
+                            <div class="card-header d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center">
+                                    <svg width="24" height="24" class="me-2" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+                                    </svg>
+                                    Sent Announcements
+                                    <span class="badge bg-pcg-blue ms-2" id="announcementCount">0</span>
+                                </div>
                             </div>
                             <div class="card-body">
-                                <div class="list-group list-group-flush">
-                                    <div class="list-group-item">
-                                        <h6 class="mb-1 text-pcg-blue">Sunday Service Reminder</h6>
-                                        <small class="text-muted">Sent: 2 days ago | Target: All</small>
-                                    </div>
-                                    <div class="list-group-item">
-                                        <h6 class="mb-1 text-pcg-blue">Bible Study Tonight</h6>
-                                        <small class="text-muted">Sent: 1 week ago | Target: Group</small>
-                                    </div>
+                                <div class="list-group list-group-flush" id="announcementsList">
+                                    <!-- Announcements will be loaded dynamically -->
                                 </div>
                             </div>
                         </div>
@@ -129,14 +132,22 @@
                                 Submit Prayer Request
                             </div>
                             <div class="card-body">
-                                <form action="{{ url_for('submit_prayer_request') }}" method="POST">
+                                <form id="submitPrayerForm">
                                     <div class="mb-3">
                                         <label class="form-label fw-bold text-pcg-blue">Your Name</label>
-                                        <input type="text" class="form-control form-control-custom" name="name" required>
+                                        <input type="text" class="form-control form-control-custom" name="name" placeholder="Optional - leave blank for anonymous">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold text-pcg-blue">Email (optional)</label>
+                                        <input type="email" class="form-control form-control-custom" name="email" placeholder="For follow-up if needed">
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label fw-bold text-pcg-blue">Prayer Request</label>
-                                        <textarea class="form-control form-control-custom" name="prayer_request" rows="4" required></textarea>
+                                        <textarea class="form-control form-control-custom" name="request" rows="4" required placeholder="Share your prayer request..."></textarea>
+                                    </div>
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" class="form-check-input" name="urgent" id="urgentCheck">
+                                        <label class="form-check-label" for="urgentCheck">Mark as urgent</label>
                                     </div>
                                     <button type="submit" class="btn btn-custom-primary">Submit Request</button>
                                 </form>
@@ -145,28 +156,18 @@
                     </div>
                     <div class="col-lg-6 mb-4">
                         <div class="card card-custom">
-                            <div class="card-header d-flex align-items-center">
-                                <svg width="24" height="24" class="me-2" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
-                                </svg>
-                                Prayer Requests List
+                            <div class="card-header d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center">
+                                    <svg width="24" height="24" class="me-2" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                                    </svg>
+                                    Prayer Requests List
+                                    <span class="badge bg-pcg-green ms-2" id="prayerCount">0</span>
+                                </div>
                             </div>
                             <div class="card-body">
-                                <div class="list-group list-group-flush">
-                                    <div class="list-group-item d-flex justify-content-between align-items-start">
-                                        <div>
-                                            <h6 class="mb-1">Healing for mother</h6>
-                                            <small class="text-muted">Submitted by: Visitor</small>
-                                        </div>
-                                        <span class="status-indicator status-active" style="font-size: 0.7rem;">New</span>
-                                    </div>
-                                    <div class="list-group-item d-flex justify-content-between align-items-start">
-                                        <div>
-                                            <h6 class="mb-1">Job opportunity</h6>
-                                            <small class="text-muted">Submitted by: John Doe</small>
-                                        </div>
-                                        <span class="status-indicator status-inactive" style="font-size: 0.7rem;">Prayed</span>
-                                    </div>
+                                <div class="list-group list-group-flush" id="prayerList">
+                                    <!-- Prayer requests will be loaded dynamically -->
                                 </div>
                             </div>
                         </div>
@@ -190,37 +191,43 @@
                     </svg>
                     Dashboard
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('members') }}'">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('members_list') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.76 0-8 1.34-8 4v3h16v-3c0-2.66-5.24-4-8-4z"/>
                     </svg>
                     Members
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('attendance') }}'">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('attendance_report') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H8v-2h4v2zm0-4H8v-2h4v2zm0-4H8V6h4v2zm5 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V6h2v2z"/>
                     </svg>
                     Attendance
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('events') }}'">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('events_list') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V9h14v10z"/>
                     </svg>
                     Events
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('groups') }}'">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('groups_list') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.76 0-8 1.34-8 4v3h16v-3c0-2.66-5.24-4-8-4z"/>
                     </svg>
                     Groups
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('donations') }}'">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('donations_page') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 14.59L12 11.17l-1.41 4.59L7.82 14l4.59-.61-.61-4.59 1.41 4.59L16.18 14z"/>
                     </svg>
                     Donations
                 </div>
-                <div class="sidebar-item sidebar-highlight" onclick="location.href='{{ url_for('volunteers') }}'">
+                <div class="sidebar-item sidebar-highlight" onclick="location.href='{{ url_for('communications_page') }}'">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+                    </svg>
+                    Communications
+                </div>
+                <div class="sidebar-item" onclick="location.href='{{ url_for('volunteers_page') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                     </svg>
@@ -238,5 +245,192 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let announcements = [];
+            let prayerRequests = [];
+
+            // Load announcements
+            async function loadAnnouncements() {
+                try {
+                    const response = await fetch('/api/announcements');
+                    if (response.ok) {
+                        const data = await response.json();
+                        announcements = data.announcements || [];
+                        renderAnnouncements();
+                    }
+                } catch (error) {
+                    console.error('Error loading announcements:', error);
+                    announcements = {{ announcements|tojson }} || [];
+                    renderAnnouncements();
+                }
+            }
+
+            function renderAnnouncements() {
+                const list = document.getElementById('announcementsList');
+                const countEl = document.getElementById('announcementCount');
+                countEl.textContent = announcements.length;
+                list.innerHTML = '';
+
+                if (announcements.length === 0) {
+                    list.innerHTML = '<div class="text-center text-muted py-4"><p>No announcements yet.</p></div>';
+                    return;
+                }
+
+                announcements.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+                announcements.forEach(ann => {
+                    const date = new Date(ann.created_at).toLocaleDateString();
+                    const priorityBadge = ann.priority === 'high' ? '<span class="badge bg-danger ms-2">High Priority</span>' : '';
+                    const target = ann.target === 'all' ? 'All Members' : 'Specific Group';
+
+                    const item = document.createElement('div');
+                    item.className = 'list-group-item';
+                    item.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1 text-pcg-blue">${ann.title}${priorityBadge}</h6>
+                                <small class="text-muted d-block">Sent: ${date} | Target: ${target}</small>
+                            </div>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary edit-ann-btn" data-id="${ann.id}" title="Edit">
+                                    <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger delete-ann-btn" data-id="${ann.id}" data-name="${ann.title}" title="Delete">
+                                    <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2v-12H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="mb-1 mt-2 small">${ann.content}</p>
+                    `;
+                    list.appendChild(item);
+                });
+
+                document.querySelectorAll('.edit-ann-btn').forEach(btn => {
+                    btn.addEventListener('click', () => alert('Edit functionality would open a modal to edit announcement ' + btn.dataset.id));
+                });
+                document.querySelectorAll('.delete-ann-btn').forEach(btn => {
+                    btn.addEventListener('click', () => deleteAnnouncement(btn.dataset.id, btn.dataset.name));
+                });
+            }
+
+            // Load Prayer Requests
+            async function loadPrayerRequests() {
+                try {
+                    const response = await fetch('/api/prayer-requests');
+                    if (response.ok) {
+                        const data = await response.json();
+                        prayerRequests = data.prayer_requests || [];
+                        renderPrayerRequests();
+                    }
+                } catch (error) {
+                    console.error('Error loading prayer requests:', error);
+                    prayerRequests = {{ prayer_requests|tojson }} || [];
+                    renderPrayerRequests();
+                }
+            }
+
+            function renderPrayerRequests() {
+                const list = document.getElementById('prayerList');
+                const countEl = document.getElementById('prayerCount');
+                countEl.textContent = prayerRequests.length;
+                list.innerHTML = '';
+
+                if (prayerRequests.length === 0) {
+                    list.innerHTML = '<div class="text-center text-muted py-4"><p>No prayer requests yet.</p></div>';
+                    return;
+                }
+
+                prayerRequests.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+                prayerRequests.forEach(req => {
+                    const date = new Date(req.created_at).toLocaleDateString();
+                    const urgentBadge = req.urgent ? '<span class="badge bg-danger ms-2">Urgent</span>' : '';
+                    const statusBadge = req.status === 'new' ? '<span class="badge bg-pcg-green">New</span>' : '<span class="badge bg-secondary">Prayed</span>';
+
+                    const item = document.createElement('div');
+                    item.className = 'list-group-item';
+                    item.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">${req.name || 'Anonymous'}${urgentBadge}</h6>
+                                <small class="text-muted d-block">Submitted: ${date}</small>
+                            </div>
+                            ${statusBadge}
+                        </div>
+                        <p class="mb-1 mt-2 small">${req.request}</p>
+                    `;
+                    list.appendChild(item);
+                });
+            }
+
+            // Create Announcement
+            document.getElementById('createAnnouncementForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData.entries());
+
+                try {
+                    const response = await fetch('/api/announcements', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    if (response.ok) {
+                        bootstrap.Modal.getInstance(e.target.closest('.modal'))?.hide();
+                        loadAnnouncements();
+                        e.target.reset();
+                    } else {
+                        alert('Failed to create announcement');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            });
+
+            // Submit Prayer Request (public form)
+            document.getElementById('submitPrayerForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData.entries());
+                data.urgent = formData.get('urgent') === 'on';
+
+                try {
+                    const response = await fetch('/api/prayer-requests', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    if (response.ok) {
+                        bootstrap.Modal.getInstance(e.target.closest('.modal'))?.hide();
+                        loadPrayerRequests();
+                        e.target.reset();
+                    } else {
+                        alert('Failed to submit prayer request');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            });
+
+            // Delete Announcement
+            async function deleteAnnouncement(id, name) {
+                if (!confirm(`Delete announcement "${name}"?`)) return;
+                try {
+                    const response = await fetch(`/api/announcements/${id}`, { method: 'DELETE' });
+                    if (response.ok) {
+                        loadAnnouncements();
+                    } else {
+                        alert('Failed to delete announcement');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }
+
+            loadAnnouncements();
+            loadPrayerRequests();
+        });
+    </script>
 </body>
 </html>

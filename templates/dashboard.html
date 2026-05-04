@@ -57,41 +57,41 @@
             </div>
         </div>
 
-        <!-- Dashboard Stats Cards -->
-        <div class="row mb-4">
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="card card-custom h-100">
-                    <div class="card-body text-center">
-                        <h3 class="text-pcg-blue">{{ stats.total_members|default(0) }}</h3>
-                        <p class="text-muted mb-0">Total Members</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="card card-custom h-100">
-                    <div class="card-body text-center">
-                        <h3 class="text-pcg-green">{{ stats.attendance_today|default(0) }}</h3>
-                        <p class="text-muted mb-0">Attendance Today</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="card card-custom h-100">
-                    <div class="card-body text-center">
-                        <h3 class="text-pcg-gold">{{ stats.upcoming_events|default(0) }}</h3>
-                        <p class="text-muted mb-0">Upcoming Events</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="card card-custom h-100">
-                    <div class="card-body text-center">
-                        <h3 class="text-pcg-blue">{{ stats.active_groups|default(0) }}</h3>
-                        <p class="text-muted mb-0">Active Groups</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+         <!-- Dashboard Stats Cards -->
+         <div class="row mb-4">
+             <div class="col-lg-3 col-md-6 mb-3">
+                 <div class="card card-custom h-100">
+                     <div class="card-body text-center">
+                         <h3 class="text-pcg-blue" data-stat="total_members">{{ stats.total_members|default(0) }}</h3>
+                         <p class="text-muted mb-0">Total Members</p>
+                     </div>
+                 </div>
+             </div>
+             <div class="col-lg-3 col-md-6 mb-3">
+                 <div class="card card-custom h-100">
+                     <div class="card-body text-center">
+                         <h3 class="text-pcg-green" data-stat="attendance_today">{{ stats.attendance_today|default(0) }}</h3>
+                         <p class="text-muted mb-0">Attendance Today</p>
+                     </div>
+                 </div>
+             </div>
+             <div class="col-lg-3 col-md-6 mb-3">
+                 <div class="card card-custom h-100">
+                     <div class="card-body text-center">
+                         <h3 class="text-pcg-gold" data-stat="upcoming_events">{{ stats.upcoming_events|default(0) }}</h3>
+                         <p class="text-muted mb-0">Upcoming Events</p>
+                     </div>
+                 </div>
+             </div>
+             <div class="col-lg-3 col-md-6 mb-3">
+                 <div class="card card-custom h-100">
+                     <div class="card-body text-center">
+                         <h3 class="text-pcg-blue" data-stat="active_groups">{{ stats.active_groups|default(0) }}</h3>
+                         <p class="text-muted mb-0">Active Groups</p>
+                     </div>
+                 </div>
+             </div>
+         </div>
 
         <!-- Quick Access Grid -->
         <div class="row mb-4">
@@ -277,48 +277,68 @@
      <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
      <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
      
-     <script>
-         document.addEventListener('DOMContentLoaded', function() {
-             let DEMO_MODE = false;
-             let database = null;
+      <script>
+          document.addEventListener('DOMContentLoaded', function() {
+              let DEMO_MODE = false;
+              let database = null;
 
-             // Get Firebase config from Flask template variables (may be empty strings)
-             const config = {
-                 apiKey: "{{ firebase_api_key }}",
-                 authDomain: "{{ firebase_auth_domain }}",
-                 databaseURL: "{{ firebase_database_url }}",
-                 projectId: "{{ firebase_project_id }}",
-                 storageBucket: "{{ firebase_storage_bucket }}",
-                 messagingSenderId: "{{ firebase_messaging_sender_id }}",
-                 appId: "{{ firebase_app_id }}"
-             };
+              // Get Firebase config from Flask template variables (may be empty strings)
+              const config = {
+                  apiKey: "{{ firebase_api_key }}",
+                  authDomain: "{{ firebase_auth_domain }}",
+                  databaseURL: "{{ firebase_database_url }}",
+                  projectId: "{{ firebase_project_id }}",
+                  storageBucket: "{{ firebase_storage_bucket }}",
+                  messagingSenderId: "{{ firebase_messaging_sender_id }}",
+                  appId: "{{ firebase_app_id }}"
+              };
 
-             // Check if Firebase library loaded AND config is valid
-             if (typeof firebase === 'undefined' || !config.apiKey || !config.databaseURL) {
-                 DEMO_MODE = true;
-                 console.warn('Firebase not available or not configured - running in DEMO MODE');
-             }
-
-             // Initialize Firebase if available
-             if (!DEMO_MODE) {
-                 try {
-                     firebase.initializeApp(config);
-                     database = firebase.database();
-                     console.log('Firebase initialized successfully');
-                 } catch (error) {
-                     console.error('Firebase init error:', error);
-                     DEMO_MODE = true;
-                 }
-             }
-
-              if (DEMO_MODE) {
-                  console.log('App running in DEMO mode - service data will not be saved to Firebase');
+              // Check if Firebase library loaded AND config is valid
+              if (typeof firebase === 'undefined' || !config.apiKey || !config.databaseURL) {
+                  DEMO_MODE = true;
+                  console.warn('Firebase not available or not configured - running in DEMO MODE');
               }
 
-              let currentSessionId = null;
-              let attendanceListener = null;
+              // Initialize Firebase if available
+              if (!DEMO_MODE) {
+                  try {
+                      firebase.initializeApp(config);
+                      database = firebase.database();
+                      console.log('Firebase initialized successfully');
+                  } catch (error) {
+                      console.error('Firebase init error:', error);
+                      DEMO_MODE = true;
+                  }
+              }
 
-          // DOM Elements
+               if (DEMO_MODE) {
+                   console.log('App running in DEMO mode - service data will not be saved to Firebase');
+               }
+
+               let currentSessionId = null;
+               let attendanceListener = null;
+
+              // Refresh dashboard stats every 30 seconds
+              async function refreshStats() {
+                  try {
+                      const response = await fetch('/api/stats');
+                      if (response.ok) {
+                          const stats = await response.json();
+                          document.querySelector('.text-pcg-blue[data-stat="total_members"]').textContent = stats.total_members;
+                          document.querySelector('.text-pcg-green[data-stat="attendance_today"]').textContent = stats.attendance_today;
+                          document.querySelector('.text-pcg-gold[data-stat="upcoming_events"]').textContent = stats.upcoming_events;
+                          document.querySelector('.text-pcg-blue[data-stat="active_groups"]').textContent = stats.active_groups;
+                      }
+                  } catch (e) {
+                      console.error('Failed to refresh stats:', e);
+                  }
+              }
+
+              // Call on load and set interval
+              setTimeout(refreshStats, 1000);
+              setInterval(refreshStats, 30000); // every 30 seconds
+
+           // DOM Elements
         const startServiceBtn = document.getElementById('startServiceBtn');
         const serviceStatus = document.getElementById('serviceStatus');
         const qrCodeImg = document.getElementById('qrCodeImg');

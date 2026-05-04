@@ -98,6 +98,42 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
+@app.route('/api/stats')
+def get_stats():
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    stats = {
+        'total_members': 0,
+        'attendance_today': 0,
+        'upcoming_events': 0,
+        'active_groups': 0
+    }
+
+    if FIREBASE_INITIALIZED:
+        try:
+            members = ref.child('members').get()
+            if members:
+                stats['total_members'] = len(members)
+
+            today = date.today().isoformat()
+            attendance_today = ref.child('attendance').child(today).get()
+            if attendance_today:
+                stats['attendance_today'] = len(attendance_today)
+
+            events = ref.child('events').get()
+            if events:
+                upcoming = [e for e in events.values() if e.get('date', '') >= today]
+                stats['upcoming_events'] = len(upcoming)
+
+            groups = ref.child('groups').get()
+            if groups:
+                stats['active_groups'] = len(groups)
+        except Exception as e:
+            print(f"Error fetching stats: {e}")
+
+    return jsonify(stats)
+
 # ==================== DASHBOARD ROUTE ====================
 
 @app.route('/dashboard')
@@ -201,6 +237,23 @@ def add_member():
         # Demo mode
         return jsonify({'success': True, 'member_id': member_id, 'demo': True})
 
+@app.route('/api/members', methods=['GET'])
+def get_members():
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    members = []
+    if FIREBASE_INITIALIZED:
+        try:
+            data = ref.child('members').get()
+            if data:
+                members = [{'id': k, **v} for k, v in data.items()]
+                members.sort(key=lambda x: x.get('name', ''))
+        except Exception as e:
+            print(f"Error fetching members: {e}")
+
+    return jsonify({'members': members})
+
 @app.route('/api/members/<member_id>', methods=['PUT'])
 def update_member(member_id):
     if 'user' not in session:
@@ -274,26 +327,69 @@ def attendance_report():
         return redirect(url_for('login'))
     
     # Get date range from query params
-    start_date = request.args.get('start', (date.today() - timedelta(days=30)).isoformat())
-    end_date = request.args.get('end', date.today().isoformat())
-    
+    start = request.args.get('start', (date.today() - timedelta(days=30)).isoformat())
+    end = request.args.get('end', date.today().isoformat())
+
+    # Generate list of dates
+    start_date = date.fromisoformat(start)
+    end_date = date.fromisoformat(end)
+    dates = []
+    current = start_date
+    while current <= end_date:
+        dates.append(current)
+        current += timedelta(days=1)
+
     records = []
     if FIREBASE_INITIALIZED:
         try:
-            dates = pd.date_range(start=start_date, end=end_date)
             for d in dates:
-                day_data = ref.child('attendance').child(d.strftime('%Y-%m-%d')).get()
+                day_data = ref.child('attendance').child(d.isoformat()).get()
                 if day_data:
                     for member_id, record in day_data.items():
                         records.append({
-                            'date': d.strftime('%Y-%m-%d'),
+                            'date': d.isoformat(),
                             'member_id': member_id,
-                            'timestamp': record.get('timestamp', '')
+                            'timestamp': record.get('timestamp', ''),
+                            'service_type': record.get('service_type', 'sunday')
                         })
         except Exception as e:
             print(f"Error fetching attendance: {e}")
-    
-    return render_template('attendance.html', records=records, start=start_date, end=end_date, user=session.get('email'))
+
+    return render_template('attendance.html', records=records, start=start, end=end, user=session.get('email'))
+
+@app.route('/api/attendance/records')
+def get_attendance_records():
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    start = request.args.get('start', (date.today() - timedelta(days=30)).isoformat())
+    end = request.args.get('end', date.today().isoformat())
+
+    start_date = date.fromisoformat(start)
+    end_date = date.fromisoformat(end)
+    dates = []
+    current = start_date
+    while current <= end_date:
+        dates.append(current)
+        current += timedelta(days=1)
+
+    records = []
+    if FIREBASE_INITIALIZED:
+        try:
+            for d in dates:
+                day_data = ref.child('attendance').child(d.isoformat()).get()
+                if day_data:
+                    for member_id, record in day_data.items():
+                        records.append({
+                            'date': d.isoformat(),
+                            'member_id': member_id,
+                            'timestamp': record.get('timestamp', ''),
+                            'service_type': record.get('service_type', 'sunday')
+                        })
+        except Exception as e:
+            print(f"Error fetching attendance: {e}")
+
+    return jsonify({'records': records})
 
 @app.route('/api/attendance/record', methods=['POST'])
 def record_attendance():
@@ -390,6 +486,50 @@ def create_event():
             return jsonify({'error': str(e)}), 500
     return jsonify({'success': True, 'demo': True})
 
+@app.route('/api/events', methods=['GET'])
+def get_events():
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    events = []
+    if FIREBASE_INITIALIZED:
+        try:
+            data = ref.child('events').get()
+            if data:
+                events = [{'id': k, **v} for k, v in data.items()]
+                events.sort(key=lambda x: x.get('date', ''), reverse=True)
+        except Exception as e:
+            print(f"Error fetching events: {e}")
+
+    return jsonify({'events': events})
+
+@app.route('/api/events/<event_id>', methods=['PUT'])
+def update_event(event_id):
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    data = request.get_json()
+    if FIREBASE_INITIALIZED:
+        try:
+            ref.child('events').child(event_id).update(data)
+            return jsonify({'success': True})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    return jsonify({'success': True, 'demo': True})
+
+@app.route('/api/events/<event_id>', methods=['DELETE'])
+def delete_event(event_id):
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    if FIREBASE_INITIALIZED:
+        try:
+            ref.child('events').child(event_id).delete()
+            return jsonify({'success': True})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    return jsonify({'success': True})
+
 # ==================== SMALL GROUPS ====================
 
 @app.route('/groups')
@@ -462,6 +602,20 @@ def add_group_member(group_id):
             return jsonify({'error': str(e)}), 500
     return jsonify({'success': True, 'demo': True})
 
+@app.route('/api/groups/<group_id>/members/<member_id>', methods=['DELETE'])
+def remove_group_member(group_id, member_id):
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    if FIREBASE_INITIALIZED:
+        try:
+            ref.child('groups').child(group_id).child('members').child(member_id).delete()
+            ref.child('members').child(member_id).child('groups').child(group_id).delete()
+            return jsonify({'success': True})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    return jsonify({'success': True})
+
 # ==================== DONATIONS ====================
 
 @app.route('/donations')
@@ -511,6 +665,23 @@ def record_donation():
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     return jsonify({'success': True, 'demo': True})
+
+@app.route('/api/donations', methods=['GET'])
+def get_donations():
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    donations = []
+    if FIREBASE_INITIALIZED:
+        try:
+            data = ref.child('donations').get()
+            if data:
+                donations = [{'id': k, **v} for k, v in data.items()]
+                donations.sort(key=lambda x: x.get('date', ''), reverse=True)
+        except Exception as e:
+            print(f"Error fetching donations: {e}")
+
+    return jsonify({'donations': donations})
 
 @app.route('/api/donations/export')
 def export_donations():
@@ -598,6 +769,53 @@ def create_announcement():
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     return jsonify({'success': True})
+
+@app.route('/api/announcements', methods=['GET'])
+def get_announcements():
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    announcements = []
+    if FIREBASE_INITIALIZED:
+        try:
+            data = ref.child('announcements').get()
+            if data:
+                announcements = [{'id': k, **v} for k, v in data.items()]
+                announcements.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        except Exception as e:
+            print(f"Error: {e}")
+
+    return jsonify({'announcements': announcements})
+
+@app.route('/api/announcements/<ann_id>', methods=['DELETE'])
+def delete_announcement(ann_id):
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    if FIREBASE_INITIALIZED:
+        try:
+            ref.child('announcements').child(ann_id).delete()
+            return jsonify({'success': True})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    return jsonify({'success': True})
+
+@app.route('/api/prayer-requests', methods=['GET'])
+def get_prayer_requests():
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    prayer_requests = []
+    if FIREBASE_INITIALIZED:
+        try:
+            data = ref.child('prayer_requests').get()
+            if data:
+                prayer_requests = [{'id': k, **v} for k, v in data.items()]
+                prayer_requests.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        except Exception as e:
+            print(f"Error: {e}")
+
+    return jsonify({'prayer_requests': prayer_requests})
 
 @app.route('/api/prayer-requests', methods=['POST'])
 def submit_prayer_request():

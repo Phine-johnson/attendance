@@ -61,7 +61,7 @@
             <div class="col-lg-4 col-md-6 mb-3">
                 <div class="card card-custom">
                     <div class="card-body text-center">
-                        <h3 class="text-pcg-blue fw-bold mb-2">$24,560</h3>
+                        <h3 class="text-pcg-blue fw-bold mb-2" id="totalDonations">$0</h3>
                         <p class="text-muted mb-0">Total Donations</p>
                     </div>
                 </div>
@@ -69,7 +69,7 @@
             <div class="col-lg-4 col-md-6 mb-3">
                 <div class="card card-custom">
                     <div class="card-body text-center">
-                        <h3 class="text-pcg-green fw-bold mb-2">$2,100</h3>
+                        <h3 class="text-pcg-green fw-bold mb-2" id="monthDonations">$0</h3>
                         <p class="text-muted mb-0">This Month</p>
                     </div>
                 </div>
@@ -80,11 +80,11 @@
                         <h6 class="text-pcg-blue mb-3">Tithe vs Offering</h6>
                         <div class="d-flex justify-content-between mb-2">
                             <span>Tithe:</span>
-                            <span class="fw-bold">$15,200</span>
+                            <span class="fw-bold" id="titheTotal">$0</span>
                         </div>
                         <div class="d-flex justify-content-between">
                             <span>Offering:</span>
-                            <span class="fw-bold">$9,360</span>
+                            <span class="fw-bold" id="offeringTotal">$0</span>
                         </div>
                     </div>
                 </div>
@@ -94,7 +94,7 @@
         <!-- Export Button -->
         <div class="row mb-3">
             <div class="col-12 text-end">
-                <button class="btn btn-outline-secondary">
+                <button class="btn btn-outline-secondary" id="exportBtn">
                     <svg width="18" height="18" class="me-1" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
                     </svg>
@@ -107,11 +107,14 @@
         <div class="row">
             <div class="col-12">
                 <div class="card card-custom">
-                    <div class="card-header d-flex align-items-center">
-                        <svg width="24" height="24" class="me-2" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 14.59L12 11.17l-1.41 4.59L7.82 14l4.59-.61-.61-4.59 1.41 4.59L16.18 14z"/>
-                        </svg>
-                        Recent Donations
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <svg width="24" height="24" class="me-2" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 14.59L12 11.17l-1.41 4.59L7.82 14l4.59-.61-.61-4.59 1.41 4.59L16.18 14z"/>
+                            </svg>
+                            Recent Donations
+                            <span class="badge bg-pcg-green ms-2" id="donationCount">0</span>
+                        </div>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -125,30 +128,16 @@
                                         <th>Amount</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>2026-05-01</td>
-                                        <td>John Doe</td>
-                                        <td><span class="badge bg-pcg-blue">Tithe</span></td>
-                                        <td>Cash</td>
-                                        <td class="fw-bold">$200</td>
-                                    </tr>
-                                    <tr>
-                                        <td>2026-05-01</td>
-                                        <td>Jane Smith</td>
-                                        <td><span class="badge bg-secondary">Offering</span></td>
-                                        <td>Check</td>
-                                        <td class="fw-bold">$150</td>
-                                    </tr>
-                                    <tr>
-                                        <td>2026-04-28</td>
-                                        <td>Michael Johnson</td>
-                                        <td><span class="badge bg-pcg-blue">Tithe</span></td>
-                                        <td>Bank Transfer</td>
-                                        <td class="fw-bold">$250</td>
-                                    </tr>
+                                <tbody id="donationsTableBody">
+                                    <!-- Donations will be loaded dynamically -->
                                 </tbody>
                             </table>
+                        </div>
+                        <div id="emptyState" class="text-center py-5 text-muted">
+                            <svg width="48" height="48" class="mb-3" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 14.59L12 11.17l-1.41 4.59L7.82 14l4.59-.61-.61-4.59 1.41 4.59L16.18 14z"/>
+                            </svg>
+                            <p>No donations recorded yet.</p>
                         </div>
                     </div>
                 </div>
@@ -164,24 +153,21 @@
                     <h5 class="modal-title text-pcg-blue" id="recordDonationModalLabel">Record Donation</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ url_for('record_donation') }}" method="POST">
+                <form id="recordDonationForm">
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label fw-bold text-pcg-blue">Member</label>
-                            <select class="form-select form-control-custom" name="member_id" required>
+                            <select class="form-select form-control-custom" name="member_id" id="donationMemberSelect" required>
                                 <option value="">Select Member</option>
-                                <option value="1">John Doe</option>
-                                <option value="2">Jane Smith</option>
-                                <option value="3">Michael Johnson</option>
                             </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold text-pcg-blue">Amount ($)</label>
-                            <input type="number" step="0.01" class="form-control form-control-custom" name="amount" required>
+                            <input type="number" step="0.01" class="form-control form-control-custom" name="amount" required placeholder="0.00">
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold text-pcg-blue">Donation Type</label>
-                            <select class="form-select form-control-custom" name="donation_type" required>
+                            <select class="form-select form-control-custom" name="type" required>
                                 <option value="tithe">Tithe</option>
                                 <option value="offering">Offering</option>
                                 <option value="special">Special</option>
@@ -195,6 +181,14 @@
                                 <option value="bank_transfer">Bank Transfer</option>
                                 <option value="mobile_money">Mobile Money</option>
                             </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Date</label>
+                            <input type="date" class="form-control form-control-custom" name="date" value="{{ date.today().isoformat() if date else '' }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Notes</label>
+                            <textarea class="form-control form-control-custom" name="notes" rows="2" placeholder="Optional notes..."></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -220,37 +214,43 @@
                     </svg>
                     Dashboard
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('members') }}'">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('members_list') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.76 0-8 1.34-8 4v3h16v-3c0-2.66-5.24-4-8-4z"/>
                     </svg>
                     Members
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('attendance') }}'">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('attendance_report') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H8v-2h4v2zm0-4H8v-2h4v2zm0-4H8V6h4v2zm5 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V6h2v2z"/>
                     </svg>
                     Attendance
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('events') }}'">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('events_list') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V9h14v10z"/>
                     </svg>
                     Events
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('groups') }}'">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('groups_list') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.76 0-8 1.34-8 4v3h16v-3c0-2.66-5.24-4-8-4z"/>
                     </svg>
                     Groups
                 </div>
-                <div class="sidebar-item sidebar-highlight" onclick="location.href='{{ url_for('communications') }}'">
+                <div class="sidebar-item sidebar-highlight" onclick="location.href='{{ url_for('donations_page') }}'">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 14.59L12 11.17l-1.41 4.59L7.82 14l4.59-.61-.61-4.59 1.41 4.59L16.18 14z"/>
+                    </svg>
+                    Donations
+                </div>
+                <div class="sidebar-item" onclick="location.href='{{ url_for('communications_page') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
                     </svg>
                     Communications
                 </div>
-                <div class="sidebar-item" onclick="location.href='{{ url_for('volunteers') }}'">
+                <div class="sidebar-item" onclick="location.href='{{ url_for('volunteers_page') }}'">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                     </svg>
@@ -268,5 +268,170 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let allDonations = [];
+
+            // Load donations
+            async function loadDonations() {
+                try {
+                    const response = await fetch('/api/donations');
+                    if (response.ok) {
+                        const data = await response.json();
+                        allDonations = data.donations || [];
+                        renderDonations();
+                        calculateSummary();
+                    }
+                } catch (error) {
+                    console.error('Error loading donations:', error);
+                    // Fallback
+                    const initialDonations = {{ donations|tojson }};
+                    allDonations = initialDonations || [];
+                    renderDonations();
+                    calculateSummary();
+                }
+            }
+
+            function renderDonations() {
+                const tbody = document.getElementById('donationsTableBody');
+                const emptyState = document.getElementById('emptyState');
+                const countEl = document.getElementById('donationCount');
+                tbody.innerHTML = '';
+
+                countEl.textContent = allDonations.length;
+
+                if (allDonations.length === 0) {
+                    emptyState.style.display = 'block';
+                    return;
+                }
+                emptyState.style.display = 'none';
+
+                // Sort by date descending
+                allDonations.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                allDonations.forEach(donation => {
+                    const row = document.createElement('tr');
+                    const date = new Date(donation.date);
+                    const formattedDate = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                    const typeBadge = getTypeBadge(donation.type);
+                    const method = capitalize(donation.method.replace('_', ' '));
+
+                    row.innerHTML = `
+                        <td>${formattedDate}</td>
+                        <td><span class="badge bg-secondary">${donation.member_id || 'Unknown'}</span></td>
+                        <td>${typeBadge}</td>
+                        <td>${method}</td>
+                        <td class="fw-bold">$${parseFloat(donation.amount || 0).toFixed(2)}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            function getTypeBadge(type) {
+                const badges = {
+                    'tithe': '<span class="badge bg-pcg-blue">Tithe</span>',
+                    'offering': '<span class="badge bg-secondary">Offering</span>',
+                    'special': '<span class="badge bg-pcg-gold">Special</span>'
+                };
+                return badges[type] || `<span class="badge bg-secondary">${type}</span>`;
+            }
+
+            function capitalize(s) {
+                return s.charAt(0).toUpperCase() + s.slice(1);
+            }
+
+            function calculateSummary() {
+                const total = allDonations.reduce((sum, d) => sum + parseFloat(d.amount || 0), 0);
+                document.getElementById('totalDonations').textContent = `$${total.toFixed(2)}`;
+
+                // This month
+                const now = new Date();
+                const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+                const monthDonations = allDonations.filter(d => new Date(d.date) >= monthStart);
+                const monthTotal = monthDonations.reduce((sum, d) => sum + parseFloat(d.amount || 0), 0);
+                document.getElementById('monthDonations').textContent = `$${monthTotal.toFixed(2)}`;
+
+                // Tithe vs Offering
+                const tithe = allDonations.filter(d => d.type === 'tithe').reduce((sum, d) => sum + parseFloat(d.amount || 0), 0);
+                const offering = allDonations.filter(d => d.type === 'offering').reduce((sum, d) => sum + parseFloat(d.amount || 0), 0);
+                document.getElementById('titheTotal').textContent = `$${tithe.toFixed(2)}`;
+                document.getElementById('offeringTotal').textContent = `$${offering.toFixed(2)}`;
+            }
+
+            // Record Donation
+            document.getElementById('recordDonationForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData.entries());
+                data.amount = parseFloat(data.amount);
+
+                try {
+                    const response = await fetch('/api/donations', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    if (response.ok) {
+                        bootstrap.Modal.getInstance(document.getElementById('recordDonationModal')).hide();
+                        loadDonations();
+                        e.target.reset();
+                    } else {
+                        alert('Failed to record donation');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            });
+
+            // Export CSV
+            document.getElementById('exportBtn').addEventListener('click', () => {
+                const rows = [];
+                document.querySelectorAll('#donationsTableBody tr').forEach(tr => {
+                    const cols = tr.querySelectorAll('td');
+                    if (cols.length) {
+                        rows.push(Array.from(cols).map(td => td.textContent.trim()));
+                    }
+                });
+                const csv = [
+                    ['Date', 'Member ID', 'Type', 'Method', 'Amount'],
+                    ...rows
+                ].map(r => r.join(',')).join('\n');
+
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `donations_${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+            });
+
+            // Populate member select
+            async function populateMembers() {
+                try {
+                    const response = await fetch('/api/members');
+                    let members = [];
+                    if (response.ok) {
+                        const data = await response.json();
+                        members = data.members || [];
+                    } else {
+                        members = {{ members|tojson }} || [];
+                    }
+                    const select = document.getElementById('donationMemberSelect');
+                    select.innerHTML = '<option value="">Select Member</option>';
+                    members.forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = m.id;
+                        opt.textContent = `${m.first_name} ${m.last_name}`;
+                        select.appendChild(opt);
+                    });
+                } catch (error) {
+                    console.error('Error loading members:', error);
+                }
+            }
+
+            loadDonations();
+            populateMembers();
+        });
+    </script>
 </body>
 </html>
