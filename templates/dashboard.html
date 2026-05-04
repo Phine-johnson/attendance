@@ -953,6 +953,9 @@
      <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
 <script>
+          // Debug: Check library loaded
+          console.log('html5-qrcode loaded:', typeof Html5Qrcode !== 'undefined' ? 'YES' : 'NO');
+          
           // Check secure context first
           if (!window.isSecureContext) {
               console.warn('Not a secure context - camera will be blocked');
@@ -976,20 +979,31 @@
          }
 
 // Handle Scan Member button click
-          document.getElementById('scanMemberBtn').addEventListener('click', function() {
-              const modal = new bootstrap.Modal(document.getElementById('scanModal'));
-              modal.show();
-
-              // Check secure context first
+          document.getElementById('scanMemberBtn').addEventListener('click', async function() {
+              // Check secure context
               if (!window.isSecureContext) {
-                  document.getElementById('scan-result').innerHTML = 
-                      '<p class="text-danger">Camera requires HTTPS. Please use the deployed URL (not localhost).</p>';
+                  document.getElementById('qr-reader').innerHTML = 
+                      '<p class="text-danger">Camera requires HTTPS connection.</p>';
                   return;
               }
 
+              const modal = new bootstrap.Modal(document.getElementById('scanModal'));
+              modal.show();
+
               // Wait for modal to be shown before initializing scanner
-              document.getElementById('scanModal').addEventListener('shown.bs.modal', function initScanner() {
+              document.getElementById('scanModal').addEventListener('shown.bs.modal', async function(initScanner) {
                   let html5QrCode = null;
+                  
+                  // Try to get camera permission early
+                  try {
+                      const stream = await navigator.mediaDevices.getUserMedia({ 
+                          video: { facingMode: "environment" } 
+                      });
+                      stream.getTracks().forEach(t => t.stop()); // Stop preview, scanner will restart
+                      console.log('Camera permission granted');
+                  } catch (err) {
+                      console.warn('Permission request failed:', err);
+                  }
                   
                   function startScanner(cameraConfig) {
                       console.log('Trying camera with config:', cameraConfig);
