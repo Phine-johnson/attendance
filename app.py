@@ -766,7 +766,10 @@ def start_service():
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
 
-    data = request.get_json() or {}
+    try:
+        data = request.get_json(silent=True) or {}
+    except Exception:
+        data = {}
     session_id = str(uuid.uuid4())
     proximity_limit = 3
     latitude = data.get('latitude', 0)
