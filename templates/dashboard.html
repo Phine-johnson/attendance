@@ -953,6 +953,11 @@
      <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
 <script>
+          // Check secure context first
+          if (!window.isSecureContext) {
+              console.warn('Not a secure context - camera will be blocked');
+          }
+
           // Check html5-qrcode is loaded
           if (typeof Html5Qrcode === 'undefined') {
               console.error('html5-qrcode library not loaded');
@@ -1004,11 +1009,16 @@
                               modal.hide();
                           },
                           (errorMessage) => {}
-                      ).catch((err2) => {
-                          console.error('Camera start error:', err2);
-                          document.getElementById('scan-result').innerHTML = 
-                              '<p class="text-danger">Camera access denied. Please allow camera permissions and use HTTPS.</p>';
-                      });
+).catch((err2) => {
+                           console.error('Camera start error:', err2);
+                           let errorMsg = 'Camera access denied. ';
+                           if (!window.isSecureContext) {
+                               errorMsg += 'HTTPS required. ';
+                           }
+                           errorMsg += 'Please allow camera permissions.';
+                           document.getElementById('scan-result').innerHTML = 
+                               '<p class="text-danger">' + errorMsg + '</p>';
+                       });
                   });
 
                   // Cleanup when modal is hidden
