@@ -191,7 +191,7 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold text-pcg-blue">Join Date</label>
-                            <input type="date" class="form-control form-control-custom" name="joinDate" value="{{ date.today().isoformat() if date else '' }}">
+                            <input type="date" class="form-control form-control-custom" name="joinDate" id="joinDateInput">
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -627,6 +627,17 @@
 
             // Initialize
             loadMembers();
+
+            // Set default join date to today when Add Member modal opens
+            document.getElementById('addMemberModal').addEventListener('show.bs.modal', function () {
+                const joinDateInput = document.getElementById('joinDateInput');
+                if (joinDateInput) {
+                    joinDateInput.value = new Date().toISOString().split('T')[0];
+                }
+                // Optionally generate a random member ID
+                // const randomId = 'MEM' + Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+                // document.getElementById('memberIdInput').value = randomId;
+            });
         });
     </script>
 </body>

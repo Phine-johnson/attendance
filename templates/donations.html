@@ -184,7 +184,7 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold text-pcg-blue">Date</label>
-                            <input type="date" class="form-control form-control-custom" name="date" value="{{ date.today().isoformat() if date else '' }}" required>
+                            <input type="date" class="form-control form-control-custom" name="date" id="donationDateInput" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold text-pcg-blue">Notes</label>
@@ -405,7 +405,7 @@
                 a.click();
             });
 
-            // Populate member select
+            // Populate member select dropdown
             async function populateMembers() {
                 try {
                     const response = await fetch('/api/members');
@@ -414,7 +414,7 @@
                         const data = await response.json();
                         members = data.members || [];
                     } else {
-                        members = {{ members|tojson }} || [];
+                        console.warn('Failed to fetch members from API');
                     }
                     const select = document.getElementById('donationMemberSelect');
                     select.innerHTML = '<option value="">Select Member</option>';
@@ -431,6 +431,14 @@
 
             loadDonations();
             populateMembers();
+
+            // Set default donation date to today when modal opens
+            document.getElementById('recordDonationModal').addEventListener('show.bs.modal', function () {
+                const dateInput = document.getElementById('donationDateInput');
+                if (dateInput) {
+                    dateInput.value = new Date().toISOString().split('T')[0];
+                }
+            });
         });
     </script>
 </body>
