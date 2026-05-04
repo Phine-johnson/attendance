@@ -183,6 +183,163 @@ def dashboard():
         firebase_app_id=os.environ.get('FIREBASE_APP_ID')
     )
 
+@app.route('/api/members/<member_id>/qrcode')
+def get_member_qrcode(member_id):
+    """Generate QR code for member ID card"""
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    # Get member data
+    member = None
+    if FIREBASE_INITIALIZED:
+        try:
+            member_data = ref.child('members').child(member_id).get()
+            if member_data:
+                member = {'id': member_id, **member_data}
+        except Exception as e:
+            print(f"Error fetching member: {e}")
+
+    if not member:
+        return jsonify({'error': 'Member not found'}), 404
+
+    # Get member_id or generate CHURCH-MEM format
+    member_id_value = member.get('member_id', member_id)
+    if not member_id_value.startswith('CHURCH-MEM'):
+        member_id_value = f"CHURCH-MEM-{member_id_value}"
+
+    # Generate QR code encoding member ID in CHURCH-MEM-XXX format
+    qr_data = json.dumps({
+        'member_id': member_id_value,
+        'name': f"{member.get('first_name', '')} {member.get('last_name', '')}".strip(),
+        'type': 'member_card'
+    })
+
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4
+    )
+    qr.add_data(qr_data)
+    qr.make(fit=True)
+
+    try:
+        from qrcode.image.svg import SvgImage
+        img = qr.make_image(image_factory=SvgImage)
+        svg_content = img.to_string()
+        return Response(svg_content, mimetype='image/svg+xml')
+    except Exception as e:
+        print(f'QR generation error: {e}')
+        return jsonify({'error': 'Failed to generate QR code'}), 500
+
+@app.route('/api/members/<member_id>/card')
+def get_member_card(member_id):
+    """Generate printable HTML card for member"""
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    member = None
+    if FIREBASE_INITIALIZED:
+        try:
+            member_data = ref.child('members').child(member_id).get()
+            if member_data:
+                member = {'id': member_id, **member_data}
+        except Exception as e:
+            print(f"Error fetching member: {e}")
+
+    if not member:
+        return render_template('error.html', message='Member not found'), 404
+
+    return render_template('member_card.html', member=member, user=session.get('email'))
+
+# ==================== REVERSE SCAN ====================
+
+@app.route('/api/scan-member', methods=['POST'])
+def scan_member():
+    """
+    Reverse scan endpoint for admin to scan member ID cards.
+    Unlike regular attendance scan, this does NOT check GPS - admin's location is trusted.
+    """
+    data = request.get_json()
+    qr_data = data.get('qr_data')  # Expecting decoded JSON from QR code
+
+    if not qr_data:
+        return jsonify({'error': 'Missing QR data'}), 400
+
+    try:
+        qr = json.loads(qr_data) if isinstance(qr_data, str) else qr_data
+    except Exception:
+        return jsonify({'error': 'Invalid QR code format'}), 400
+
+    member_id = qr.get('member_id')
+    if not member_id:
+        return jsonify({'error': 'Invalid member ID'}), 400
+
+    # Verify member exists by searching for member_id field
+    member = None
+    member_key = None
+    if FIREBASE_INITIALIZED:
+        try:
+            members = ref.child('members').get()
+            if members:
+                for key, mdata in members.items():
+                    if mdata.get('member_id') == member_id:
+                        member = {'id': key, **mdata}
+                        member_key = key
+                        break
+        except Exception as e:
+            print(f"Error fetching member: {e}")
+
+    if not member:
+        return jsonify({'error': 'Member not found'}), 404
+
+    # Record attendance for current session (if available) or for today's date
+    today = date.today().isoformat()
+    service_type = 'sunday'  # Could be determined by service running
+
+    if FIREBASE_INITIALIZED:
+        try:
+            # Check if there's an active session first
+            active_session = None
+            try:
+                sessions = ref.child('sessions').get()
+                if sessions:
+                    # Find an active session (most recent)
+                    for sid, sdata in sessions.items():
+                        if sdata.get('active', False):
+                            active_session = sid
+                            break
+            except Exception:
+                pass
+
+            # Record attendance under that session or directly under date
+            if active_session:
+                attendance_ref = ref.child('attendance').child(active_session).child(member_key)
+                attendance_ref.set({
+                    'timestamp': datetime.now().isoformat(),
+                    'service_type': service_type,
+                    'mode': 'admin_scan'
+                })
+            else:
+                attendance_ref = ref.child('attendance').child(today).child(member_key)
+                attendance_ref.set({
+                    'timestamp': datetime.now().isoformat(),
+                    'service_type': service_type,
+                    'mode': 'admin_scan'
+                })
+        except Exception as e:
+            print(f"Error recording attendance: {e}")
+
+    member_name = f"{member.get('first_name', '')} {member.get('last_name', '')}".strip()
+    return jsonify({
+        'success': True,
+        'member': {
+            'id': member_id,
+            'name': member_name,
+            'status': member.get('status', 'active')
+        }
+    })
+
 # ==================== MEMBER MANAGEMENT ====================
 
 @app.route('/members')
@@ -202,6 +359,33 @@ def members_list():
     
     return render_template('members.html', members=members, user=session.get('email'))
 
+# Global counter for generating CHURCH-MEM IDs
+last_member_num = 0
+
+def generate_member_id():
+    """Generate a unique CHURCH-MEM-XXX format member ID"""
+    global last_member_num
+    if FIREBASE_INITIALIZED:
+        try:
+            # Find the highest numbered member
+            members = ref.child('members').get()
+            max_num = 0
+            if members:
+                for m in members.values():
+                    mid = m.get('member_id', '')
+                    if mid and mid.startswith('CHURCH-MEM-'):
+                        try:
+                            num = int(mid.replace('CHURCH-MEM-', ''))
+                            max_num = max(max_num, num)
+                        except ValueError:
+                            pass
+            last_member_num = max_num + 1
+        except Exception:
+            last_member_num += 1
+    else:
+        last_member_num += 1
+    return f"CHURCH-MEM-{last_member_num:03d}"
+
 @app.route('/api/members', methods=['POST'])
 def add_member():
     if 'user' not in session:
@@ -210,9 +394,16 @@ def add_member():
     data = request.get_json()
     member_id = str(uuid.uuid4())[:8]
     
+    # Generate CHURCH-MEM format ID if not provided
+    provided_member_id = data.get('memberId', '')
+    if provided_member_id and provided_member_id.startswith('CHURCH-MEM-'):
+        formatted_member_id = provided_member_id
+    else:
+        formatted_member_id = generate_member_id()
+    
     member_data = {
         'id': member_id,
-        'member_id': data.get('memberId', member_id),
+        'member_id': formatted_member_id,
         'first_name': data.get('firstName', ''),
         'last_name': data.get('lastName', ''),
         'email': data.get('email', ''),
@@ -230,12 +421,12 @@ def add_member():
     if FIREBASE_INITIALIZED:
         try:
             ref.child('members').child(member_id).set(member_data)
-            return jsonify({'success': True, 'member_id': member_id})
+            return jsonify({'success': True, 'member_id': formatted_member_id})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     else:
         # Demo mode
-        return jsonify({'success': True, 'member_id': member_id, 'demo': True})
+        return jsonify({'success': True, 'member_id': formatted_member_id, 'demo': True})
 
 @app.route('/api/members', methods=['GET'])
 def get_members():
@@ -839,6 +1030,25 @@ def submit_prayer_request():
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     return jsonify({'success': True})
+
+# ==================== MEMBER CARDS ====================
+
+@app.route('/member-cards')
+def member_cards():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    
+    members = []
+    if FIREBASE_INITIALIZED:
+        try:
+            data = ref.child('members').get()
+            if data:
+                members = [{'id': k, **v} for k, v in data.items()]
+                members.sort(key=lambda x: x.get('first_name', ''))
+        except Exception as e:
+            print(f"Error fetching members: {e}")
+    
+    return render_template('member_cards.html', members=members, user=session.get('email'))
 
 # ==================== VOLUNTEER SCHEDULING ====================
 
