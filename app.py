@@ -1271,15 +1271,14 @@ def start_service():
         except Exception as e:
             print(f"Warning: {e}")
 
-    qr_data = json.dumps({
-        'sid': session_id,
-        'lat': latitude,
-        'lng': longitude,
-        'limit': proximity_limit
-    })
-
+    # Generate URL for member scan page
+    from urllib.parse import quote
+    base_url = request.url_root.rstrip('/')
+    qr_url = f"{base_url}/scan?sid={session_id}&lat={latitude}&lng={longitude}&limit={proximity_limit}"
+    
+    # Generate QR code with the scan URL
     qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
-    qr.add_data(qr_data)
+    qr.add_data(qr_url)
     qr.make(fit=True)
 
     try:
@@ -1290,6 +1289,20 @@ def start_service():
     except Exception as e:
         print(f'QR generation error: {e}')
         return jsonify({'error': 'Failed to generate QR code'}), 500
+
+@app.route('/scan')
+def member_scan_page():
+    """Page members see when scanning the service QR code"""
+    session_id = request.args.get('sid')
+    lat = request.args.get('lat', '0')
+    lng = request.args.get('lng', '0')
+    limit = request.args.get('limit', '3')
+    
+    return render_template('member_scan.html', 
+        session_id=session_id, 
+        lat=lat, 
+        lng=lng, 
+        limit=limit)
 
 @app.route('/api/attendance/scan', methods=['POST'])
 def scan_attendance():
