@@ -33,6 +33,11 @@ def is_admin():
     email = session.get('email')
     return email in ADMIN_EMAILS
 
+# Serve static files from 'static' folder
+@app.route('/static/<path:filename>')
+def static_files(filename):
+    return send_from_directory(os.path.join(app.root_path, 'static'), filename)
+
 @app.before_request
 def require_login_and_admin():
     """Require login and admin access for all routes except login, logout, and static"""
