@@ -42,7 +42,7 @@ def static_files(filename):
 def require_login_and_admin():
     """Require login and admin access for all routes except login, logout, and static"""
     # List of routes that don't require authentication
-    allowed_routes = ['login', 'logout', 'static']
+    allowed_routes = ['login', 'logout', 'static_files']
     
     # Check if current route is in allowed list
     if request.endpoint not in allowed_routes:
