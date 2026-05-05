@@ -28,8 +28,7 @@
                         
                         <form id="checkinForm">
                             <input type="hidden" id="sessionId" value="{{ session_id }}">
-                            <input type="hidden" id="lat" value="{{ lat }}">
-                            <input type="hidden" id="lng" value="{{ lng }}">
+                            <input type="hidden" id="limit" value="{{ limit }}">
                             
                             <div class="mb-3">
                                 <label class="form-label fw-bold text-pcg-blue">Full Name</label>
@@ -80,7 +79,12 @@
         </div>
     </div>
     
-    <script>
+     <script>
+        const sessionId = document.getElementById('sessionId').value;
+        const proximityLimit = parseFloat(document.getElementById('limit').value) || 3;
+        let memberLatitude = null;
+        let memberLongitude = null;
+        
         // Set current time
         function updateTime() {
             const now = new Date();
@@ -89,14 +93,57 @@
         updateTime();
         setInterval(updateTime, 1000);
         
+        // Get member's actual location
+        function getLocation() {
+            const statusEl = document.getElementById('checkinStatus');
+            statusEl.textContent = 'Getting location...';
+            statusEl.className = 'badge bg-warning status-badge';
+            
+            if (!navigator.geolocation) {
+                statusEl.textContent = 'Geolocation not supported';
+                statusEl.className = 'badge bg-danger status-badge';
+                return false;
+            }
+            
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    memberLatitude = position.coords.latitude;
+                    memberLongitude = position.coords.longitude;
+                    statusEl.textContent = 'Location obtained - Ready to check in';
+                    statusEl.className = 'badge bg-success status-badge';
+                },
+                (error) => {
+                    let msg = 'Location access denied';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED: msg = 'Location access denied'; break;
+                        case error.POSITION_UNAVAILABLE: msg = 'Location unavailable'; break;
+                        case error.TIMEOUT: msg = 'Location request timeout'; break;
+                    }
+                    statusEl.textContent = msg;
+                    statusEl.className = 'badge bg-danger status-badge';
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+            return true;
+        }
+        
+        // Attempt to get location on page load
+        getLocation();
+        
         // Handle form submission
         document.getElementById('checkinForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            if (memberLatitude === null || memberLongitude === null) {
+                document.getElementById('errorText').textContent = 'Waiting for location. Please allow location access and try again.';
+                document.getElementById('errorMessage').classList.remove('d-none');
+                return;
+            }
+            
             const data = {
-                session_id: document.getElementById('sessionId').value,
-                latitude: parseFloat(document.getElementById('lat').value),
-                longitude: parseFloat(document.getElementById('lng').value),
+                session_id: sessionId,
+                latitude: memberLatitude,
+                longitude: memberLongitude,
                 name: document.getElementById('memberName').value,
                 member_type: document.getElementById('memberCategory').value
             };

@@ -2,6 +2,7 @@
 import uuid
 import json
 import requests
+import tempfile
 from datetime import datetime, date, timedelta
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, Response, send_from_directory, send_file
 try:
@@ -40,9 +41,15 @@ if FIREBASE_AVAILABLE:
     try:
         service_account_json = os.environ.get('FIREBASE_SERVICE_ACCOUNT_JSON')
         if service_account_json:
-            with open('/tmp/serviceAccountKey.json', 'w') as f:
+            # Write service account JSON to a temporary file
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
                 f.write(service_account_json)
-            cred = credentials.Certificate('/tmp/serviceAccountKey.json')
+                temp_path = f.name
+            try:
+                cred = credentials.Certificate(temp_path)
+            finally:
+                # Clean up the temporary file
+                os.unlink(temp_path)
         elif os.path.exists("serviceAccountKey.json"):
             cred = credentials.Certificate("serviceAccountKey.json")
         else:
@@ -56,7 +63,7 @@ if FIREBASE_AVAILABLE:
         ref = db.reference()
         bucket = storage.bucket()
         FIREBASE_INITIALIZED = True
-        print("✅ Firebase Admin SDK initialized successfully")
+        print("Firebase Admin SDK initialized successfully")
     except Exception as e:
         print(f"Warning: Firebase initialization failed: {e}")
         print("Running in demo mode without Firebase.")
@@ -80,7 +87,6 @@ def login():
         
         if FIREBASE_AVAILABLE and FIREBASE_INITIALIZED:
             try:
-                import requests
                 api_key = os.environ.get('FIREBASE_API_KEY')
                 url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={api_key}"
                 payload = {"email": email, "password": password, "returnSecureToken": True}
@@ -107,78 +113,53 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
-@app.route('/api/stats')
-def get_stats():
-    if 'user' not in session:
-        return jsonify({'error': 'Unauthorized'}), 401
-
+def get_dashboard_stats():
+    """Fetch and return stats for dashboard"""
     stats = {
         'total_members': 0,
         'attendance_today': 0,
         'upcoming_events': 0,
         'active_groups': 0
     }
-
+    
     if FIREBASE_INITIALIZED:
         try:
             members = ref.child('members').get()
             if members:
                 stats['total_members'] = len(members)
-
+            
             today = date.today().isoformat()
             attendance_today = ref.child('attendance').child(today).get()
             if attendance_today:
                 stats['attendance_today'] = len(attendance_today)
-
+            
             events = ref.child('events').get()
             if events:
                 upcoming = [e for e in events.values() if e.get('date', '') >= today]
                 stats['upcoming_events'] = len(upcoming)
-
+            
             groups = ref.child('groups').get()
             if groups:
                 stats['active_groups'] = len(groups)
         except Exception as e:
             print(f"Error fetching stats: {e}")
+    
+    return stats
 
+@app.route('/api/stats')
+def get_stats():
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    stats = get_dashboard_stats()
     return jsonify(stats)
-
-# ==================== DASHBOARD ROUTE ====================
 
 @app.route('/dashboard')
 def dashboard():
     if 'user' not in session:
         return redirect(url_for('login'))
     
-    # Get stats for dashboard
-    stats = {
-        'total_members': 0,
-        'attendance_today': 0,
-        'upcoming_events': 0,
-        'active_groups': 0
-    }
-    
-    if FIREBASE_INITIALIZED:
-        try:
-            members = ref.child('members').get()
-            if members:
-                stats['total_members'] = len(members)
-            
-            today = date.today().isoformat()
-            attendance_today = ref.child('attendance').child(today).get()
-            if attendance_today:
-                stats['attendance_today'] = len(attendance_today)
-            
-            events = ref.child('events').get()
-            if events:
-                upcoming = [e for e in events.values() if e.get('date', '') >= today]
-                stats['upcoming_events'] = len(upcoming)
-            
-            groups = ref.child('groups').get()
-            if groups:
-                stats['active_groups'] = len(groups)
-        except Exception as e:
-            print(f"Error fetching stats: {e}")
+    stats = get_dashboard_stats()
     
     return render_template('dashboard.html',
         user=session.get('email'),
@@ -191,6 +172,19 @@ def dashboard():
         firebase_messaging_sender_id=os.environ.get('FIREBASE_MESSAGING_SENDER_ID'),
         firebase_app_id=os.environ.get('FIREBASE_APP_ID')
     )
+
+def format_member_id(member_id_value):
+    """Ensure member ID is in CHURCH-MEM-XXX format"""
+    if not member_id_value:
+        return member_id_value
+    # If already in correct format, return as-is
+    if member_id_value.startswith('CHURCH-MEM-'):
+        return member_id_value
+    # If it has CHURCH-MEM without hyphen, add it
+    if member_id_value.startswith('CHURCH-MEM'):
+        return f"CHURCH-MEM-{member_id_value.replace('CHURCH-MEM', '').strip()}"
+    # Otherwise, prepend the prefix
+    return f"CHURCH-MEM-{member_id_value}"
 
 @app.route('/api/members/<member_id>/qrcode')
 def get_member_qrcode(member_id):
@@ -212,9 +206,8 @@ def get_member_qrcode(member_id):
         return jsonify({'error': 'Member not found'}), 404
 
     # Get member_id or generate CHURCH-MEM format
-    member_id_value = member.get('member_id', member_id)
-    if not member_id_value.startswith('CHURCH-MEM'):
-        member_id_value = f"CHURCH-MEM-{member_id_value}"
+    raw_member_id = member.get('member_id', member_id)
+    member_id_value = format_member_id(raw_member_id)
 
     # Generate QR code encoding member ID in CHURCH-MEM-XXX format
     qr_data = json.dumps({
@@ -269,6 +262,12 @@ def scan_member():
     Reverse scan endpoint for admin to scan member ID cards.
     Unlike regular attendance scan, this does NOT check GPS - admin's location is trusted.
     """
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    if not is_admin():
+        return jsonify({'error': 'Admin access required'}), 403
+    
     data = request.get_json()
     qr_data = data.get('qr_data')  # Expecting decoded JSON from QR code
 
@@ -362,7 +361,7 @@ def members_list():
             data = ref.child('members').get()
             if data:
                 members = [{'id': k, **v} for k, v in data.items()]
-                members.sort(key=lambda x: x.get('name', ''))
+                members.sort(key=lambda x: (x.get('last_name', '').lower(), x.get('first_name', '').lower()))
         except Exception as e:
             print(f"Error fetching members: {e}")
     
@@ -448,7 +447,7 @@ def get_members():
             data = ref.child('members').get()
             if data:
                 members = [{'id': k, **v} for k, v in data.items()]
-                members.sort(key=lambda x: x.get('name', ''))
+                members.sort(key=lambda x: (x.get('last_name', '').lower(), x.get('first_name', '').lower()))
         except Exception as e:
             print(f"Error fetching members: {e}")
 
@@ -594,10 +593,16 @@ def get_attendance_records():
 @app.route('/api/attendance/record', methods=['POST'])
 def record_attendance():
     """Record attendance for a member (via QR scan or manual entry)"""
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
     data = request.get_json()
     member_id = data.get('member_id')
     service_type = data.get('service_type', 'sunday')
     today = date.today().isoformat()
+    
+    if not member_id:
+        return jsonify({'error': 'member_id is required'}), 400
     
     if FIREBASE_INITIALIZED:
         try:
@@ -633,6 +638,15 @@ def attendance_stats():
                 stats['last_7_days'].append({'date': d.strftime('%Y-%m-%d'), 'count': count})
             
             stats['last_7_days'].reverse()
+            
+            # Service type breakdown (last 30 days)
+            for i in range(30):
+                d = date.today() - timedelta(days=i)
+                day_data = ref.child('attendance').child(d.strftime('%Y-%m-%d')).get()
+                if day_data:
+                    for record in day_data.values():
+                        service = record.get('service_type', 'unknown')
+                        stats['by_service_type'][service] = stats['by_service_type'].get(service, 0) + 1
         except Exception as e:
             print(f"Error: {e}")
     
@@ -846,10 +860,14 @@ def record_donation():
     data = request.get_json()
     donation_id = str(uuid.uuid4())[:8]
     
+    amount = float(data.get('amount', 0))
+    if amount <= 0:
+        return jsonify({'error': 'Amount must be greater than 0'}), 400
+    
     donation_data = {
         'id': donation_id,
         'member_id': data.get('member_id', ''),
-        'amount': float(data.get('amount', 0)),
+        'amount': amount,
         'type': data.get('type', 'tithe'),
         'method': data.get('method', 'cash'),
         'date': data.get('date', date.today().isoformat()),
@@ -925,6 +943,7 @@ def sermons_page():
         return redirect(url_for('login'))
     
     sermons = []
+    today_str = date.today().isoformat()
     if FIREBASE_INITIALIZED:
         try:
             data = ref.child('sermons').get()
@@ -934,53 +953,7 @@ def sermons_page():
         except Exception as e:
             print(f"Error fetching sermons: {e}")
     
-    return render_template('sermons.html', sermons=sermons, user=session.get('email'))
-
-@app.route('/api/sermons/<sermon_id>', methods=['DELETE'])
-def delete_sermon(sermon_id):
-    """Delete sermon - admin only"""
-    if 'user' not in session:
-        return jsonify({'error': 'Unauthorized'}), 401
-    
-    if not is_admin():
-        return jsonify({'error': 'Admin access required'}), 403
-    
-    if FIREBASE_INITIALIZED:
-        try:
-            # Get sermon data first (to find storage path)
-            sermon_data = ref.child('sermons').child(sermon_id).get()
-            if sermon_data and 'storage_path' in sermon_data:
-                # Delete file from storage
-                try:
-                    blob = bucket.blob(sermon_data['storage_path'])
-                    blob.delete()
-                    print(f"Deleted file: {sermon_data['storage_path']}")
-                except Exception as e:
-                    print(f"Warning: Could not delete file: {e}")
-            
-            # Delete record from database
-            ref.child('sermons').child(sermon_id).delete()
-            return jsonify({'success': True})
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
-    
-    return jsonify({'success': True, 'demo': True})
-
-@app.route('/api/sermons/<sermon_id>', methods=['GET'])
-def get_sermon(sermon_id):
-    """Get single sermon details"""
-    if 'user' not in session:
-        return jsonify({'error': 'Unauthorized'}), 401
-    
-    if FIREBASE_INITIALIZED:
-        try:
-            sermon_data = ref.child('sermons').child(sermon_id).get()
-            if sermon_data:
-                return jsonify({'sermon': {'id': sermon_id, **sermon_data}})
-        except Exception as e:
-            print(f"Sermon fetch error: {e}")
-    
-    return jsonify({'error': 'Sermon not found'}), 404
+    return render_template('sermons.html', sermons=sermons, user=session.get('email'), date=today_str)
 
 # ==================== COMMUNICATIONS ====================
 
@@ -1118,7 +1091,8 @@ def member_cards():
             data = ref.child('members').get()
             if data:
                 members = [{'id': k, **v} for k, v in data.items()]
-                members.sort(key=lambda x: x.get('first_name', ''))
+                # Sort by last_name then first_name
+                members.sort(key=lambda x: (x.get('last_name', '').lower(), x.get('first_name', '').lower()))
         except Exception as e:
             print(f"Error fetching members: {e}")
     
@@ -1245,7 +1219,14 @@ def resources_page():
         except Exception as e:
             print(f"Error: {e}")
     
-    return render_template('resources.html', inventory=inventory, bookings=bookings, user=session.get('email'))
+    # Compute stats for the template
+    stats = {
+        'total_inventory': len(inventory),
+        'low_stock': sum(1 for item in inventory if item.get('quantity', 0) <= item.get('min_quantity', 0)),
+        'active_bookings': len(bookings)
+    }
+    
+    return render_template('resources.html', inventory=inventory, bookings=bookings, stats=stats, user=session.get('email'))
 
 @app.route('/api/inventory', methods=['POST'])
 def add_inventory():
@@ -1271,7 +1252,7 @@ def add_inventory():
             return jsonify({'success': True, 'item_id': item_id})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-    return jsonify({'success': True})
+    return jsonify({'success': True, 'item_id': item_id})
 
 # ==================== BIBLE TOOLS ROUTES ====================
 
@@ -1279,8 +1260,10 @@ def add_inventory():
 def bible_reader():
     if 'user' not in session:
         return redirect(url_for('login'))
+    stats = get_dashboard_stats()
     return render_template('dashboard.html',
         user=session.get('email'),
+        stats=stats,
         firebase_api_key=os.environ.get('FIREBASE_API_KEY'),
         firebase_auth_domain=os.environ.get('FIREBASE_AUTH_DOMAIN'),
         firebase_database_url=os.environ.get('FIREBASE_DATABASE_URL'),
@@ -1345,10 +1328,10 @@ def start_service():
         except Exception as e:
             print(f"Warning: {e}")
 
-    # Generate URL for member scan page
+    # Generate URL for member scan page (no coordinates needed - member will provide their own via geolocation)
     from urllib.parse import quote
     base_url = request.url_root.rstrip('/')
-    qr_url = f"{base_url}/scan?sid={session_id}&lat={latitude}&lng={longitude}&limit={proximity_limit}"
+    qr_url = f"{base_url}/scan?sid={session_id}&limit={proximity_limit}"
     
     # Generate QR code with the scan URL
     qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
@@ -1368,14 +1351,10 @@ def start_service():
 def member_scan_page():
     """Page members see when scanning the service QR code"""
     session_id = request.args.get('sid')
-    lat = request.args.get('lat', '0')
-    lng = request.args.get('lng', '0')
     limit = request.args.get('limit', '3')
     
     return render_template('member_scan.html', 
         session_id=session_id, 
-        lat=lat, 
-        lng=lng, 
         limit=limit)
 
 @app.route('/api/attendance/scan', methods=['POST'])
@@ -1443,6 +1422,9 @@ def publish_service():
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
     
+    if not is_admin():
+        return jsonify({'error': 'Admin access required'}), 403
+    
     try:
         data = request.get_json()
         required_fields = ['occasion', 'date', 'theme']
@@ -1471,7 +1453,7 @@ def publish_service():
                 print(f"Firebase write error: {e}")
                 return jsonify({'error': 'Failed to write to database'}), 500
         else:
-            print("Demo mode ΓÇö service data not saved")
+            print("Demo mode - service data not saved")
         
         return jsonify({'success': True, 'message': 'Service update published'}), 200
     except Exception as e:
@@ -1662,7 +1644,7 @@ def upload_sermon():
         'message': 'Sermon uploaded successfully'
     })
 
-@app.route('/api/sermons/<sermon_id>', methods=['DELETE'])
+@app.route('/api/sermons/<sermon_id>', methods=['DELETE'], endpoint='delete_sermon_api')
 def delete_sermon(sermon_id):
     """Delete sermon - admin only"""
     if 'user' not in session:
@@ -1759,4 +1741,5 @@ def get_analytics():
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+
 

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member Card - {{ member.first_name }} {{ member.last_name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            font-family: 'Source Sans Pro', sans-serif;
+        }
+        .id-card {
+            width: 350px;
+            height: 200px;
+            background: linear-gradient(135deg, #002192 0%, #006333 100%);
+            border-radius: 15px;
+            color: white;
+            padding: 20px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .id-card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 6px;
+            background: #D4AF37;
+        }
+        .church-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .church-sub {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+            margin-bottom: 15px;
+        }
+        .member-info {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        .member-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 10px 0;
+            color: #D4AF37;
+        }
+        .member-id {
+            font-family: monospace;
+            font-size: 0.9rem;
+            background: rgba(255,255,255,0.15);
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 8px 0;
+        }
+        .qr {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 80px;
+            height: 80px;
+            background: white;
+            padding: 4px;
+            border-radius: 6px;
+        }
+        .qr img {
+            width: 100%;
+            height: 100%;
+        }
+        .footer {
+            position: absolute;
+            bottom: 8px;
+            left: 20px;
+            font-size: 0.6rem;
+            opacity: 0.7;
+        }
+        @media print {
+            body { background: white; padding: 0; }
+            .id-card { box-shadow: none; border: 2px solid #002192; }
+        }
+    </style>
+</head>
+<body>
+    <div class="id-card">
+        <div class="church-name">Redemption Presby</div>
+        <div class="church-sub">Congregation</div>
+        
+        <div class="member-info"><strong>Name:</strong> {{ member.first_name }} {{ member.last_name }}</div>
+        <div class="member-info"><strong>Status:</strong> {{ member.status|title }}</div>
+        
+        <div class="member-name">{{ member.member_id }}</div>
+        
+        <div class="qr">
+            <img src="{{ url_for('get_member_qrcode', member_id=member.id) }}" alt="QR">
+        </div>
+        
+        <div class="footer">Printed: {{ now|default('Today') }}</div>
+    </div>
+</body>
+</html>
