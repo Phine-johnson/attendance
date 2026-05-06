@@ -1829,9 +1829,6 @@ def get_trash():
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
 
-    if not is_admin():
-        return jsonify({'error': 'Admin access required'}), 403
-
     trash_items = []
     if FIREBASE_INITIALIZED:
         try:
@@ -1849,9 +1846,6 @@ def restore_trash_item(item_id):
     """Restore a deleted item from trash"""
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
-
-    if not is_admin():
-        return jsonify({'error': 'Admin access required'}), 403
 
     if FIREBASE_INITIALIZED:
         try:
@@ -1896,9 +1890,6 @@ def purge_trash_item(item_id):
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
 
-    if not is_admin():
-        return jsonify({'error': 'Admin access required'}), 403
-
     if FIREBASE_INITIALIZED:
         try:
             # Get trash item first to check for associated files
@@ -1928,9 +1919,6 @@ def clear_all_trash():
     """Permanently delete all items from trash"""
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
-
-    if not is_admin():
-        return jsonify({'error': 'Admin access required'}), 403
 
     if FIREBASE_INITIALIZED:
         try:
@@ -1962,9 +1950,6 @@ def clear_all_trash():
 def trash_page():
     if 'user' not in session:
         return redirect(url_for('login'))
-
-    if not is_admin():
-        return redirect(url_for('dashboard'))
 
     return render_template('trash.html', user=session.get('email'))
 
