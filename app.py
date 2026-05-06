@@ -1567,7 +1567,7 @@ def scan_attendance():
     limit = session_data.get('limit', 3)
 
     if distance > limit:
-        return jsonify({'error': f'Too far! Please move closer to the admin. (Distance: {distance:.1f}m)'}), 403
+        return jsonify({'error': f'Please move closer to the service location. Kindly move to within {limit}m of the Redemption Presby Church for verification. (Current distance: {distance:.1f}m)'}), 403
 
     try:
         checkin_id = str(uuid.uuid4())[:8]
@@ -1586,6 +1586,115 @@ def scan_attendance():
         return jsonify({'error': str(e)}), 500
 
     return jsonify({'success': True, 'message': f'Check-in successful! Distance: {distance:.1f}m'})
+
+@app.route('/api/attendance/session/<session_id>')
+def get_session_attendance(session_id):
+    '''Get all attendance records for a specific session (admin only)'''
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    if not is_admin():
+        return jsonify({'error': 'Admin access required'}), 403
+    
+    records = []
+    if FIREBASE_INITIALIZED:
+        try:
+            # Check if session exists
+            session_data = ref.child('sessions').child(session_id).get()
+            if not session_data:
+                return jsonify({'error': 'Session not found'}), 404
+            
+            # Get all checkins for this session
+            checkins = ref.child('checkins').get()
+            if checkins:
+                for cid, cdata in checkins.items():
+                    if cdata.get('session_id') == session_id:
+                        records.append({'id': cid, **cdata})
+            
+            records.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+        except Exception as e:
+            print('Error fetching session attendance: %s' % e)
+            return jsonify({'error': str(e)}), 500
+    
+    return jsonify({'records': records, 'session': session_data})
+
+
+@app.route('/api/sessions/qr', methods=['POST'])
+def create_session_qr():
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    if not is_admin():
+        return jsonify({'error': 'Admin access required'}), 403
+    if not FIREBASE_INITIALIZED:
+        return jsonify({'error': 'Firebase not initialized'}), 503
+    try:
+        data = request.get_json(silent=True) or {}
+    except Exception:
+        data = {}
+    program_name = data.get('program_name', '').strip()
+    date_str = data.get('date', '').strip()
+    start_time = data.get('start_time', '').strip()
+    end_time = data.get('end_time', '').strip()
+    latitude = data.get('latitude', 0)
+    longitude = data.get('longitude', 0)
+    proximity_limit = data.get('limit', 3)
+    if not program_name or not date_str or not start_time or not end_time:
+        return jsonify({'error': 'Missing required field'}), 400
+    session_id = str(uuid.uuid4())
+    try:
+        session_data = {
+            'session_id': session_id, 'latitude': latitude, 'longitude': longitude,
+            'limit': proximity_limit, 'program_name': program_name,
+            'date': date_str, 'start_time': start_time, 'end_time': end_time,
+            'timestamp': datetime.now().isoformat(),
+            'created_by': session['user'], 'active': True
+        }
+        ref.child('sessions').child(session_id).set(session_data)
+    except Exception as e:
+        return jsonify({'error': f'Failed to create session: {str(e)}'}), 500
+    base_url = request.url_root.rstrip('/')
+    qr_url = f'{base_url}/scan?sid={session_id}&limit={proximity_limit}'
+    qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
+    qr.add_data(qr_url)
+    qr.make(fit=True)
+    try:
+        from qrcode.image.svg import SvgImage
+        img = qr.make_image(image_factory=SvgImage)
+        return Response(img.to_string(), mimetype='image/svg+xml')
+    except Exception as e:
+        print(f'QR error: {e}')
+        return jsonify({'error': 'Failed to generate QR code'}), 500
+
+@app.route('/api/sessions', methods=['GET'])
+def get_sessions():
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    if not is_admin():
+        return jsonify({'error': 'Admin access required'}), 403
+    sessions = []
+    if FIREBASE_INITIALIZED:
+        try:
+            data = ref.child('sessions').get()
+            if data:
+                for sid, sdata in data.items():
+                    sessions.append({'id': sid, **sdata})
+                sessions.sort(key=lambda x: (x.get('date', ''), x.get('start_time', '')), reverse=True)
+        except Exception as e:
+            print('Error fetching sessions: %s' % e)
+    return jsonify({'sessions': sessions})
+
+@app.route('/api/sessions/<session_id>', methods=['DELETE'])
+def delete_session(session_id):
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    if not is_admin():
+        return jsonify({'error': 'Admin access required'}), 403
+    if FIREBASE_INITIALIZED:
+        try:
+            ref.child('sessions').child(session_id).delete()
+            return jsonify({'success': True})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 @app.route('/publish_service', methods=['POST'])
 def publish_service():
@@ -1671,6 +1780,12 @@ def send_notification():
             return jsonify({'error': str(e)}), 500
     
     return jsonify({'error': 'Firebase not initialized'}), 503
+
+@app.route('/sessions')
+def sessions_page():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    return render_template('session_management.html', user=session.get('email'))
 
 @app.route('/api/sermons', methods=['POST'])
 def add_sermon():

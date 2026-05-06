@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Management - Redemption Presby Congregation</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=6">
+    <style>
+        .qr-code-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+        .qr-code-container svg {
+            max-width: 200px;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <button class="hamburger-btn me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                </button>
+                <div class="d-flex align-items-center">
+                    <div class="logo-img d-flex align-items-center justify-content-center">
+                        <img src="{{ url_for('static', filename='presby-logo.png') }}?v=3" alt="PCG Logo" style="max-width: 70%; max-height: 70%;">
+                    </div>
+                    <div>
+                        <div class="church-name">Redemption Presby</div>
+                        <div class="church-subtitle">Congregation</div>
+                    </div>
+                </div>
+            </div>
+            <div class="ms-auto d-flex align-items-center">
+                <span class="navbar-text me-3">Welcome, <strong>{{ user }}</strong></span>
+                <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm">Sign Out</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="text-pcg-blue fw-bold mb-1" style="font-family: 'Playfair Display', serif;">
+                            Session Management
+                        </h2>
+                        <p class="text-muted">Create QR codes for Sunday services with time-based validity</p>
+                    </div>
+                    <button class="btn btn-custom-primary" data-bs-toggle="modal" data-bs-target="#createSessionModal">
+                        <svg width="18" height="18" class="me-1" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                        </svg>
+                        Create Session
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sunday Service Schedule Reference -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card card-custom">
+                    <div class="card-header">
+                        <strong>Sunday Service Schedule</strong>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <h6 class="text-pcg-blue">First Service</h6>
+                                <p class="mb-1"><strong>Time:</strong> 7:00 AM - 8:30 AM</p>
+                                <p class="mb-0"><em>Early morning worship</em></p>
+                            </div>
+                            <div class="col-md-4">
+                                <h6 class="text-pcg-blue">Second Service</h6>
+                                <p class="mb-1"><strong>Time:</strong> 9:00 AM - 1:00 PM</p>
+                                <p class="mb-0"><em>Main Sunday service</em></p>
+                            </div>
+                            <div class="col-md-4">
+                                <h6 class="text-pcg-blue">Joint Service</h6>
+                                <p class="mb-1"><strong>Time:</strong> 8:30 AM - 1:00 PM</p>
+                                <p class="mb-0"><em>Special combined service</em></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Sessions -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card card-custom">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <strong>Active Sessions</strong>
+                        <span class="badge bg-pcg-green" id="activeSessionCount">0</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-custom mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Program</th>
+                                        <th>Date</th>
+                                        <th>Time</th>
+                                        <th>QR Code</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sessionsTableBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4">
+                                            <div class="spinner-border text-pcg-blue" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="noSessionsMessage" class="text-center py-5 d-none">
+                            <svg width="48" height="48" class="mb-3 text-muted" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H8v-2h4v2zm0-4H8V6h4v6z"/>
+                            </svg>
+                            <p>No sessions found. Create a new session to get started.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Session Modal -->
+    <div class="modal fade" id="createSessionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-pcg-blue">Create New Session</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="createSessionForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-pcg-blue">Program Name</label>
+                            <input type="text" class="form-control form-control-custom" name="program_name" 
+                                   placeholder="e.g., First Service, Second Service, Joint Service" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-pcg-blue">Date</label>
+                                <input type="date" class="form-control form-control-custom" name="date" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-pcg-blue">Location Lat (optional)</label>
+                                <input type="number" step="any" class="form-control form-control-custom" name="latitude" placeholder="0">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-pcg-blue">Start Time</label>
+                                <input type="time" class="form-control form-control-custom" name="start_time" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-pcg-blue">End Time</label>
+                                <input type="time" class="form-control form-control-custom" name="end_time" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-pcg-blue">Location Lng (optional)</label>
+                                <input type="number" step="any" class="form-control form-control-custom" name="longitude" placeholder="0">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-pcg-blue">Proximity Limit (meters)</label>
+                                <input type="number" class="form-control form-control-custom" name="limit" value="3" min="1" max="100">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-custom-primary">Generate QR Code</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code Modal -->
+    <div class="modal fade" id="qrCodeModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-pcg-blue">Session QR Code</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p id="qrSessionDetails"></p>
+                    <div id="qrCodeDisplay" class="qr-code-container"></div>
+                    <p class="text-muted mt-3 mb-0">Members scan this to check into the service</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Offcanvas Sidebar -->
+    <div class="offcanvas offcanvas-end bg-dark" tabindex="-1" id="sidebarOffcanvas">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="sidebarOffcanvasLabel">Menu</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            <nav class="navbar-dark">
+                <div class="sidebar-item" data-href="{{ url_for('dashboard') }}">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                    </svg>
+                    Dashboard
+                </div>
+                <div class="sidebar-item" data-href="{{ url_for('attendance_report') }}">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H8v-2h4v2zm0-4H8v-2h4v2zm0-4H8V6h4v2zm5 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V6h2v2z"/>
+                    </svg>
+                    Attendance
+                </div>
+                <div class="sidebar-item" data-href="{{ url_for('sessions_page') }}">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M19 4H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H5V8h14v10zm-7-4H5v-2h7v2zm9 0h-7v-2h7v2zm0-4H5V6h14v2z"/>
+                    </svg>
+                    Sessions
+                </div>
+                <div class="sidebar-item" data-href="{{ url_for('members_list') }}">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.76 0-8 1.34-8 4v3h16v-3c0-2.66-5.24-4-8-4z"/>
+                    </svg>
+                    Members
+                </div>
+                <div class="sidebar-item" data-href="{{ url_for('events_list') }}">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V9h14v10z"/>
+                    </svg>
+                    Events
+                </div>
+                <div class="sidebar-item" data-href="{{ url_for('groups_list') }}">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.76 0-8 1.34-8 4v3h16v-3c0-2.66-5.24-4-8-4z"/>
+                    </svg>
+                    Groups
+                </div>
+                <div class="sidebar-item" data-href="{{ url_for('donations_page') }}">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 14.59L12 11.17l-1.41 4.59L7.82 14l4.59-.61-.61-4.59 1.41 4.59L16.18 14z"/>
+                    </svg>
+                    Donations
+                </div>
+                <div class="sidebar-item" data-href="{{ url_for('communications_page') }}">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+                    </svg>
+                    Communications
+                </div>
+                <div class="sidebar-item" data-href="{{ url_for('sermons_page') }}">
+                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+                    </svg>
+                    Sermons
+                </div>
+            </nav>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Set default date to today
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.querySelector('input[name="date"]').value = today;
+            loadSessions();
+        });
+
+        // Sidebar navigation
+        document.querySelectorAll('.sidebar-item[data-href]').forEach(item => {
+            item.addEventListener('click', function() {
+                const href = this.dataset.href;
+                if (href) window.location.href = href;
+            });
+        });
+
+        // Load sessions from API
+        async function loadSessions() {
+            try {
+                const response = await fetch('/api/sessions');
+                const data = await response.json();
+                displaySessions(data.sessions);
+            } catch (error) {
+                console.error('Error loading sessions:', error);
+                document.getElementById('sessionsTableBody').innerHTML = 
+                    '<tr><td colspan="5" class="text-center py-4 text-danger">Error loading sessions</td></tr>';
+            }
+        }
+
+        // Display sessions in table
+        function displaySessions(sessions) {
+            const tbody = document.getElementById('sessionsTableBody');
+            const noSessionsMsg = document.getElementById('noSessionsMessage');
+            const activeCountEl = document.getElementById('activeSessionCount');
+
+            if (!sessions || sessions.length === 0) {
+                tbody.innerHTML = '';
+                noSessionsMsg.classList.remove('d-none');
+                activeCountEl.textContent = '0';
+                return;
+            }
+
+            noSessionsMsg.classList.add('d-none');
+            activeCountEl.textContent = sessions.length;
+
+            tbody.innerHTML = sessions.map(session => `
+                <tr>
+                    <td><strong>${escapeHtml(session.program_name)}</strong></td>
+                    <td>${escapeHtml(session.date)}</td>
+                    <td>${escapeHtml(session.start_time)} - ${escapeHtml(session.end_time)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="showQR(${JSON.stringify(session).replace(/"/g, '&quot;')})">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M3 11h8V3H3v8zm2-6h4v4H5V5zm11 3h8v8h-8v-8zm2 6h4v4h-4v-4zM13 3v2h8V3h-8zm6 12v-6h2v6h-2zM3 13v8h8v-8H3zm2 6H5v-4h4v4zm8-16v8h8V3h-8z"/>
+                            </svg>
+                            Show QR
+                        </button>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteSession('${session.id}')">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                            </svg>
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Create session
+        document.getElementById('createSessionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/api/sessions/qr', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    const svg = await response.text();
+                    
+                    // Show QR code modal
+                    document.getElementById('qrSessionDetails').innerHTML = `
+                        <strong>${escapeHtml(data.program_name)}</strong><br>
+                        ${escapeHtml(data.date)} ${escapeHtml(data.start_time)} - ${escapeHtml(data.end_time)}
+                    `;
+                    document.getElementById('qrCodeDisplay').innerHTML = svg;
+                    
+                    // Close create modal, open QR modal
+                    bootstrap.Modal.getInstance(document.getElementById('createSessionModal')).hide();
+                    new bootstrap.Modal(document.getElementById('qrCodeModal')).show();
+                    
+                    // Reload sessions
+                    loadSessions();
+                    e.target.reset();
+                    document.querySelector('input[name="date"]').value = new Date().toISOString().split('T')[0];
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + error.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Network error. Please try again.');
+            }
+        });
+
+        // Show QR code in modal
+        window.showQR = function(session) {
+            // Reconstruct full session object from the escaped string
+            let sessionObj;
+            try {
+                sessionObj = JSON.parse(session.replace(/&quot;/g, '"'));
+            } catch(e) {
+                sessionObj = session;
+            }
+            
+            document.getElementById('qrSessionDetails').innerHTML = `
+                <strong>${escapeHtml(sessionObj.program_name)}</strong><br>
+                ${escapeHtml(sessionObj.date)} ${escapeHtml(sessionObj.start_time)} - ${escapeHtml(sessionObj.end_time)}
+            `;
+            
+            // Generate QR code
+            const baseUrl = window.location.origin;
+            const qrUrl = `${baseUrl}/scan?sid=${sessionObj.session_id}&limit=${sessionObj.limit || 3}`;
+            
+            const qr = qrcode.qrcode(0, 'L');
+            qr.addData(qrUrl);
+            qr.make();
+            
+            document.getElementById('qrCodeDisplay').innerHTML = qr.createImgTag(6);
+            new bootstrap.Modal(document.getElementById('qrCodeModal')).show();
+        };
+
+        // Delete session
+        window.deleteSession = async function(sessionId) {
+            if (!confirm('Delete this session?')) return;
+            
+            try {
+                const response = await fetch('/api/sessions/' + sessionId, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    loadSessions();
+                } else {
+                    alert('Error deleting session');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Network error');
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+</body>
+</html>
