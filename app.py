@@ -300,10 +300,13 @@ def scan_member():
     """
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
-    
+
     if not is_admin():
         return jsonify({'error': 'Admin access required'}), 403
-    
+
+    if not FIREBASE_INITIALIZED:
+        return jsonify({'error': 'Firebase not initialized'}), 503
+
     data = request.get_json()
     qr_data = data.get('qr_data')  # Expecting decoded JSON from QR code
 
@@ -322,17 +325,17 @@ def scan_member():
     # Verify member exists by searching for member_id field
     member = None
     member_key = None
-    if FIREBASE_INITIALIZED:
-        try:
-            members = ref.child('members').get()
-            if members:
-                for key, mdata in members.items():
-                    if mdata.get('member_id') == member_id:
-                        member = {'id': key, **mdata}
-                        member_key = key
-                        break
-        except Exception as e:
-            print(f"Error fetching member: {e}")
+    try:
+        members = ref.child('members').get()
+        if members:
+            for key, mdata in members.items():
+                if mdata.get('member_id') == member_id:
+                    member = {'id': key, **mdata}
+                    member_key = key
+                    break
+    except Exception as e:
+        print(f"Error fetching member: {e}")
+        return jsonify({'error': 'Database error'}), 500
 
     if not member:
         return jsonify({'error': 'Member not found'}), 404
@@ -341,38 +344,38 @@ def scan_member():
     today = date.today().isoformat()
     service_type = 'sunday'  # Could be determined by service running
 
-    if FIREBASE_INITIALIZED:
+    try:
+        # Check if there's an active session first
+        active_session = None
         try:
-            # Check if there's an active session first
-            active_session = None
-            try:
-                sessions = ref.child('sessions').get()
-                if sessions:
-                    # Find an active session (most recent)
-                    for sid, sdata in sessions.items():
-                        if sdata.get('active', False):
-                            active_session = sid
-                            break
-            except Exception:
-                pass
+            sessions = ref.child('sessions').get()
+            if sessions:
+                # Find an active session (most recent)
+                for sid, sdata in sessions.items():
+                    if sdata.get('active', False):
+                        active_session = sid
+                        break
+        except Exception:
+            pass
 
-            # Record attendance under that session or directly under date
-            if active_session:
-                attendance_ref = ref.child('attendance').child(active_session).child(member_key)
-                attendance_ref.set({
-                    'timestamp': datetime.now().isoformat(),
-                    'service_type': service_type,
-                    'mode': 'admin_scan'
-                })
-            else:
-                attendance_ref = ref.child('attendance').child(today).child(member_key)
-                attendance_ref.set({
-                    'timestamp': datetime.now().isoformat(),
-                    'service_type': service_type,
-                    'mode': 'admin_scan'
-                })
-        except Exception as e:
-            print(f"Error recording attendance: {e}")
+        # Record attendance under that session or directly under date
+        if active_session:
+            attendance_ref = ref.child('attendance').child(active_session).child(member_key)
+            attendance_ref.set({
+                'timestamp': datetime.now().isoformat(),
+                'service_type': service_type,
+                'mode': 'admin_scan'
+            })
+        else:
+            attendance_ref = ref.child('attendance').child(today).child(member_key)
+            attendance_ref.set({
+                'timestamp': datetime.now().isoformat(),
+                'service_type': service_type,
+                'mode': 'admin_scan'
+            })
+    except Exception as e:
+        print(f"Error recording attendance: {e}")
+        return jsonify({'error': 'Failed to record attendance'}), 500
 
     member_name = f"{member.get('first_name', '')} {member.get('last_name', '')}".strip()
     return jsonify({
@@ -646,26 +649,27 @@ def record_attendance():
     """Record attendance for a member (via QR scan or manual entry)"""
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
-    
+
+    if not FIREBASE_INITIALIZED:
+        return jsonify({'error': 'Firebase not initialized'}), 503
+
     data = request.get_json()
     member_id = data.get('member_id')
     service_type = data.get('service_type', 'sunday')
     today = date.today().isoformat()
-    
+
     if not member_id:
         return jsonify({'error': 'member_id is required'}), 400
-    
-    if FIREBASE_INITIALIZED:
-        try:
-            attendance_ref = ref.child('attendance').child(today).child(member_id)
-            attendance_ref.set({
-                'timestamp': datetime.now().isoformat(),
-                'service_type': service_type
-            })
-            return jsonify({'success': True})
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
-    return jsonify({'error': 'Firebase not initialized'}), 503
+
+    try:
+        attendance_ref = ref.child('attendance').child(today).child(member_id)
+        attendance_ref.set({
+            'timestamp': datetime.now().isoformat(),
+            'service_type': service_type
+        })
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/attendance/stats')
 def attendance_stats():
@@ -1521,6 +1525,12 @@ def member_scan_page():
 
 @app.route('/api/attendance/scan', methods=['POST'])
 def scan_attendance():
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    if not FIREBASE_INITIALIZED:
+        return jsonify({'error': 'Firebase not initialized'}), 503
+
     data = request.get_json()
     session_id = data.get('session_id')
     latitude = data.get('latitude')
@@ -1531,14 +1541,13 @@ def scan_attendance():
     if not session_id or latitude is None or longitude is None:
         return jsonify({'error': 'Missing required fields'}), 400
 
-    session_data = None
-    if FIREBASE_INITIALIZED:
-        try:
-            session_data = ref.child('sessions').child(session_id).get()
-            if not session_data:
-                return jsonify({'error': 'Invalid session'}), 400
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
+    # Get session data
+    try:
+        session_data = ref.child('sessions').child(session_id).get()
+        if not session_data:
+            return jsonify({'error': 'Invalid or expired session'}), 400
+    except Exception as e:
+        return jsonify({'error': f'Failed to verify session: {str(e)}'}), 500
 
     if not session_data:
         return jsonify({'error': 'Session not found'}), 404
@@ -1558,24 +1567,23 @@ def scan_attendance():
     limit = session_data.get('limit', 3)
 
     if distance > limit:
-        return jsonify({'error': f'Too far! Please move closer to the Admin. (Distance: {distance:.1f}m)'}), 403
+        return jsonify({'error': f'Too far! Please move closer to the admin. (Distance: {distance:.1f}m)'}), 403
 
-    if FIREBASE_INITIALIZED:
-        try:
-            checkin_id = str(uuid.uuid4())[:8]
-            checkin_data = {
-                'id': checkin_id,
-                'session_id': session_id,
-                'member_name': member_name,
-                'member_type': member_type,
-                'distance': round(distance, 1),
-                'timestamp': datetime.now().isoformat(),
-                'latitude': latitude,
-                'longitude': longitude
-            }
-            ref.child('checkins').child(checkin_id).set(checkin_data)
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
+    try:
+        checkin_id = str(uuid.uuid4())[:8]
+        checkin_data = {
+            'id': checkin_id,
+            'session_id': session_id,
+            'member_name': member_name,
+            'member_type': member_type,
+            'distance': round(distance, 1),
+            'timestamp': datetime.now().isoformat(),
+            'latitude': latitude,
+            'longitude': longitude
+        }
+        ref.child('checkins').child(checkin_id).set(checkin_data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
     return jsonify({'success': True, 'message': f'Check-in successful! Distance: {distance:.1f}m'})
 
