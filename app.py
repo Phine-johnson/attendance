@@ -471,10 +471,27 @@ def update_member(member_id):
 def delete_member(member_id):
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
-    
+
+    if not is_admin():
+        return jsonify({'error': 'Admin access required'}), 403
+
     if FIREBASE_INITIALIZED:
         try:
-            ref.child('members').child(member_id).delete()
+            # Get member data before deleting
+            member_data = ref.child('members').child(member_id).get()
+            if member_data:
+                # Move to trash
+                trash_item = {
+                    'type': 'member',
+                    'original_id': member_id,
+                    'data': member_data,
+                    'deleted_by': session.get('email', ''),
+                    'deleted_at': datetime.now().isoformat()
+                }
+                trash_id = f"member_{member_id}_{int(datetime.now().timestamp())}"
+                ref.child('trash').child(trash_id).set(trash_item)
+                # Delete original
+                ref.child('members').child(member_id).delete()
             return jsonify({'success': True})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
@@ -736,9 +753,26 @@ def delete_event(event_id):
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
 
+    if not is_admin():
+        return jsonify({'error': 'Admin access required'}), 403
+
     if FIREBASE_INITIALIZED:
         try:
-            ref.child('events').child(event_id).delete()
+            # Get event data before deleting
+            event_data = ref.child('events').child(event_id).get()
+            if event_data:
+                # Move to trash
+                trash_item = {
+                    'type': 'event',
+                    'original_id': event_id,
+                    'data': event_data,
+                    'deleted_by': session.get('email', ''),
+                    'deleted_at': datetime.now().isoformat()
+                }
+                trash_id = f"event_{event_id}_{int(datetime.now().timestamp())}"
+                ref.child('trash').child(trash_id).set(trash_item)
+                # Delete original
+                ref.child('events').child(event_id).delete()
             return jsonify({'success': True})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
@@ -825,6 +859,36 @@ def remove_group_member(group_id, member_id):
         try:
             ref.child('groups').child(group_id).child('members').child(member_id).delete()
             ref.child('members').child(member_id).child('groups').child(group_id).delete()
+            return jsonify({'success': True})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    return jsonify({'success': True})
+
+@app.route('/api/groups/<group_id>', methods=['DELETE'])
+def delete_group(group_id):
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    if not is_admin():
+        return jsonify({'error': 'Admin access required'}), 403
+
+    if FIREBASE_INITIALIZED:
+        try:
+            # Get group data before deleting
+            group_data = ref.child('groups').child(group_id).get()
+            if group_data:
+                # Move to trash
+                trash_item = {
+                    'type': 'group',
+                    'original_id': group_id,
+                    'data': group_data,
+                    'deleted_by': session.get('email', ''),
+                    'deleted_at': datetime.now().isoformat()
+                }
+                trash_id = f"group_{group_id}_{int(datetime.now().timestamp())}"
+                ref.child('trash').child(trash_id).set(trash_item)
+                # Delete original
+                ref.child('groups').child(group_id).delete()
             return jsonify({'success': True})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
@@ -935,6 +999,36 @@ def export_donations():
         'Content-Disposition': f'attachment; filename=donations_{date.today()}.csv'
     })
 
+@app.route('/api/donations/<donation_id>', methods=['DELETE'])
+def delete_donation(donation_id):
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    if not is_admin():
+        return jsonify({'error': 'Admin access required'}), 403
+
+    if FIREBASE_INITIALIZED:
+        try:
+            # Get donation data before deleting
+            donation_data = ref.child('donations').child(donation_id).get()
+            if donation_data:
+                # Move to trash
+                trash_item = {
+                    'type': 'donation',
+                    'original_id': donation_id,
+                    'data': donation_data,
+                    'deleted_by': session.get('email', ''),
+                    'deleted_at': datetime.now().isoformat()
+                }
+                trash_id = f"donation_{donation_id}_{int(datetime.now().timestamp())}"
+                ref.child('trash').child(trash_id).set(trash_item)
+                # Delete original
+                ref.child('donations').child(donation_id).delete()
+            return jsonify({'success': True})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    return jsonify({'success': True})
+
 # ==================== SERMONS ====================
 
 @app.route('/sermons')
@@ -1030,9 +1124,26 @@ def delete_announcement(ann_id):
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
 
+    if not is_admin():
+        return jsonify({'error': 'Admin access required'}), 403
+
     if FIREBASE_INITIALIZED:
         try:
-            ref.child('announcements').child(ann_id).delete()
+            # Get announcement data before deleting
+            ann_data = ref.child('announcements').child(ann_id).get()
+            if ann_data:
+                # Move to trash
+                trash_item = {
+                    'type': 'announcement',
+                    'original_id': ann_id,
+                    'data': ann_data,
+                    'deleted_by': session.get('email', ''),
+                    'deleted_at': datetime.now().isoformat()
+                }
+                trash_id = f"announcement_{ann_id}_{int(datetime.now().timestamp())}"
+                ref.child('trash').child(trash_id).set(trash_item)
+                # Delete original
+                ref.child('announcements').child(ann_id).delete()
             return jsonify({'success': True})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
@@ -1189,9 +1300,26 @@ def delete_schedule(schedule_id):
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
 
+    if not is_admin():
+        return jsonify({'error': 'Admin access required'}), 403
+
     if FIREBASE_INITIALIZED:
         try:
-            ref.child('schedules').child(schedule_id).delete()
+            # Get schedule data before deleting
+            schedule_data = ref.child('schedules').child(schedule_id).get()
+            if schedule_data:
+                # Move to trash
+                trash_item = {
+                    'type': 'schedule',
+                    'original_id': schedule_id,
+                    'data': schedule_data,
+                    'deleted_by': session.get('email', ''),
+                    'deleted_at': datetime.now().isoformat()
+                }
+                trash_id = f"schedule_{schedule_id}_{int(datetime.now().timestamp())}"
+                ref.child('trash').child(trash_id).set(trash_item)
+                # Delete original
+                ref.child('schedules').child(schedule_id).delete()
             return jsonify({'success': True})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
@@ -1646,32 +1774,35 @@ def upload_sermon():
 
 @app.route('/api/sermons/<sermon_id>', methods=['DELETE'], endpoint='delete_sermon_api')
 def delete_sermon(sermon_id):
-    """Delete sermon - admin only"""
+    """Delete sermon - admin only (soft delete to trash)"""
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
-    
+
     if not is_admin():
         return jsonify({'error': 'Admin access required'}), 403
-    
+
     if FIREBASE_INITIALIZED:
         try:
-            # Get sermon data first (to find storage path)
+            # Get sermon data first
             sermon_data = ref.child('sermons').child(sermon_id).get()
-            if sermon_data and 'storage_path' in sermon_data:
-                # Delete file from storage
-                try:
-                    blob = bucket.blob(sermon_data['storage_path'])
-                    blob.delete()
-                    print(f"Deleted file: {sermon_data['storage_path']}")
-                except Exception as e:
-                    print(f"Warning: Could not delete file: {e}")
-            
-            # Delete record from database
-            ref.child('sermons').child(sermon_id).delete()
+            if sermon_data:
+                # Move to trash (keep storage_path for later)
+                trash_item = {
+                    'type': 'sermon',
+                    'original_id': sermon_id,
+                    'data': sermon_data,
+                    'deleted_by': session.get('email', ''),
+                    'deleted_at': datetime.now().isoformat()
+                }
+                trash_id = f"sermon_{sermon_id}_{int(datetime.now().timestamp())}"
+                ref.child('trash').child(trash_id).set(trash_item)
+
+                # Delete record from database
+                ref.child('sermons').child(sermon_id).delete()
             return jsonify({'success': True})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-    
+
     return jsonify({'success': True, 'demo': True})
 
 @app.route('/api/sermons/<sermon_id>', methods=['GET'])
@@ -1690,7 +1821,154 @@ def get_sermon(sermon_id):
     
     return jsonify({'error': 'Sermon not found'}), 404
 
-@app.route('/api/analytics/dashboard', methods=['GET'])
+# ==================== TRASH / RECYCLE BIN ====================
+
+@app.route('/api/trash', methods=['GET'])
+def get_trash():
+    """List all deleted items in trash"""
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    if not is_admin():
+        return jsonify({'error': 'Admin access required'}), 403
+
+    trash_items = []
+    if FIREBASE_INITIALIZED:
+        try:
+            data = ref.child('trash').get()
+            if data:
+                trash_items = [{'id': k, **v} for k, v in data.items()]
+                trash_items.sort(key=lambda x: x.get('deleted_at', ''), reverse=True)
+        except Exception as e:
+            print(f"Error fetching trash: {e}")
+
+    return jsonify({'trash': trash_items})
+
+@app.route('/api/trash/restore/<item_id>', methods=['POST'])
+def restore_trash_item(item_id):
+    """Restore a deleted item from trash"""
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    if not is_admin():
+        return jsonify({'error': 'Admin access required'}), 403
+
+    if FIREBASE_INITIALIZED:
+        try:
+            # Get trash item
+            trash_item = ref.child('trash').child(item_id).get()
+            if not trash_item:
+                return jsonify({'error': 'Item not found in trash'}), 404
+
+            item_type = trash_item.get('type')
+            original_id = trash_item.get('original_id')
+            original_data = trash_item.get('data', {})
+
+            # Restore to original collection
+            if item_type == 'member':
+                ref.child('members').child(original_id).set(original_data)
+            elif item_type == 'event':
+                ref.child('events').child(original_id).set(original_data)
+            elif item_type == 'announcement':
+                ref.child('announcements').child(original_id).set(original_data)
+            elif item_type == 'donation':
+                ref.child('donations').child(original_id).set(original_data)
+            elif item_type == 'schedule':
+                ref.child('schedules').child(original_id).set(original_data)
+            elif item_type == 'group':
+                ref.child('groups').child(original_id).set(original_data)
+            elif item_type == 'sermon':
+                ref.child('sermons').child(original_id).set(original_data)
+            else:
+                return jsonify({'error': f'Unknown item type: {item_type}'}), 400
+
+            # Remove from trash
+            ref.child('trash').child(item_id).delete()
+            return jsonify({'success': True})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    return jsonify({'success': True})
+
+@app.route('/api/trash/purge/<item_id>', methods=['DELETE'])
+def purge_trash_item(item_id):
+    """Permanently delete an item from trash"""
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    if not is_admin():
+        return jsonify({'error': 'Admin access required'}), 403
+
+    if FIREBASE_INITIALIZED:
+        try:
+            # Get trash item first to check for associated files
+            trash_item = ref.child('trash').child(item_id).get()
+            if trash_item and 'data' in trash_item:
+                # If it's a sermon, delete the associated file from storage
+                if trash_item.get('type') == 'sermon':
+                    storage_path = trash_item['data'].get('storage_path')
+                    if storage_path and bucket:
+                        try:
+                            blob = bucket.blob(storage_path)
+                            blob.delete()
+                            print(f"Purged sermon file: {storage_path}")
+                        except Exception as e:
+                            print(f"Warning: Could not delete sermon file: {e}")
+
+            # Delete from trash
+            ref.child('trash').child(item_id).delete()
+            return jsonify({'success': True})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    return jsonify({'success': True})
+
+@app.route('/api/trash/clear-all', methods=['DELETE'])
+def clear_all_trash():
+    """Permanently delete all items from trash"""
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    if not is_admin():
+        return jsonify({'error': 'Admin access required'}), 403
+
+    if FIREBASE_INITIALIZED:
+        try:
+            # Get all trash items first to handle file cleanup
+            trash_data = ref.child('trash').get()
+            if trash_data:
+                for trash_id, trash_item in trash_data.items():
+                    # If it's a sermon, delete the associated file from storage
+                    if trash_item.get('type') == 'sermon':
+                        storage_path = trash_item.get('data', {}).get('storage_path')
+                        if storage_path and bucket:
+                            try:
+                                blob = bucket.blob(storage_path)
+                                blob.delete()
+                                print(f"Purged sermon file: {storage_path}")
+                            except Exception as e:
+                                print(f"Warning: Could not delete sermon file: {e}")
+
+                # Clear entire trash collection
+                ref.child('trash').delete()
+                return jsonify({'success': True, 'purged_count': len(trash_data)})
+            return jsonify({'success': True, 'purged_count': 0})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    return jsonify({'success': True})
+
+@app.route('/trash')
+def trash_page():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    if not is_admin():
+        return redirect(url_for('dashboard'))
+
+    return render_template('trash.html', user=session.get('email'))
+
+# ==================== ANALYTICS ====================
 def get_analytics():
     """Get analytics data for dashboard"""
     if 'user' not in session:

@@ -126,6 +126,7 @@
                                         <th>Type</th>
                                         <th>Method</th>
                                         <th>Amount</th>
+                                        <th class="text-end">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="donationsTableBody">
@@ -200,6 +201,26 @@
         </div>
     </div>
 
+    <!-- Delete Donation Confirmation Modal -->
+    <div class="modal fade" id="deleteDonationModal" tabindex="-1" aria-labelledby="deleteDonationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger" id="deleteDonationModalLabel">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Delete donation record for <strong id="deleteDonationInfo"></strong>?</p>
+                    <p class="text-muted small">This action cannot be undone. The record will be moved to Trash.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteDonationBtn">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Offcanvas Sidebar -->
     <div class="offcanvas offcanvas-end bg-dark" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
         <div class="offcanvas-header">
@@ -238,13 +259,19 @@
                     </svg>
                     Groups
                 </div>
-                <div class="sidebar-item sidebar-highlight" data-href="{{ url_for('donations_page') }}">
-                    <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 14.59L12 11.17l-1.41 4.59L7.82 14l4.59-.61-.61-4.59 1.41 4.59L16.18 14z"/>
-                    </svg>
-                    Donations
-                </div>
-                <div class="sidebar-item" data-href="{{ url_for('communications_page') }}">
+                 <div class="sidebar-item sidebar-highlight" data-href="{{ url_for('donations_page') }}">
+                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 14.59L12 11.17l-1.41 4.59L7.82 14l4.59-.61-.61-4.59 1.41 4.59L16.18 14z"/>
+                     </svg>
+                     Donations
+                 </div>
+                 <div class="sidebar-item" data-href="{{ url_for('trash_page') }}">
+                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
+                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                     </svg>
+                     Trash
+                 </div>
+                 <div class="sidebar-item" data-href="{{ url_for('communications_page') }}">
                     <svg width="20" height="20" class="me-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
                     </svg>
@@ -323,13 +350,20 @@
                     const typeBadge = getTypeBadge(donation.type);
                     const method = capitalize(donation.method.replace('_', ' '));
 
-                    row.innerHTML = `
-                        <td>${formattedDate}</td>
-                        <td><span class="badge bg-secondary">${donation.member_id || 'Unknown'}</span></td>
-                        <td>${typeBadge}</td>
-                        <td>${method}</td>
-                        <td class="fw-bold">$${parseFloat(donation.amount || 0).toFixed(2)}</td>
-                    `;
+                     row.innerHTML = `
+                         <td>${formattedDate}</td>
+                         <td><span class="badge bg-secondary">${donation.member_id || 'Unknown'}</span></td>
+                         <td>${typeBadge}</td>
+                         <td>${method}</td>
+                         <td class="fw-bold">$${parseFloat(donation.amount || 0).toFixed(2)}</td>
+                         <td class="text-end">
+                             <button class="btn btn-sm btn-outline-danger delete-donation-btn" data-id="${donation.id}" title="Delete">
+                                 <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                                     <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2v-12H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                                 </svg>
+                             </button>
+                         </td>
+                     `;
                     tbody.appendChild(row);
                 });
             }
@@ -411,6 +445,49 @@
                 a.download = `donations_${new Date().toISOString().split('T')[0]}.csv`;
                 a.click();
             });
+
+            // Delete Donation
+            let deleteDonationId = null;
+            function openDeleteDonationModal(donationId, donationInfo) {
+                deleteDonationId = donationId;
+                document.getElementById('deleteDonationInfo').textContent = donationInfo;
+                new bootstrap.Modal(document.getElementById('deleteDonationModal')).show();
+            }
+
+            document.getElementById('confirmDeleteDonationBtn').addEventListener('click', async () => {
+                if (!deleteDonationId) return;
+                try {
+                    const response = await fetch(`/api/donations/${deleteDonationId}`, { method: 'DELETE' });
+                    if (response.ok) {
+                        bootstrap.Modal.getInstance(document.getElementById('deleteDonationModal')).hide();
+                        loadDonations();
+                        deleteDonationId = null;
+                    } else {
+                        alert('Failed to delete donation');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            });
+
+            // Attach delete event listeners after rendering
+            function attachDeleteListeners() {
+                document.querySelectorAll('.delete-donation-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.dataset.id;
+                        const amount = this.closest('tr').querySelector('td:nth-child(5)').textContent;
+                        const member = this.closest('tr').querySelector('td:nth-child(2)').textContent;
+                        openDeleteDonationModal(id, `${member} - ${amount}`);
+                    });
+                });
+            }
+
+            // Modify renderDonations to attach listeners after rendering
+            const originalRenderDonations = renderDonations;
+            renderDonations = function() {
+                originalRenderDonations();
+                attachDeleteListeners();
+            };
 
             // Populate member select dropdown
             async function populateMembers() {
