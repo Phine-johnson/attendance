@@ -455,15 +455,12 @@ def get_members():
 def update_member(member_id):
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
-    
+
     data = request.get_json()
     if FIREBASE_INITIALIZED:
         try:
-            ref.child('members').child(member_id).delete()
+            ref.child('members').child(member_id).update(data)
             return jsonify({'success': True})
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
-    return jsonify({'error': 'Firebase not initialized'}), 503
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     return jsonify({'error': 'Firebase not initialized'}), 503
