@@ -238,6 +238,12 @@ body {
     color: var(--pcg-red);
 }
 
+.alert-success-custom {
+    background-color: #F0FFF4;
+    border-color: var(--pcg-green);
+    color: var(--pcg-green);
+}
+
 .footer-text {
     text-align: center;
     margin-top: 2rem;

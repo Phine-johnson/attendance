@@ -113,6 +113,42 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
+@app.route('/api/auth/reset-password', methods=['POST'])
+def reset_password():
+    """Send password reset email via Firebase Auth"""
+    if not FIREBASE_INITIALIZED:
+        return jsonify({'error': 'Authentication service unavailable'}), 503
+
+    data = request.get_json()
+    email = data.get('email', '').strip()
+
+    if not email:
+        return jsonify({'error': 'Email is required'}), 400
+
+    try:
+        api_key = os.environ.get('FIREBASE_API_KEY')
+        if not api_key:
+            return jsonify({'error': 'Server configuration error'}), 500
+
+        url = f"https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key={api_key}"
+        payload = {
+            "requestType": "PASSWORD_RESET",
+            "email": email
+        }
+        response = requests.post(url, json=payload)
+
+        if response.status_code == 200:
+            # Success — email sent (even if email not found, Firebase returns success to prevent enumeration)
+            return jsonify({'success': True, 'message': 'If an account exists with this email, a password reset link has been sent.'})
+        else:
+            error_data = response.json()
+            error_msg = error_data.get('error', {}).get('message', 'Failed to send reset email')
+            return jsonify({'error': 'Failed to send reset email. Please try again.'}), 500
+
+    except Exception as e:
+        print(f"Password reset error: {e}")
+        return jsonify({'error': 'Network error. Please try again.'}), 500
+
 def get_dashboard_stats():
     """Fetch and return stats for dashboard"""
     stats = {
