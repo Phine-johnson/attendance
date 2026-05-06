@@ -839,6 +839,27 @@ def groups_list():
     
     return render_template('groups.html', groups=groups, members=members_map, user=session.get('email'))
 
+@app.route('/api/groups', methods=['GET'])
+def get_groups():
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    groups = []
+    members_map = {}
+    if FIREBASE_INITIALIZED:
+        try:
+            g = ref.child('groups').get()
+            if g:
+                groups = [{'id': k, **v} for k, v in g.items()]
+
+            m = ref.child('members').get()
+            if m:
+                members_map = m
+        except Exception as e:
+            print(f"Error: {e}")
+
+    return jsonify({'groups': groups, 'members': members_map})
+
 @app.route('/api/groups', methods=['POST'])
 def create_group():
     if 'user' not in session:
