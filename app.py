@@ -1478,9 +1478,15 @@ def start_service():
     except Exception:
         data = {}
     session_id = str(uuid.uuid4())
-    proximity_limit = 3
+    proximity_limit = data.get('limit', 3)
     latitude = data.get('latitude', 0)
     longitude = data.get('longitude', 0)
+
+    program_name = data.get('program_name', 'First Service')
+    today = date.today().isoformat()
+    date_str = data.get('date', today)
+    start_time = data.get('start_time', '07:00')
+    end_time = data.get('end_time', '08:30')
 
     try:
         session_data = {
@@ -1488,6 +1494,10 @@ def start_service():
             'latitude': latitude,
             'longitude': longitude,
             'limit': proximity_limit,
+            'program_name': program_name,
+            'date': date_str,
+            'start_time': start_time,
+            'end_time': end_time,
             'timestamp': datetime.now().isoformat(),
             'created_by': session['user'],
             'active': True
