@@ -432,9 +432,7 @@ def add_member():
             return jsonify({'success': True, 'member_id': formatted_member_id})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-    else:
-        # Demo mode
-        return jsonify({'success': True, 'member_id': formatted_member_id, 'demo': True})
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 @app.route('/api/members', methods=['GET'])
 def get_members():
@@ -461,11 +459,14 @@ def update_member(member_id):
     data = request.get_json()
     if FIREBASE_INITIALIZED:
         try:
-            ref.child('members').child(member_id).update(data)
+            ref.child('members').child(member_id).delete()
             return jsonify({'success': True})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-    return jsonify({'success': True, 'demo': True})
+    return jsonify({'error': 'Firebase not initialized'}), 503
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 @app.route('/api/members/<member_id>', methods=['DELETE'])
 def delete_member(member_id):
@@ -495,7 +496,7 @@ def delete_member(member_id):
             return jsonify({'success': True})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-    return jsonify({'success': True})
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 @app.route('/api/members/import', methods=['POST'])
 def import_members():
@@ -631,7 +632,7 @@ def record_attendance():
             return jsonify({'success': True})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-    return jsonify({'success': True, 'demo': True})
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 @app.route('/api/attendance/stats')
 def attendance_stats():
@@ -715,7 +716,7 @@ def create_event():
             return jsonify({'success': True, 'event_id': event_id})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-    return jsonify({'success': True, 'demo': True})
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 @app.route('/api/events', methods=['GET'])
 def get_events():
@@ -746,7 +747,7 @@ def update_event(event_id):
             return jsonify({'success': True})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-    return jsonify({'success': True, 'demo': True})
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 @app.route('/api/events/<event_id>', methods=['DELETE'])
 def delete_event(event_id):
@@ -776,7 +777,7 @@ def delete_event(event_id):
             return jsonify({'success': True})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-    return jsonify({'success': True})
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 # ==================== SMALL GROUPS ====================
 
@@ -827,7 +828,7 @@ def create_group():
             return jsonify({'success': True, 'group_id': group_id})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-    return jsonify({'success': True, 'demo': True})
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 @app.route('/api/groups/<group_id>/members', methods=['POST'])
 def add_group_member(group_id):
@@ -848,7 +849,7 @@ def add_group_member(group_id):
             return jsonify({'success': True})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-    return jsonify({'success': True, 'demo': True})
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 @app.route('/api/groups/<group_id>/members/<member_id>', methods=['DELETE'])
 def remove_group_member(group_id, member_id):
@@ -862,7 +863,7 @@ def remove_group_member(group_id, member_id):
             return jsonify({'success': True})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-    return jsonify({'success': True})
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 @app.route('/api/groups/<group_id>', methods=['DELETE'])
 def delete_group(group_id):
@@ -892,7 +893,7 @@ def delete_group(group_id):
             return jsonify({'success': True})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-    return jsonify({'success': True})
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 # ==================== DONATIONS ====================
 
@@ -946,7 +947,7 @@ def record_donation():
             return jsonify({'success': True, 'donation_id': donation_id})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-    return jsonify({'success': True, 'demo': True})
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 @app.route('/api/donations', methods=['GET'])
 def get_donations():
@@ -1027,7 +1028,7 @@ def delete_donation(donation_id):
             return jsonify({'success': True})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-    return jsonify({'success': True})
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 # ==================== SERMONS ====================
 
@@ -1100,7 +1101,7 @@ def create_announcement():
             return jsonify({'success': True, 'id': ann_id})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-    return jsonify({'success': True})
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 @app.route('/api/announcements', methods=['GET'])
 def get_announcements():
@@ -1147,7 +1148,7 @@ def delete_announcement(ann_id):
             return jsonify({'success': True})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-    return jsonify({'success': True})
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 @app.route('/api/prayer-requests', methods=['GET'])
 def get_prayer_requests():
@@ -1187,7 +1188,7 @@ def submit_prayer_request():
             return jsonify({'success': True})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-    return jsonify({'success': True})
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 # ==================== MEMBER CARDS ====================
 
@@ -1254,7 +1255,7 @@ def create_schedule():
             return jsonify({'success': True, 'schedule_id': schedule_id})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-    return jsonify({'success': True, 'demo': True})
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 @app.route('/api/volunteers/schedule', methods=['GET'])
 def get_schedules():
@@ -1293,7 +1294,7 @@ def update_schedule(schedule_id):
             return jsonify({'success': True})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-    return jsonify({'success': True, 'demo': True})
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 @app.route('/api/volunteers/schedule/<schedule_id>', methods=['DELETE'])
 def delete_schedule(schedule_id):
@@ -1323,7 +1324,7 @@ def delete_schedule(schedule_id):
             return jsonify({'success': True})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-    return jsonify({'success': True})
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 # ==================== RESOURCE MANAGEMENT ====================
 
@@ -1380,7 +1381,7 @@ def add_inventory():
             return jsonify({'success': True, 'item_id': item_id})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-    return jsonify({'success': True, 'item_id': item_id})
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 # ==================== BIBLE TOOLS ROUTES ====================
 
@@ -1432,6 +1433,9 @@ def start_service():
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
 
+    if not FIREBASE_INITIALIZED:
+        return jsonify({'error': 'Firebase not initialized'}), 503
+
     try:
         data = request.get_json(silent=True) or {}
     except Exception:
@@ -1441,22 +1445,19 @@ def start_service():
     latitude = data.get('latitude', 0)
     longitude = data.get('longitude', 0)
 
-    if FIREBASE_INITIALIZED:
-        try:
-            session_data = {
-                'session_id': session_id,
-                'latitude': latitude,
-                'longitude': longitude,
-                'limit': proximity_limit,
-                'timestamp': datetime.now().isoformat(),
-                'created_by': session['user'],
-                'active': True
-            }
-            ref.child('sessions').child(session_id).set(session_data)
-        except Exception as e:
-            print(f"Warning: {e}")
-
-    # Generate URL for member scan page (no coordinates needed - member will provide their own via geolocation)
+    try:
+        session_data = {
+            'session_id': session_id,
+            'latitude': latitude,
+            'longitude': longitude,
+            'limit': proximity_limit,
+            'timestamp': datetime.now().isoformat(),
+            'created_by': session['user'],
+            'active': True
+        }
+        ref.child('sessions').child(session_id).set(session_data)
+    except Exception as e:
+        return jsonify({'error': f'Failed to create session: {str(e)}'}), 500
     from urllib.parse import quote
     base_url = request.url_root.rstrip('/')
     qr_url = f"{base_url}/scan?sid={session_id}&limit={proximity_limit}"
@@ -1581,8 +1582,8 @@ def publish_service():
                 print(f"Firebase write error: {e}")
                 return jsonify({'error': 'Failed to write to database'}), 500
         else:
-            print("Demo mode - service data not saved")
-        
+            return jsonify({'error': 'Firebase not initialized'}), 503
+
         return jsonify({'success': True, 'message': 'Service update published'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -1628,7 +1629,7 @@ def send_notification():
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
-    return jsonify({'success': True, 'demo': True})
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 @app.route('/api/sermons', methods=['POST'])
 def add_sermon():
@@ -1662,7 +1663,7 @@ def add_sermon():
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
-    return jsonify({'success': True, 'demo': True})
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 @app.route('/api/sermons', methods=['GET'])
 def get_sermons():
@@ -1739,32 +1740,34 @@ def upload_sermon():
             # Create storage path: sermons/YYYY-MM-DD/sermon_id_filename
             storage_path = f"sermons/{date_str}/{sermon_id}_{file.filename}"
             blob = bucket.blob(storage_path)
-            
+
             # Upload file
             file.seek(0)  # Reset file pointer
             blob.upload_from_file(file, content_type=file.content_type)
-            
+
             # Make publicly readable
             blob.make_public()
             file_url = blob.public_url
-            
+
             sermon_data['file_url'] = file_url
             sermon_data['storage_path'] = storage_path
-            
+
             print(f"Sermon file uploaded to: {storage_path}")
         except Exception as e:
             print(f"Storage upload error: {e}")
             return jsonify({'error': f'Failed to upload file: {str(e)}'}), 500
     else:
         return jsonify({'error': 'Storage not available'}), 500
-    
+
     # Save sermon metadata to Realtime Database
+    if not FIREBASE_INITIALIZED:
+        return jsonify({'error': 'Firebase not initialized'}), 503
     try:
         ref.child('sermons').child(sermon_id).set(sermon_data)
     except Exception as e:
         print(f"Database error: {e}")
         return jsonify({'error': 'Failed to save sermon metadata'}), 500
-    
+
     return jsonify({
         'success': True,
         'sermon_id': sermon_id,
@@ -1803,7 +1806,7 @@ def delete_sermon(sermon_id):
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
-    return jsonify({'success': True, 'demo': True})
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 @app.route('/api/sermons/<sermon_id>', methods=['GET'])
 def get_sermon(sermon_id):
@@ -1882,7 +1885,7 @@ def restore_trash_item(item_id):
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
-    return jsonify({'success': True})
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 @app.route('/api/trash/purge/<item_id>', methods=['DELETE'])
 def purge_trash_item(item_id):
@@ -1912,7 +1915,7 @@ def purge_trash_item(item_id):
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
-    return jsonify({'success': True})
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 @app.route('/api/trash/clear-all', methods=['DELETE'])
 def clear_all_trash():
@@ -1944,7 +1947,7 @@ def clear_all_trash():
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
-    return jsonify({'success': True})
+    return jsonify({'error': 'Firebase not initialized'}), 503
 
 @app.route('/trash')
 def trash_page():
