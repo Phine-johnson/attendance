@@ -1498,27 +1498,34 @@ def start_service():
         data = request.get_json(silent=True) or {}
     except Exception:
         data = {}
+    
+    # Get form data from dashboard
+    session_title = data.get('title', 'First Service')
+    start_time = data.get('start_time', '08:00')
+    end_time = data.get('end_time', '11:30')
+    sermon_topic = data.get('sermon_topic', 'Sunday Service')
+    
+    # Church GPS coordinates (Redemption Presby Church)
+    # These should be configurable via environment variables in production
+    church_latitude = float(os.environ.get('CHURCH_LATITUDE', '40.7128'))  # Default to NYC
+    church_longitude = float(os.environ.get('CHURCH_LONGITUDE', '-74.0060'))
+    
     session_id = str(uuid.uuid4())
-    proximity_limit = data.get('limit', 3)
-    latitude = data.get('latitude', 0)
-    longitude = data.get('longitude', 0)
-
-    program_name = data.get('program_name', 'First Service')
+    proximity_limit = 3  # 3 meters as specified
+    
     today = date.today().isoformat()
-    date_str = data.get('date', today)
-    start_time = data.get('start_time', '07:00')
-    end_time = data.get('end_time', '08:30')
 
     try:
         session_data = {
             'session_id': session_id,
-            'latitude': latitude,
-            'longitude': longitude,
-            'limit': proximity_limit,
-            'program_name': program_name,
-            'date': date_str,
+            'title': session_title,
+            'sermon_topic': sermon_topic,
             'start_time': start_time,
             'end_time': end_time,
+            'date': today,
+            'latitude': church_latitude,
+            'longitude': church_longitude,
+            'limit': proximity_limit,
             'timestamp': datetime.now().isoformat(),
             'created_by': session['user'],
             'active': True
@@ -1526,6 +1533,7 @@ def start_service():
         ref.child('sessions').child(session_id).set(session_data)
     except Exception as e:
         return jsonify({'error': f'Failed to create session: {str(e)}'}), 500
+    
     from urllib.parse import quote
     base_url = request.url_root.rstrip('/')
     qr_url = f"{base_url}/scan?sid={session_id}&limit={proximity_limit}"
@@ -1543,6 +1551,28 @@ def start_service():
     except Exception as e:
         print(f'QR generation error: {e}')
         return jsonify({'error': 'Failed to generate QR code'}), 500
+
+
+@app.route('/stop_service', methods=['POST'])
+def stop_service():
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    if not FIREBASE_INITIALIZED:
+        return jsonify({'error': 'Firebase not initialized'}), 503
+
+    try:
+        # Deactivate all active sessions for this user (or we could pass session_id)
+        sessions = ref.child('sessions').get()
+        if sessions:
+            for session_id, session_data in sessions.items():
+                if session_data.get('created_by') == session['user'] and session_data.get('active', False):
+                    ref.child('sessions').child(session_id).update({'active': False})
+        
+        return jsonify({'success': True, 'message': 'Service stopped'})
+    except Exception as e:
+        return jsonify({'error': f'Failed to stop service: {str(e)}'}), 500
+
 
 @app.route('/scan')
 def member_scan_page():
