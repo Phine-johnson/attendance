@@ -917,16 +917,16 @@ body {
 
 /* Standalone items (Search, Service Update) - more visible */
 .sidebar-item {
-    background-color: rgba(255, 255, 255, 0.05);
-    border-left-color: var(--pcg-gold);
-    color: var(--pcg-gold);
+    background-color: var(--pcg-blue);
+    border-left-color: var(--pcg-red);
+    color: var(--pcg-white);
     font-weight: 600;
 }
 
 .sidebar-item:hover {
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: var(--pcg-blue-dark);
     color: var(--pcg-white);
-    border-left-color: var(--pcg-gold);
+    border-left-color: var(--pcg-red);
     text-decoration: none;
 }
 
@@ -934,13 +934,13 @@ body {
 .sidebar-subitem {
     padding-left: 3.5rem;
     font-size: 0.95rem;
-    color: rgba(254, 254, 254, 0.85);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .sidebar-subitem:hover {
     color: var(--pcg-white);
-    background-color: rgba(255, 255, 255, 0.08);
-    border-left-color: var(--pcg-green);
+    background-color: rgba(0, 33, 146, 0.2);
+    border-left-color: var(--pcg-red);
 }
 
 /* Chevron rotate on accordion expand */
@@ -1048,15 +1048,15 @@ body {
     width: 45px;
     height: 45px;
     padding: 0;
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 2px solid var(--pcg-gold);
+    background-color: var(--pcg-blue);
+    border: 2px solid var(--pcg-red);
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .hamburger-btn:hover {
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: var(--pcg-blue-dark);
     transform: scale(1.05);
 }
 
@@ -1064,7 +1064,7 @@ body {
     display: block;
     width: 22px;
     height: 2px;
-    background-color: var(--pcg-gold);
+    background-color: var(--pcg-red);
     border-radius: 2px;
     transition: all 0.3s ease;
 }
