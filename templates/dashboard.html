@@ -214,10 +214,18 @@
                                       <input type="time" class="form-control form-control-custom" id="endTime" value="11:30">
                                   </div>
                               </div>
-                              <div class="mb-3">
-                                  <label class="form-label fw-bold text-pcg-blue">Sermon Topic</label>
-                                  <input type="text" class="form-control form-control-custom" id="sermonTopic" placeholder="e.g., The Power of Faith">
-                              </div>
+<div class="mb-3">
+                                   <label class="form-label fw-bold text-pcg-blue">Sermon Topic</label>
+                                   <input type="text" class="form-control form-control-custom" id="sermonTopic" placeholder="e.g., The Power of Faith">
+                               </div>
+                               <div class="mb-3">
+                                   <label class="form-label fw-bold text-pcg-blue">Service Type</label>
+                                   <select class="form-select" id="serviceType">
+                                       <option value="First Service">First Service</option>
+                                       <option value="Second Service">Second Service</option>
+                                       <option value="Joint Service">Joint Service</option>
+                                   </select>
+                               </div>
                               <button id="startServiceBtn" class="btn btn-custom-primary btn-lg w-100 mb-2">
                                   <svg width="20" height="20" class="me-2" fill="currentColor" viewBox="0 0 24 24">
                                       <path d="M8 5v14l11-7z"/>
@@ -279,7 +287,7 @@
             </div>
         </div>
 
-        <!-- Attendance Records -->
+<!-- Attendance Records -->
         <div class="row">
             <div class="col-12">
                 <div class="card card-custom">
@@ -297,10 +305,13 @@
                             <table class="table table-custom mb-0">
                                 <thead>
                                     <tr>
-                                        <th>Timestamp</th>
+                                        <th>Date</th>
                                         <th>Member ID</th>
                                         <th>Name</th>
-                                        <th>Status</th>
+                                        <th>Time</th>
+                                        <th>Service Type</th>
+                                        <th>Member Type</th>
+                                        <th>Distance</th>
                                     </tr>
                                 </thead>
                                 <tbody id="attendanceTableBody">
@@ -424,7 +435,8 @@
                         title: serviceTitle,
                         start_time: startTime,
                         end_time: endTime,
-                        sermon_topic: sermonTopic
+                        sermon_topic: sermonTopic,
+                        service_type: document.getElementById('serviceType').value
                     })
                 });
 
@@ -608,14 +620,19 @@ serviceStatus.className = 'status-indicator status-inactive';
         function addAttendanceRow(data) {
             const row = document.createElement('tr');
             const timestamp = new Date(data.timestamp).toLocaleString();
-            
+            const dateStr = new Date(data.timestamp).toLocaleDateString();
+            const timeStr = new Date(data.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
             row.innerHTML = `
-                <td>${timestamp}</td>
-                <td><span class="badge bg-secondary">${data.memberId}</span></td>
-                <td><strong>${data.name}</strong></td>
-                <td><span class="status-indicator status-active">Present</span></td>
+                <td>${dateStr}</td>
+                <td><span class="badge bg-secondary">${data.memberId || data.member_id || '-'}</span></td>
+                <td><strong>${data.name || '-'}</strong></td>
+                <td>${timeStr}</td>
+                <td><span class="badge bg-pcg-green">${data.service_type || 'First Service'}</span></td>
+                <td>${data.member_type || '-'}</td>
+                <td>${data.distance ? data.distance + 'm' : '-'}</td>
             `;
-            
+
             attendanceTableBody.prepend(row);
             recordCount.textContent = `${attendanceTableBody.children.length} record${attendanceTableBody.children.length !== 1 ? 's' : ''}`;
         }

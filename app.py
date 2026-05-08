@@ -1552,16 +1552,17 @@ def start_service():
     start_time = data.get('start_time', '08:00')
     end_time = data.get('end_time', '11:30')
     sermon_topic = data.get('sermon_topic', 'Sunday Service')
-    
+    service_type = data.get('service_type', 'First Service')
+
     # Church GPS coordinates (Redemption Presby Church - New Gbawe, Ghana)
     # These should be configurable via environment variables in production
     # Plus code: GS 0142-6728
     church_latitude = float(os.environ.get('CHURCH_LATITUDE', '5.6472'))  # Default to New Gbawe
     church_longitude = float(os.environ.get('CHURCH_LONGITUDE', '-0.4125'))
-    
+
     session_id = str(uuid.uuid4())
     proximity_limit = 3  # 3 meters as specified
-    
+
     today = date.today().isoformat()
 
     try:
@@ -1569,6 +1570,7 @@ def start_service():
             'session_id': session_id,
             'title': session_title,
             'sermon_topic': sermon_topic,
+            'service_type': service_type,
             'start_time': start_time,
             'end_time': end_time,
             'date': today,
@@ -1647,7 +1649,7 @@ def scan_attendance():
     longitude = data.get('longitude')
     member_name = data.get('name')
     member_type = data.get('member_type', 'Member')
-    service_type = data.get('service_type', 'First Service')
+    service_type = data.get('service_type') or session_data.get('service_type', 'First Service')
 
     if not session_id or latitude is None or longitude is None:
         return jsonify({'error': 'Missing required fields'}), 400
