@@ -1545,10 +1545,11 @@ def start_service():
     end_time = data.get('end_time', '11:30')
     sermon_topic = data.get('sermon_topic', 'Sunday Service')
     
-    # Church GPS coordinates (Redemption Presby Church)
+    # Church GPS coordinates (Redemption Presby Church - New Gbawe, Ghana)
     # These should be configurable via environment variables in production
-    church_latitude = float(os.environ.get('CHURCH_LATITUDE', '40.7128'))  # Default to NYC
-    church_longitude = float(os.environ.get('CHURCH_LONGITUDE', '-74.0060'))
+    # Plus code: GS 0142-6728
+    church_latitude = float(os.environ.get('CHURCH_LATITUDE', '5.6472'))  # Default to New Gbawe
+    church_longitude = float(os.environ.get('CHURCH_LONGITUDE', '-0.4125'))
     
     session_id = str(uuid.uuid4())
     proximity_limit = 3  # 3 meters as specified
