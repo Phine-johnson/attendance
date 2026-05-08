@@ -25,46 +25,56 @@
                             <h3 class="text-pcg-blue mt-2">Attendance Check-in</h3>
                             <p class="text-muted">Please confirm your details</p>
                         </div>
-                        
+
                         <form id="checkinForm">
                             <input type="hidden" id="sessionId" value="{{ session_id }}">
                             <input type="hidden" id="limit" value="{{ limit }}">
-                            
+
                             <div class="mb-3">
                                 <label class="form-label fw-bold text-pcg-blue">Full Name</label>
                                 <input type="text" class="form-control" id="memberName" placeholder="Enter your name" required>
                             </div>
-                            
-                             <div class="mb-3">
-                                 <label class="form-label fw-bold text-pcg-blue">Category</label>
-                                 <select class="form-select" id="memberCategory">
-                                     <option value="Member">Member</option>
-                                     <option value="Children Service">Children Service</option>
-                                     <option value="YPG">YPG</option>
-                                     <option value="JY">JY</option>
-                                     <option value="YAF">YAF</option>
-                                     <option value="Men's Fellowship">Men's Fellowship</option>
-                                     <option value="Women's Fellowship">Women's Fellowship</option>
-                                     <option value="Church Choir">Church Choir</option>
-                                     <option value="Singing Band">Singing Band</option>
-                                     <option value="Usher">Usher</option>
-                                     <option value="Visit">Visit</option>
-                                     <option value="Guest">Guest</option>
-                                 </select>
-                             </div>
-                            
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-pcg-blue">Service Type</label>
+                                <select class="form-select" id="serviceType" required>
+                                    <option value="">-- Select Service --</option>
+                                    <option value="First Service">First Service</option>
+                                    <option value="Second Service">Second Service</option>
+                                    <option value="Joint Service">Joint Service</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-pcg-blue">Category</label>
+                                <select class="form-select" id="memberCategory">
+                                    <option value="Member">Member</option>
+                                    <option value="Children Service">Children Service</option>
+                                    <option value="YPG">YPG</option>
+                                    <option value="JY">JY</option>
+                                    <option value="YAF">YAF</option>
+                                    <option value="Men's Fellowship">Men's Fellowship</option>
+                                    <option value="Women's Fellowship">Women's Fellowship</option>
+                                    <option value="Church Choir">Church Choir</option>
+                                    <option value="Singing Band">Singing Band</option>
+                                    <option value="Usher">Usher</option>
+                                    <option value="Visit">Visit</option>
+                                    <option value="Guest">Guest</option>
+                                </select>
+                            </div>
+
                             <div class="mb-3">
                                 <label class="form-label fw-bold text-pcg-blue">Time</label>
                                 <input type="text" class="form-control" id="checkinTime" readonly>
                             </div>
-                            
+
                             <div class="mb-4">
                                 <label class="form-label fw-bold text-pcg-blue">Status</label>
                                 <div>
                                     <span class="badge bg-success status-badge" id="checkinStatus">Ready to Check In</span>
                                 </div>
                             </div>
-                            
+
                             <button type="submit" class="btn btn-submit text-white w-100 py-2">Confirm Attendance</button>
                         </form>
                         
@@ -154,7 +164,8 @@
                 latitude: memberLatitude,
                 longitude: memberLongitude,
                 name: document.getElementById('memberName').value,
-                member_type: document.getElementById('memberCategory').value
+                member_type: document.getElementById('memberCategory').value,
+                service_type: document.getElementById('serviceType').value
             };
             
             try {

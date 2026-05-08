@@ -1639,6 +1639,7 @@ def scan_attendance():
     longitude = data.get('longitude')
     member_name = data.get('name')
     member_type = data.get('member_type', 'Member')
+    service_type = data.get('service_type', 'First Service')
 
     if not session_id or latitude is None or longitude is None:
         return jsonify({'error': 'Missing required fields'}), 400
@@ -1669,7 +1670,7 @@ def scan_attendance():
     limit = session_data.get('limit', 3)
 
     if distance > limit:
-        return jsonify({'error': f'Please move closer to the service location. Kindly move to within {limit}m of the Redemption Presby Church for verification. (Current distance: {distance:.1f}m)'}), 403
+        return jsonify({'error': f'Please kindly move 3m closer to the Redemption Presby premises. (Current distance: {distance:.1f}m)'}), 403
 
     try:
         checkin_id = str(uuid.uuid4())[:8]
@@ -1678,6 +1679,7 @@ def scan_attendance():
             'session_id': session_id,
             'member_name': member_name,
             'member_type': member_type,
+            'service_type': service_type,
             'distance': round(distance, 1),
             'timestamp': datetime.now().isoformat(),
             'latitude': latitude,
