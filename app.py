@@ -642,8 +642,12 @@ def attendance_report():
                         records.append({
                             'date': d.isoformat(),
                             'member_id': member_id,
+                            'member_name': record.get('member_name', record.get('name', '')),
                             'timestamp': record.get('timestamp', ''),
-                            'service_type': record.get('service_type', 'sunday')
+                            'service_type': record.get('service_type', 'sunday'),
+                            'member_type': record.get('member_type', ''),
+                            'distance': record.get('distance', ''),
+                            'mode': record.get('mode', '')
                         })
         except Exception as e:
             print(f"Error fetching attendance: {e}")
@@ -676,8 +680,12 @@ def get_attendance_records():
                         records.append({
                             'date': d.isoformat(),
                             'member_id': member_id,
+                            'member_name': record.get('member_name', record.get('name', '')),
                             'timestamp': record.get('timestamp', ''),
-                            'service_type': record.get('service_type', 'sunday')
+                            'service_type': record.get('service_type', 'sunday'),
+                            'member_type': record.get('member_type', ''),
+                            'distance': record.get('distance', ''),
+                            'mode': record.get('mode', '')
                         })
         except Exception as e:
             print(f"Error fetching attendance: {e}")
@@ -1670,7 +1678,10 @@ def scan_attendance():
     limit = session_data.get('limit', 3)
 
     if distance > limit:
-        return jsonify({'error': f'Please kindly move 3m closer to the Redemption Presby premises. (Current distance: {distance:.1f}m)'}), 403
+        return jsonify({
+            'success': False,
+            'error': f'Please kindly move 3m closer to the Redemption Presby premises. (Current distance: {distance:.1f}m)'
+        }), 200
 
     try:
         checkin_id = str(uuid.uuid4())[:8]

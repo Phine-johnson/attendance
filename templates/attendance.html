@@ -157,9 +157,11 @@
                                     <tr>
                                         <th>Date</th>
                                         <th>Member ID</th>
-                                        <th>Member Name</th>
+                                        <th>Name</th>
                                         <th>Check-in Time</th>
                                         <th>Service Type</th>
+                                        <th>Member Type</th>
+                                        <th>Distance (m)</th>
                                     </tr>
                                 </thead>
                                 <tbody id="attendanceTableBody">
@@ -346,6 +348,8 @@
                         <td><strong>${record.member_name || 'Member'}</strong></td>
                         <td>${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
                         <td><span class="badge bg-pcg-green">${record.service_type || 'Sunday'}</span></td>
+                        <td>${record.member_type || '-'}</td>
+                        <td>${record.distance ? record.distance + 'm' : '-'}</td>
                     `;
                     tbody.appendChild(row);
                 });
