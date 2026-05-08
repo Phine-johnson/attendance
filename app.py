@@ -296,7 +296,7 @@ def get_member_card(member_id):
 def scan_member():
     """
     Reverse scan endpoint for admin to scan member ID cards.
-    Unlike regular attendance scan, this does NOT check GPS - admin's location is trusted.
+    Now includes GPS proximity check to ensure admin is near the church.
     """
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
@@ -312,6 +312,41 @@ def scan_member():
 
     if not qr_data:
         return jsonify({'error': 'Missing QR data'}), 400
+
+    # Get admin's GPS coordinates
+    admin_latitude = data.get('latitude')
+    admin_longitude = data.get('longitude')
+
+    if admin_latitude is None or admin_longitude is None:
+        return jsonify({'error': 'GPS coordinates are required for verification'}), 400
+
+    # Verify proximity to church
+    church_latitude = float(os.environ.get('CHURCH_LATITUDE', 0))
+    church_longitude = float(os.environ.get('CHURCH_LONGITUDE', 0))
+
+    if church_latitude == 0 or church_longitude == 0:
+        return jsonify({'error': 'Church location is not configured'}), 500
+
+    import math
+
+    def haversine(lat1, lon1, lat2, lon2):
+        R = 6371000
+        phi1 = math.radians(lat1)
+        phi2 = math.radians(lat2)
+        delta_phi = math.radians(lat2 - lat1)
+        delta_lambda = math.radians(lon2 - lon1)
+        a = math.sin(delta_phi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2) ** 2
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+        return R * c
+
+    distance = haversine(admin_latitude, admin_longitude, church_latitude, church_longitude)
+    proximity_limit = 3  # 3 meters
+
+    if distance > proximity_limit:
+        return jsonify({
+            'error': f'Please move closer to the church location for verification. '
+                     f'(Current distance: {distance:.1f}m)'
+        }), 403
 
     try:
         qr = json.loads(qr_data) if isinstance(qr_data, str) else qr_data
@@ -364,14 +399,18 @@ def scan_member():
             attendance_ref.set({
                 'timestamp': datetime.now().isoformat(),
                 'service_type': service_type,
-                'mode': 'admin_scan'
+                'mode': 'admin_scan',
+                'verified': True,
+                'distance': round(distance, 1)
             })
         else:
             attendance_ref = ref.child('attendance').child(today).child(member_key)
             attendance_ref.set({
                 'timestamp': datetime.now().isoformat(),
                 'service_type': service_type,
-                'mode': 'admin_scan'
+                'mode': 'admin_scan',
+                'verified': True,
+                'distance': round(distance, 1)
             })
     except Exception as e:
         print(f"Error recording attendance: {e}")
@@ -384,7 +423,8 @@ def scan_member():
             'id': member_id,
             'name': member_name,
             'status': member.get('status', 'active')
-        }
+        },
+        'distance': round(distance, 1)
     })
 
 # ==================== MEMBER MANAGEMENT ====================
@@ -1695,8 +1735,8 @@ def create_session_qr():
     date_str = data.get('date', '').strip()
     start_time = data.get('start_time', '').strip()
     end_time = data.get('end_time', '').strip()
-    latitude = data.get('latitude', 0)
-    longitude = data.get('longitude', 0)
+    latitude = data.get('latitude', float(os.environ.get('CHURCH_LATITUDE', 0)))
+    longitude = data.get('longitude', float(os.environ.get('CHURCH_LONGITUDE', 0)))
     proximity_limit = data.get('limit', 3)
     if not program_name or not date_str or not start_time or not end_time:
         return jsonify({'error': 'Missing required field'}), 400
