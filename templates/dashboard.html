@@ -438,15 +438,19 @@
                     document.getElementById('serviceForm').style.display = 'none';
                     document.getElementById('serviceStatusDisplay').style.display = 'block';
                     
-                    // Update status to active
-                    serviceStatus.className = 'status-indicator status-active';
-                    serviceStatus.textContent = 'Service Active';
-                    
-                    // Show session info
-                    document.getElementById('sessionInfo').style.display = 'block';
-                    document.getElementById('sessionTitle').textContent = serviceTitle;
-                    document.getElementById('sessionTime').textContent = `${startTime} - ${endTime}`;
-                    document.getElementById('sessionSermon').textContent = sermonTopic;
+// Update status to active
+                     serviceStatus.className = 'status-indicator status-active';
+                     serviceStatus.textContent = 'Service Active';
+                     
+                     // Show session info (element may not exist in all versions)
+                     const sessionInfoEl = document.getElementById('sessionInfo');
+                     if (sessionInfoEl) { sessionInfoEl.style.display = 'block'; }
+                     const sessionTitleEl = document.getElementById('sessionTitle');
+                     if (sessionTitleEl) { sessionTitleEl.textContent = serviceTitle; }
+                     const sessionTimeEl = document.getElementById('sessionTime');
+                     if (sessionTimeEl) { sessionTimeEl.textContent = `${startTime} - ${endTime}`; }
+                     const sessionSermonEl = document.getElementById('sessionSermon');
+                     if (sessionSermonEl) { sessionSermonEl.textContent = sermonTopic; }
                     
                     // Show QR, hide placeholder
                     qrContainer.style.display = 'block';
@@ -486,11 +490,12 @@
                     document.getElementById('serviceForm').style.display = 'block';
                     document.getElementById('serviceStatusDisplay').style.display = 'none';
                     
-                    serviceStatus.className = 'status-indicator status-inactive';
-                    serviceStatus.textContent = 'Service Inactive';
-                    
-                    document.getElementById('sessionInfo').style.display = 'none';
-                    qrContainer.style.display = 'none';
+serviceStatus.className = 'status-indicator status-inactive';
+                     serviceStatus.textContent = 'Service Inactive';
+                     
+                     const sessionInfoHide = document.getElementById('sessionInfo');
+                     if (sessionInfoHide) { sessionInfoHide.style.display = 'none'; }
+                     qrContainer.style.display = 'none';
                     qrPlaceholder.style.display = 'block';
                     
                     // Clear QR code
@@ -583,10 +588,11 @@
                             Start Service
                         `;
                         
-                        // Hide service status display and show form
-                        document.getElementById('serviceForm').style.display = 'block';
-                        document.getElementById('serviceStatusDisplay').style.display = 'none';
-                        document.getElementById('sessionInfo').style.display = 'none';
+// Hide service status display and show form
+                         document.getElementById('serviceForm').style.display = 'block';
+                         document.getElementById('serviceStatusDisplay').style.display = 'none';
+                         const sessionInfoExpired = document.getElementById('sessionInfo');
+                         if (sessionInfoExpired) { sessionInfoExpired.style.display = 'none'; }
                         
                         // Stop attendance listener
                         if (attendanceListener) {
