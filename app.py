@@ -313,11 +313,11 @@ def scan_member():
     if not qr_data:
         return jsonify({'error': 'Missing QR data'}), 400
 
-    # Get admin's GPS coordinates
-    admin_latitude = data.get('latitude')
-    admin_longitude = data.get('longitude')
+    # Get user's GPS coordinates
+    user_latitude = data.get('latitude')
+    user_longitude = data.get('longitude')
 
-    if admin_latitude is None or admin_longitude is None:
+    if user_latitude is None or user_longitude is None:
         return jsonify({'error': 'GPS coordinates are required for verification'}), 400
 
     # Verify proximity to church
@@ -339,12 +339,12 @@ def scan_member():
         c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
         return R * c
 
-    distance = haversine(admin_latitude, admin_longitude, church_latitude, church_longitude)
+    distance = haversine(user_latitude, user_longitude, church_latitude, church_longitude)
     proximity_limit = 3  # 3 meters
 
     if distance > proximity_limit:
         return jsonify({
-            'error': f'Please move closer to the church location for verification. '
+            'error': f'Please kindly move 3m closer to the Redemption Presby premises. '
                      f'(Current distance: {distance:.1f}m)'
         }), 403
 
