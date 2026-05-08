@@ -1,0 +1,18 @@
+fix: resolve Flask duplicate endpoint, template errors, and sidebar JS issues
+
+- Fix duplicate Flask endpoint for DELETE sermons (add explicit endpoint name)
+- Extract common get_dashboard_stats() helper to avoid code duplication
+- Fix member_id formatting to prevent duplicate CHURCH-MEM- prefix
+- Add authentication check to record_attendance and publish_service
+- Add admin authorization to scan_member and publish_service
+- Add input validation: donation amount > 0, member_id required
+- Replace hardcoded /tmp with tempfile for cross-platform compatibility
+- Fix Unicode mojibake in publish_service demo message
+- Fix member sorting to use last_name/first_name instead of name field
+- Fix missing stats context in bible_reader and resources_page
+- Replace sermons.html notes file with full working template
+- Add missing templates: member_cards.html, member_card.html, error.html
+- Fix QR scan page to use browser geolocation (remove admin coordinates from QR)
+- Replace all inline onclick="location.href=" with data-href attributes + script
+- Add sidebar click handlers to all templates
+- Create requirements.txt with pinned dependencies

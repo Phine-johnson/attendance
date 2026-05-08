@@ -9,12 +9,22 @@
     --pcg-gray: #F5F5F5;
     --pcg-gray-dark: #E5E5E5;
     --pcg-text: #2C2C2C;
+    --pcg-gold: #D4AF37;
+    --pcg-gold-light: #E6C26A;
+    --pcg-green: #006333;
+    --pcg-green-light: #008040;
 }
 
 body {
     background: linear-gradient(135deg, var(--pcg-gray) 0%, #E8E8E8 100%);
     font-family: 'Source Sans Pro', sans-serif;
     color: var(--pcg-text);
+}
+
+/* Ensure all text is visible */
+.text-muted {
+    color: #555 !important;
+    opacity: 0.9;
 }
 
 /* Navbar */
