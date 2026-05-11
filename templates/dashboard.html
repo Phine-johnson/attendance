@@ -226,64 +226,44 @@
                                        <option value="Joint Service">Joint Service</option>
                                    </select>
                                </div>
-                              <button id="startServiceBtn" class="btn btn-custom-primary btn-lg w-100 mb-2">
-                                  <svg width="20" height="20" class="me-2" fill="currentColor" viewBox="0 0 24 24">
-                                      <path d="M8 5v14l11-7z"/>
-                                  </svg>
-                                  Start Service
-                              </button>
-                          </div>
-                          
-                          <!-- Service Status -->
-                          <div id="serviceStatusDisplay" style="display: none;">
-                              <div class="mb-4">
-                                  <span id="serviceStatus" class="status-indicator status-inactive">Service Inactive</span>
-                              </div>
-                              <p class="text-muted mb-3">
-                                  Start the attendance service to generate QR codes for members to scan.
-                              </p>
-                              <button id="stopServiceBtn" class="btn btn-outline-secondary btn-lg w-100 mb-2">
-                                  <svg width="20" height="20" class="me-2" fill="currentColor" viewBox="0 0 24 24">
-                                      <path d="M6 19h4V5H6v14zm8-4v2h2c0-3.31-2.69-6-6-6s-6 2.69-6 6h2v2c2.76 0 5 2.24 5 5s-2.24 5-5 5-5-2.24-5-5z"/>
-                                  </svg>
-                                  Stop Service
-                              </button>
-                              <button id="scanMemberBtn" class="btn btn-outline-secondary btn-lg w-100">
+<button id="startServiceBtn" class="btn btn-custom-primary btn-lg w-100 mb-2">
                                    <svg width="20" height="20" class="me-2" fill="currentColor" viewBox="0 0 24 24">
-                                       <path d="M3 3h6v6H3V3zm2 2v2h2V5H5zm8-2h6v6h-6V3zm2 2v2h2V5h-2zM3 13h6v6H3v-6zm2 2v2h2v-2H5zm8-2h6v6h-6v-6zm2 2v2h2v-2h-2zm-8-5h4v4H8V8zm5 0h4v4h-4V8z"/>
+                                       <path d="M8 5v14l11-7z"/>
                                    </svg>
-                                   Scan Member ID
+                                   Start Service
                                </button>
-                          </div>
-                      </div>
-                </div>
-            </div>
-           </div>
-
-            <!-- QR Code Display -->
-            <div class="col-lg-6 mb-4">
-                <div class="card card-custom h-100">
-                    <div class="card-header d-flex align-items-center">
-                        <svg width="24" height="24" class="me-2" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M3 3h6v6H3V3zm2 2v2h2V5H5zm8-2h6v6h-6V3zm2 2v2h2V5h-2zM3 13h6v6H3v-6zm2 2v2h2v-2H5zm8-2h6v6h-6v-6zm2 2v2h2v-2h-2z"/>
-                        </svg>
-                        QR Code
-                    </div>
-                    <div class="card-body text-center d-flex flex-column justify-content-center align-items-center">
-                        <div class="qr-code-container" id="qrContainer" style="display: none;">
-                            <img id="qrCodeImg" src="" alt="QR Code" class="img-fluid rounded">
-                            <div class="mt-3">
-                                <small class="text-muted">Scan for attendance</small>
-                            </div>
-                        </div>
-                        <div id="qrPlaceholder" class="text-muted" style="opacity: 0.5;">
-                            <svg width="64" height="64" class="mb-3" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M3 3h4v4H3V3zm5 0h4v4H8V3zM3 8h4v4H3V8zm5 0h4v4H8V8zm5 0h4v4h-4V8zM3 13h4v4H3v-4zm5 0h4v4H8v-4zm5 0h4v4h-4v-4zm-5-5h4v4H8V8zm5 0h4v4h-4V8z"/>
-                            </svg>
-                            <p>QR code will appear here</p>
-                        </div>
-                    </div>
-                </div>
+                           </div>
+                           
+                           <!-- Service Status with QR Code -->
+                           <div id="serviceStatusDisplay" style="display: none;">
+                               <div class="mb-4">
+                                   <span id="serviceStatus" class="status-indicator status-inactive">Service Inactive</span>
+                               </div>
+                               
+                               <!-- QR Code integrated in service control -->
+                               <div class="qr-code-container mb-4" id="qrContainer" style="display: none;">
+                                   <img id="qrCodeImg" src="" alt="QR Code" class="img-fluid rounded" style="max-height: 200px;">
+                                   <div class="mt-2">
+                                       <small class="text-muted fw-bold">Scan for Attendance</small>
+                                   </div>
+                               </div>
+                               
+                               <button id="stopServiceBtn" class="btn btn-outline-secondary btn-lg w-100 mb-2">
+                                   <svg width="20" height="20" class="me-2" fill="currentColor" viewBox="0 0 24 24">
+                                       <path d="M6 19h4V5H6v14zm8-4v2h2c0-3.31-2.69-6-6-6s-6 2.69-6 6h2v2c2.76 0 5 2.24 5 5s-2.24 5-5 5-5-2.24-5-5z"/>
+                                   </svg>
+                                   Stop Service
+                               </button>
+                               <button id="scanMemberBtn" class="btn btn-outline-secondary btn-lg w-100">
+                                    <svg width="20" height="20" class="me-2" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M3 3h6v6H3V3zm2 2v2h2V5H5zm8-2h6v6h-6V3zm2 2v2h2V5h-2zM3 13h6v6H3v-6zm2 2v2h2v-2H5zm8-2h6v6h-6v-6zm2 2v2h2v-2h-2zm-8-5h4v4H8V8zm5 0h4v4h-4V8z"/>
+                                    </svg>
+                                    Scan Member ID
+                                </button>
+                           </div>
+                       </div>
+                 </div>
+             </div>
             </div>
         </div>
 
@@ -401,17 +381,13 @@
               setTimeout(refreshStats, 1000);
               setInterval(refreshStats, 30000); // every 30 seconds
 
-           // DOM Elements
-        const startServiceBtn = document.getElementById('startServiceBtn');
-        const serviceStatus = document.getElementById('serviceStatus');
-        const qrCodeImg = document.getElementById('qrCodeImg');
-        const qrContainer = document.getElementById('qrContainer');
-        const qrPlaceholder = document.getElementById('qrPlaceholder');
-        const attendanceTableBody = document.getElementById('attendanceTableBody');
-        const emptyState = document.getElementById('emptyState');
-        const recordCount = document.getElementById('recordCount');
+// DOM Elements
+         const startServiceBtn = document.getElementById('startServiceBtn');
+         const serviceStatus = document.getElementById('serviceStatus');
+         const qrCodeImg = document.getElementById('qrCodeImg');
+         const qrContainer = document.getElementById('qrContainer');
 
-        // Start Service Button Click Handler
+         // Start Service Button Click Handler
         startServiceBtn.addEventListener('click', async () => {
             try {
                 // Get form values
@@ -464,11 +440,10 @@
                      const sessionSermonEl = document.getElementById('sessionSermon');
                      if (sessionSermonEl) { sessionSermonEl.textContent = sermonTopic; }
                     
-                    // Show QR, hide placeholder
-                    qrContainer.style.display = 'block';
-                    qrPlaceholder.style.display = 'none';
+// Show QR code
+                     qrContainer.style.display = 'block';
 
-                    // Store session data for expiration checking
+                     // Store session data for expiration checking
                     currentSessionId = Date.now().toString(36);
                     sessionEndTime = endTime;
                     
@@ -497,18 +472,17 @@
                     }
                 });
 
-                if (response.ok) {
+if (response.ok) {
                     // Reset UI
                     document.getElementById('serviceForm').style.display = 'block';
                     document.getElementById('serviceStatusDisplay').style.display = 'none';
                     
-serviceStatus.className = 'status-indicator status-inactive';
-                     serviceStatus.textContent = 'Service Inactive';
-                     
-                     const sessionInfoHide = document.getElementById('sessionInfo');
-                     if (sessionInfoHide) { sessionInfoHide.style.display = 'none'; }
-                     qrContainer.style.display = 'none';
-                    qrPlaceholder.style.display = 'block';
+                    serviceStatus.className = 'status-indicator status-inactive';
+                    serviceStatus.textContent = 'Service Inactive';
+                    
+                    const sessionInfoHide = document.getElementById('sessionInfo');
+                    if (sessionInfoHide) { sessionInfoHide.style.display = 'none'; }
+                    qrContainer.style.display = 'none';
                     
                     // Clear QR code
                     qrCodeImg.src = '';
@@ -574,22 +548,23 @@ serviceStatus.className = 'status-indicator status-inactive';
                         clearInterval(expirationChecker);
                         expirationChecker = null;
                         
-                        // Update UI
+// Update UI
                         serviceStatus.className = 'status-indicator status-inactive';
                         serviceStatus.textContent = 'Session Closed';
                         
                         // Hide QR code
                         qrContainer.style.display = 'none';
-                        qrPlaceholder.style.display = 'block';
-                        
-                        // Show expired message in placeholder
-                        qrPlaceholder.innerHTML = `
-                            <svg width="64" height="64" class="mb-3" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M3 3h4v4H3V3zm5 0h4v4H8V3zM3 8h4v4H3V8zm5 0h4v4H8V8zm5 0h4v4h-4V8zM3 13h4v4H3v-4zm5 0h4v4H8v-4zm5 0h4v4h-4v-4zm-5-5h4v4H8V8zm5 0h4v4h-4V8z"/>
-                            </svg>
-                            <p>Session Expired</p>
+
+                        // Show expired message in service status
+                        document.getElementById('serviceStatusDisplay').innerHTML = `
+                            <div class="text-center py-4">
+                                <svg width="64" height="64" class="mb-3 text-warning" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M3 3h4v4H3V3zm5 0h4v4H8V3zM3 8h4v4H3V8zm5 0h4v4H8V8zm5 0h4v4h-4V8zM3 13h4v4H3v-4zm5 0h4v4H8v-4zm5 0h4v4h-4v-4zm-5-5h4v4H8V8zm5 0h4v4h-4V8z"/>
+                                </svg>
+                                <p class="text-warning fw-bold">Session Expired</p>
+                            </div>
                         `;
-                        
+
                         // Reset start service button
                         startServiceBtn.disabled = false;
                         startServiceBtn.className = 'btn btn-custom-primary btn-lg w-100';
@@ -599,10 +574,9 @@ serviceStatus.className = 'status-indicator status-inactive';
                             </svg>
                             Start Service
                         `;
-                        
-// Hide service status display and show form
-                         document.getElementById('serviceForm').style.display = 'block';
-                         document.getElementById('serviceStatusDisplay').style.display = 'none';
+                    }
+                }
+            }, 60000); // Check every minute
                          const sessionInfoExpired = document.getElementById('sessionInfo');
                          if (sessionInfoExpired) { sessionInfoExpired.style.display = 'none'; }
                         
