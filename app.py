@@ -1650,9 +1650,6 @@ def member_scan_page():
 
 @app.route('/api/attendance/scan', methods=['POST'])
 def scan_attendance():
-    if 'user' not in session:
-        return jsonify({'error': 'Unauthorized'}), 401
-
     if not FIREBASE_INITIALIZED:
         return jsonify({'error': 'Firebase not initialized'}), 503
 
