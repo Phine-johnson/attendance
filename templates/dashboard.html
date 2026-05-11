@@ -237,22 +237,15 @@
                                </button>
                            </div>
                            
-                           <!-- Active Service Info (shown when active) -->
-                           <div id="activeServiceDisplay" style="display: none;" class="mb-3 p-3 bg-light rounded">
-                               <h6 class="text-pcg-green mb-2">Current Service</h6>
-                               <p class="mb-1"><strong>Title:</strong> <span id="activeServiceTitle"></span></p>
-                               <p class="mb-1"><strong>Time:</strong> <span id="activeServiceTime"></span></p>
-                               <p class="mb-0"><strong>Type:</strong> <span id="activeServiceType"></span></p>
-                           </div>
-                           
-                           <!-- Stop Service Button -->
-                           <button id="stopServiceBtn" class="btn btn-outline-secondary btn-lg w-100 mb-2" style="display: none;">
-                               <svg width="20" height="20" class="me-2" fill="currentColor" viewBox="0 0 24 24">
-                                   <path d="M6 19h4V5H6v14zm8-4v2h2c0-3.31-2.69-6-6-6s-6 2.69-6 6h2v2c2.76 0 5 2.24 5 5s-2.24 5-5 5-5-2.24-5-5z"/>
-                               </svg>
-                               Stop Service
-                           </button>
-                       </div>
+                            <!-- Active Service Info (shown when active) -->
+                            <div id="activeServiceDisplay" style="display: none;" class="mb-3 p-3 bg-light rounded">
+                                <h6 class="text-pcg-green mb-2">Current Service</h6>
+                                <p class="mb-1"><strong>Title:</strong> <span id="activeServiceTitle"></span></p>
+                                <p class="mb-1"><strong>Time:</strong> <span id="activeServiceTime"></span></p>
+                                <p class="mb-0"><strong>Type:</strong> <span id="activeServiceType"></span></p>
+                            </div>
+                            
+                        </div>
                    </div>
                </div>
 
@@ -282,13 +275,21 @@
                                <p>QR code will appear here when service starts</p>
                            </div>
                            
-                           <!-- Open Scanner Button (shown when service active) -->
-                           <button id="scanMemberBtn" class="btn btn-outline-secondary btn-lg w-100 mt-3" style="display: none;">
-                               <svg width="20" height="20" class="me-2" fill="currentColor" viewBox="0 0 24 24">
-                                   <path d="M3 3h6v6H3V3zm2 2v2h2V5H5zm8-2h6v6h-6V3zm2 2v2h2V5h-2zM3 13h6v6H3v-6zm2 2v2h2v-2H5zm8-2h6v6h-6v-6zm2 2v2h2v-2h-2zm-8-5h4v4H8V8zm5 0h4v4h-4V8z"/>
-                               </svg>
-                               Open Scanner
-                           </button>
+                            <!-- Open Scanner Button (shown when service active) -->
+                            <button id="scanMemberBtn" class="btn btn-outline-secondary btn-lg w-100 mb-2" style="display: none;">
+                                <svg width="20" height="20" class="me-2" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M3 3h6v6H3V3zm2 2v2h2V5H5zm8-2h6v6h-6V3zm2 2v2h2V5h-2zM3 13h6v6H3v-6zm2 2v2h2v-2H5zm8-2h6v6h-6v-6zm2 2v2h2v-2h-2zm-8-5h4v4H8V8zm5 0h4v4h-4V8z"/>
+                                </svg>
+                                Open Scanner
+                            </button>
+                            
+                            <!-- Stop Service Button (shown when service active) -->
+                            <button id="stopServiceBtn" class="btn btn-outline-danger btn-lg w-100" style="display: none;">
+                                <svg width="20" height="20" class="me-2" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M6 19h4V5H6v14zm8-4v2h2c0-3.31-2.69-6-6-6s-6 2.69-6 6h2v2c2.76 0 5 2.24 5 5s-2.24 5-5 5-5-2.24-5-5z"/>
+                                </svg>
+                                Stop Service
+                            </button>
                        </div>
                    </div>
                </div>
@@ -459,12 +460,13 @@
                      qrCodeImg.src = qrCodeUrl;
                      
                      // Update UI: show QR, hide placeholder, show active service info
-                     qrContainer.style.display = 'block';
-                     qrPlaceholder.style.display = 'none';
-                     activeServiceDisplay.style.display = 'block';
-                     scanMemberBtn.style.display = 'block';
-                     
-                     // Populate active service details
+                      qrContainer.style.display = 'block';
+                      qrPlaceholder.style.display = 'none';
+                      activeServiceDisplay.style.display = 'block';
+                      scanMemberBtn.style.display = 'block';
+                      stopServiceBtn.style.display = 'block';
+                      
+                      // Populate active service details
                      activeServiceTitle.textContent = serviceTitle;
                      activeServiceTime.textContent = `${startTime} - ${endTime}`;
                      activeServiceType.textContent = document.getElementById('serviceType').value;
@@ -506,34 +508,35 @@
                 });
 
  if (response.ok) {
-                     // Reset UI - hide QR and active service display, show start button
-                     qrContainer.style.display = 'none';
-                     qrPlaceholder.style.display = 'block';
-                     activeServiceDisplay.style.display = 'none';
-                     scanMemberBtn.style.display = 'none';
-                     startServiceBtn.style.display = 'block';
-                     
-                     // Reset status indicator
-                     serviceStatus.className = 'status-indicator status-inactive';
-                     serviceStatus.textContent = 'Service Inactive';
-                     
-                     // Clear QR code
-                     qrCodeImg.src = '';
-                     
-                     // Stop listeners
-                     if (attendanceListener) {
-                         attendanceListener.off();
-                         attendanceListener = null;
-                     }
-                     
-                     if (expirationChecker) {
-                         clearInterval(expirationChecker);
-                         expirationChecker = null;
-                     }
-                     
-                     currentSessionId = null;
-                     sessionEndTime = null;
-                 } else {
+                      // Reset UI - hide QR and active service display, show start button
+                      qrContainer.style.display = 'none';
+                      qrPlaceholder.style.display = 'block';
+                      activeServiceDisplay.style.display = 'none';
+                      scanMemberBtn.style.display = 'none';
+                      stopServiceBtn.style.display = 'none';
+                      startServiceBtn.style.display = 'block';
+                      
+                      // Reset status indicator
+                      serviceStatus.className = 'status-indicator status-inactive';
+                      serviceStatus.textContent = 'Service Inactive';
+                      
+                      // Clear QR code
+                      qrCodeImg.src = '';
+                      
+                      // Stop listeners
+                      if (attendanceListener) {
+                          attendanceListener.off();
+                          attendanceListener = null;
+                      }
+                      
+                      if (expirationChecker) {
+                          clearInterval(expirationChecker);
+                          expirationChecker = null;
+                      }
+                      
+                      currentSessionId = null;
+                      sessionEndTime = null;
+                  } else {
                     alert('Failed to stop service');
                 }
             } catch (error) {
@@ -566,35 +569,36 @@
                     const endTime = new Date();
                     endTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
                     
-                    if (now > endTime) {
-                        // Session expired
-                        clearInterval(expirationChecker);
-                        expirationChecker = null;
-                        
-                        // Update UI
-                        serviceStatus.className = 'status-indicator status-inactive';
-                        serviceStatus.textContent = 'Session Closed';
-                        
-                        // Hide QR, show placeholder
-                        qrContainer.style.display = 'none';
-                        qrPlaceholder.style.display = 'block';
-                        
-                        // Hide active service info and scanner button
-                        activeServiceDisplay.style.display = 'none';
-                        scanMemberBtn.style.display = 'none';
-                        
-                        // Show start button
-                        startServiceBtn.style.display = 'block';
-                        
-                        // Clear QR code
-                        qrCodeImg.src = '';
-                        
-                        // Stop attendance listener
-                        if (attendanceListener) {
-                            attendanceListener.off();
-                            attendanceListener = null;
-                        }
-                    }
+                     if (now > endTime) {
+                         // Session expired
+                         clearInterval(expirationChecker);
+                         expirationChecker = null;
+                         
+                         // Update UI
+                         serviceStatus.className = 'status-indicator status-inactive';
+                         serviceStatus.textContent = 'Session Closed';
+                         
+                         // Hide QR, show placeholder
+                         qrContainer.style.display = 'none';
+                         qrPlaceholder.style.display = 'block';
+                         
+                         // Hide active service info and scanner buttons
+                         activeServiceDisplay.style.display = 'none';
+                         scanMemberBtn.style.display = 'none';
+                         stopServiceBtn.style.display = 'none';
+                         
+                         // Show start button
+                         startServiceBtn.style.display = 'block';
+                         
+                         // Clear QR code
+                         qrCodeImg.src = '';
+                         
+                         // Stop attendance listener
+                         if (attendanceListener) {
+                             attendanceListener.off();
+                             attendanceListener = null;
+                         }
+                     }
                 }
             }, 60000); // Check every minute
         }
