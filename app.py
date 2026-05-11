@@ -1791,6 +1791,16 @@ def scan_attendance():
             'longitude': longitude
         }
         ref.child('checkins').child(checkin_id).set(checkin_data)
+        # Also save to attendance by date for reporting
+        today = date.today().isoformat()
+        ref.child('attendance').child(today).child(checkin_id).set({
+            'member_name': member_name,
+            'member_type': member_type,
+            'service_type': service_type,
+            'timestamp': datetime.now().isoformat(),
+            'session_id': session_id,
+            'distance': round(distance, 1)
+        })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
