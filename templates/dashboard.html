@@ -576,18 +576,7 @@ if (response.ok) {
                         `;
                     }
                 }
-            }, 60000); // Check every minute
-                         const sessionInfoExpired = document.getElementById('sessionInfo');
-                         if (sessionInfoExpired) { sessionInfoExpired.style.display = 'none'; }
-                        
-                        // Stop attendance listener
-                        if (attendanceListener) {
-                            attendanceListener.off();
-                            attendanceListener = null;
-                        }
-                    }
-                }
-            }, 60000); // Check every minute
+}, 60000); // Check every minute
         }
 
         // Add row to attendance table
