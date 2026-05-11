@@ -1281,13 +1281,24 @@
                      body: JSON.stringify({ qr_data: JSON.stringify(parsedData) })
                  });
 
-                 const result = await response.json();
+                  const result = await response.json();
 
-                 if (result.success && result.member) {
-                     showToast('<strong>Welcome, ' + result.member.name + '!</strong><br>Attendance recorded successfully.');
-                 } else {
-                     showToast('<strong>Error</strong> ' + (result.error || 'Member not found'), false);
-                 }
+                  if (result.success && result.member) {
+                      // Get sermon title from active service display
+                      const sermonTitleEl = document.getElementById('activeServiceTitle');
+                      const sermonTitle = sermonTitleEl ? sermonTitleEl.textContent.trim() : '';
+                      
+                      // Build welcome message
+                      let welcomeHtml = '<strong>Welcome to today\'s service!</strong>';
+                      if (sermonTitle) {
+                          welcomeHtml += `<br><span class="text-normal">Sermon: ${sermonTitle}</span>`;
+                      }
+                      welcomeHtml += '<br><span class="text-normal" style="font-size: 0.9em;">Proceed to complete your attendance</span>';
+                      
+                      showToast(welcomeHtml);
+                  } else {
+                      showToast('<strong>Error</strong> ' + (result.error || 'Member not found'), false);
+                  }
              } catch (error) {
                  console.error('Scan error:', error);
                  showToast('<strong>Error</strong> Failed to process scan', false);
