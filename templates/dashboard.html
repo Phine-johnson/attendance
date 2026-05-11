@@ -283,59 +283,49 @@
                                   </svg>
                                   Start Service
                               </button>
-                          </div>
-                          
-                          <!-- Current Service Info (shown when active) -->
-                          <div id="activeServiceDisplay" style="display: none;" class="mb-3 p-3 bg-light rounded">
-                              <h6 class="text-pcg-green mb-2">Current Service</h6>
-                              <p class="mb-1"><strong>Title:</strong> <span id="activeServiceTitle"></span></p>
-                              <p class="mb-1"><strong>Time:</strong> <span id="activeServiceTime"></span></p>
-                              <p class="mb-0"><strong>Type:</strong> <span id="activeServiceType"></span></p>
-                          </div>
-                          
-                          <button id="stopServiceBtn" class="btn btn-outline-secondary btn-lg w-100 mb-2" style="display: none;">
-                              <svg width="20" height="20" class="me-2" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M6 19h4V5H6v14zm8-4v2h2c0-3.31-2.69-6-6-6s-6 2.69-6 6h2v2c2.76 0 5 2.24 5 5s-2.24 5-5 5-5-2.24-5-5z"/>
-                              </svg>
-                              Stop Service
-                          </button>
-                      </div>
+                           </div>
+                           
+                           <!-- Current Service Info & QR (shown when active) -->
+                           <div id="activeServiceDisplay" style="display: none;" class="mb-3 p-3 bg-light rounded">
+                               <h6 class="text-pcg-green mb-2">Current Service</h6>
+                               <p class="mb-1"><strong>Title:</strong> <span id="activeServiceTitle"></span></p>
+                               <p class="mb-1"><strong>Time:</strong> <span id="activeServiceTime"></span></p>
+                               <p class="mb-0"><strong>Type:</strong> <span id="activeServiceType"></span></p>
+                           </div>
+                           
+                           <!-- QR Code Display (inside Service Control, shown when active) -->
+                           <div id="qrContainer" class="mb-3" style="display: none;">
+                               <img id="qrCodeImg" src="" alt="QR Code" class="img-fluid rounded" style="max-height: 200px;">
+                               <div class="mt-2 text-center">
+                                   <small class="text-muted fw-bold">Scan for Attendance</small>
+                               </div>
+                           </div>
+                           
+                           <div id="qrPlaceholder" class="text-muted mb-3" style="opacity: 0.5; display: block;">
+                               <svg width="48" height="48" class="mb-2" fill="currentColor" viewBox="0 0 24 24">
+                                   <path d="M3 3h4v4H3V3zm5 0h4v4H8V3zM3 8h4v4H3V8zm5 0h4v4H8V8zm5 0h4v4h-4V8zM3 13h4v4H3v-4zm5 0h4v4H8v-4zm5 0h4v4h-4v-4zm-5-5h4v4H8V8zm5 0h4v4h-4V8z"/>
+                               </svg>
+                               <p class="small">QR code will appear here when service starts</p>
+                           </div>
+                           
+                           <button id="scanMemberBtn" class="btn btn-outline-secondary btn-lg w-100 mb-2" style="display: none;">
+                               <svg width="20" height="20" class="me-2" fill="currentColor" viewBox="0 0 24 24">
+                                   <path d="M3 3h6v6H3V3zm2 2v2h2V5H5zm8-2h6v6h-6V3zm2 2v2h2V5h-2zM3 13h6v6H3v-6zm2 2v2h2v-2H5zm8-2h6v6h-6v-6zm2 2v2h2v-2h-2zm-8-5h4v4H8V8zm5 0h4v4h-4V8z"/>
+                               </svg>
+                               Open Scanner
+                           </button>
+                           
+                           <button id="stopServiceBtn" class="btn btn-outline-secondary btn-lg w-100 mb-2" style="display: none;">
+                               <svg width="20" height="20" class="me-2" fill="currentColor" viewBox="0 0 24 24">
+                                   <path d="M6 19h4V5H6v14zm8-4v2h2c0-3.31-2.69-6-6-6s-6 2.69-6 6h2v2c2.76 0 5 2.24 5 5s-2.24 5-5 5-5-2.24-5-5z"/>
+                               </svg>
+                               Stop Service
+                           </button>
+                       </div>
                   </div>
               </div>
 
-              <!-- QR Code Card (Right) -->
-              <div class="col-lg-6 mb-4">
-                  <div class="card card-custom h-100">
-                      <div class="card-header d-flex align-items-center">
-                          <svg width="24" height="24" class="me-2" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M3 3h6v6H3V3zm2 2v2h2V5H5zm8-2h6v6h-6V3zm2 2v2h2V5h-2zM3 13h6v6H3v-6zm2 2v2h2v-2H5zm8-2h6v6h-6v-6zm2 2v2h2v-2h-2zm-8-5h4v4H8V8zm5 0h4v4h-4V8z"/>
-                          </svg>
-                          Member QR Scanner
-                      </div>
-                        <div class="card-body text-center d-flex flex-column justify-content-center align-items-center">
-                            <div class="qr-code-container" id="qrContainer" style="display: none;">
-                                <img id="qrCodeImg" src="" alt="QR Code" class="img-fluid rounded" style="max-height: 250px;">
-                                <div class="mt-2">
-                                    <small class="text-muted fw-bold">Scan for Attendance</small>
-                                </div>
-                            </div>
-                            <div id="qrPlaceholder" class="text-muted" style="opacity: 0.5;">
-                                <svg width="64" height="64" class="mb-3" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M3 3h4v4H3V3zm5 0h4v4H8V3zM3 8h4v4H3V8zm5 0h4v4H8V8zm5 0h4v4h-4V8zM3 13h4v4H3v-4zm5 0h4v4H8v-4zm5 0h4v4h-4v-4zm-5-5h4v4H8V8zm5 0h4v4h-4V8z"/>
-                                </svg>
-                                <p>QR code will appear here when service starts</p>
-                            </div>
-                            
-                            <!-- Open Scanner button (shown when service active) -->
-                            <button id="scanMemberBtn" class="btn btn-outline-secondary btn-lg w-100 mt-3" style="display: none;">
-                                <svg width="20" height="20" class="me-2" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M3 3h6v6H3V3zm2 2v2h2V5H5zm8-2h6v6h-6V3zm2 2v2h2V5h-2zM3 13h6v6H3v-6zm2 2v2h2v-2H5zm8-2h6v6h-6v-6zm2 2v2h2v-2h-2zm-8-5h4v4H8V8zm5 0h4v4h-4V8z"/>
-                                </svg>
-                                Open Scanner
-                            </button>
-                        </div>
-                  </div>
-              </div>
+
           </div>
                  </div>
              </div>
