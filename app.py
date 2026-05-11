@@ -321,11 +321,12 @@ def scan_member():
         return jsonify({'error': 'GPS coordinates are required for verification'}), 400
 
     # Verify proximity to church
-    church_latitude = float(os.environ.get('CHURCH_LATITUDE', 0))
-    church_longitude = float(os.environ.get('CHURCH_LONGITUDE', 0))
+    church_latitude = float(os.environ.get('CHURCH_LATITUDE', '5.5852403'))
+    church_longitude = float(os.environ.get('CHURCH_LONGITUDE', '-0.3021029'))
 
-    if church_latitude == 0 or church_longitude == 0:
-        return jsonify({'error': 'Church location is not configured'}), 500
+    # Verify we have valid coordinates
+    if church_latitude is None or church_longitude is None or church_latitude == 0 or church_longitude == 0:
+        return jsonify({'error': 'Church location is not configured. Set CHURCH_LATITUDE and CHURCH_LONGITUDE environment variables.'}), 500
 
     import math
 
@@ -340,11 +341,23 @@ def scan_member():
         return R * c
 
     distance = haversine(user_latitude, user_longitude, church_latitude, church_longitude)
-    proximity_limit = 3  # 3 meters
+    proximity_limit = 5  # 5 meters
+
+    # If distance is thousands of meters, check for potential coordinate swap
+    if distance > 1000:
+        # Check if user's coordinates are swapped
+        swapped_user_dist = haversine(user_longitude, user_latitude, church_latitude, church_longitude)
+        # Check if church coordinates are swapped
+        swapped_church_dist = haversine(user_latitude, user_longitude, church_longitude, church_latitude)
+        if swapped_user_dist <= proximity_limit or swapped_church_dist <= proximity_limit:
+            return jsonify({
+                'error': f'Coordinate mismatch detected. Please verify device GPS or church configuration. '
+                         f'(Raw distance: {distance:.1f}m)'
+            }), 403
 
     if distance > proximity_limit:
         return jsonify({
-            'error': f'Please kindly move 3m closer to the Redemption Presby premises. '
+            'error': f'Please kindly move 5m closer to the Redemption Presby premises. '
                      f'(Current distance: {distance:.1f}m)'
         }), 403
 
@@ -1557,11 +1570,11 @@ def start_service():
     # Church GPS coordinates (Redemption Presby Church - New Gbawe, Ghana)
     # These should be configurable via environment variables in production
     # Plus code: GS 0142-6728
-    church_latitude = float(os.environ.get('CHURCH_LATITUDE', '5.6472'))  # Default to New Gbawe
-    church_longitude = float(os.environ.get('CHURCH_LONGITUDE', '-0.4125'))
+    church_latitude = float(os.environ.get('CHURCH_LATITUDE', '5.5852403'))  # Default to New Gbawe
+    church_longitude = float(os.environ.get('CHURCH_LONGITUDE', '-0.3021029'))
 
     session_id = str(uuid.uuid4())
-    proximity_limit = 3  # 3 meters as specified
+    proximity_limit = 5  # 5 meters as specified
 
     today = date.today().isoformat()
 
@@ -1649,7 +1662,7 @@ def scan_attendance():
     longitude = data.get('longitude')
     member_name = data.get('name')
     member_type = data.get('member_type', 'Member')
-    service_type = data.get('service_type') or session_data.get('service_type', 'First Service')
+    service_type = data.get('service_type')  # Don't reference session_data yet
 
     if not session_id or latitude is None or longitude is None:
         return jsonify({'error': 'Missing required fields'}), 400
@@ -1665,6 +1678,75 @@ def scan_attendance():
     if not session_data:
         return jsonify({'error': 'Session not found'}), 404
 
+    # Use service_type from session if not provided
+    if not service_type:
+        service_type = session_data.get('service_type', 'First Service')
+
+    # Session must be active and valid
+    session_active = session_data.get('active', False)
+    session_date_str = session_data.get('date')
+    start_time_str = session_data.get('start_time')
+    end_time_str = session_data.get('end_time')
+
+    # Check if session is manually deactivated
+    if not session_active:
+        return jsonify({
+            'success': False,
+            'error': 'This session has been ended by an administrator. Please scan a current service QR code.'
+        }), 200
+
+    # Check service date and time validity
+    try:
+        from datetime import datetime, date, time
+
+        # Parse session date
+        session_date = date.fromisoformat(session_date_str) if session_date_str else date.today()
+        current_date = date.today()
+
+        # If the session date is in the past, it has expired
+        if current_date > session_date:
+            return jsonify({
+                'success': False,
+                'error': f'This QR code has expired. It was valid for {session_date_str}. Please scan the current service QR code.'
+            }), 200
+
+        # If on the session date, check time window
+        if start_time_str and end_time_str and current_date == session_date:
+            # Parse times
+            try:
+                start_h, start_m = map(int, start_time_str.split(':'))
+                end_h, end_m = map(int, end_time_str.split(':'))
+                start_time_ob = time(start_h, start_m)
+                end_time_ob = time(end_h, end_m)
+                current_time_ob = datetime.now().time()
+
+                # Check if before start
+                if current_time_ob < start_time_ob:
+                    # Calculate time until start
+                    start_dt = datetime.combine(current_date, start_time_ob)
+                    current_dt = datetime.now()
+                    remaining = start_dt - current_dt
+                    minutes = int(remaining.total_seconds() // 60)
+                    return jsonify({
+                        'success': False,
+                        'error': f'Service has not started yet. Begins at {start_time_str}. Please wait {minutes} minutes.'
+                    }), 200
+
+                # Check if after end
+                if current_time_ob > end_time_ob:
+                    return jsonify({
+                        'success': False,
+                        'error': f'Service has already ended (ended at {end_time_str}). This QR code has expired. Please scan the current service QR code.'
+                    }), 200
+            except (ValueError, TypeError) as time_parse_error:
+                print(f"Time parse error: {time_parse_error}")
+                # If time parsing fails, skip time checks (fail open)
+                pass
+    except Exception as e:
+        print(f"Time validation error: {e}")
+        # Fail open if datetime parsing fails
+        pass
+
     import math
     def haversine(lat1, lon1, lat2, lon2):
         R = 6371000
@@ -1679,10 +1761,23 @@ def scan_attendance():
     distance = haversine(latitude, longitude, session_data.get('latitude', 0), session_data.get('longitude', 0))
     limit = session_data.get('limit', 3)
 
+    # If distance is thousands of meters, check for potential coordinate swap
+    if distance > 1000:
+        # Check if user's coordinates are swapped
+        swapped_user_dist = haversine(longitude, latitude, session_data.get('latitude', 0), session_data.get('longitude', 0))
+        # Check if church coordinates are swapped
+        swapped_church_dist = haversine(latitude, longitude, session_data.get('longitude', 0), session_data.get('latitude', 0))
+        if swapped_user_dist <= limit or swapped_church_dist <= limit:
+            return jsonify({
+                'success': False,
+                'error': f'Coordinate mismatch detected. Please verify your device GPS or contact administrator. '
+                         f'(Raw distance: {distance:.1f}m)'
+            }), 200
+
     if distance > limit:
         return jsonify({
             'success': False,
-            'error': f'Please kindly move 3m closer to the Redemption Presby premises. (Current distance: {distance:.1f}m)'
+            'error': f'Please kindly move 5m closer to the Redemption Presby premises. (Current distance: {distance:.1f}m)'
         }), 200
 
     try:
@@ -1751,17 +1846,18 @@ def create_session_qr():
     date_str = data.get('date', '').strip()
     start_time = data.get('start_time', '').strip()
     end_time = data.get('end_time', '').strip()
-    latitude = data.get('latitude', float(os.environ.get('CHURCH_LATITUDE', 0)))
-    longitude = data.get('longitude', float(os.environ.get('CHURCH_LONGITUDE', 0)))
-    proximity_limit = data.get('limit', 3)
+    service_type = data.get('service_type', 'First Service')
+    latitude = data.get('latitude', float(os.environ.get('CHURCH_LATITUDE', '5.5852403')))
+    longitude = data.get('longitude', float(os.environ.get('CHURCH_LONGITUDE', '-0.3021029')))
+    proximity_limit = data.get('limit', 5)
     if not program_name or not date_str or not start_time or not end_time:
-        return jsonify({'error': 'Missing required field'}), 400
+         return jsonify({'error': 'Missing required field'}), 400
     session_id = str(uuid.uuid4())
     try:
         session_data = {
             'session_id': session_id, 'latitude': latitude, 'longitude': longitude,
             'limit': proximity_limit, 'program_name': program_name,
-            'date': date_str, 'start_time': start_time, 'end_time': end_time,
+            'service_type': service_type, 'date': date_str, 'start_time': start_time, 'end_time': end_time,
             'timestamp': datetime.now().isoformat(),
             'created_by': session['user'], 'active': True
         }
