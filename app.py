@@ -1162,6 +1162,18 @@ def today_sermon():
             if sessions:
                 for sid, sdata in sessions.items():
                     if sdata.get('active', False):
+                        # If session has a sermon title set, use that
+                        sermon_title = sdata.get('sermon_title')
+                        if sermon_title and sermon_title.strip():
+                            sermon = {
+                                'id': sid,
+                                'title': sermon_title,
+                                'date': sdata.get('date'),
+                                'start_time': sdata.get('start_time'),
+                                'end_time': sdata.get('end_time'),
+                                'program_name': sdata.get('title')  # Use title as program_name
+                            }
+                            break
                         # If session has a sermon attached
                         if sdata.get('sermon_id'):
                             sermon_data = ref.child('sermons').child(sdata['sermon_id']).get()
@@ -1804,7 +1816,7 @@ def start_service():
         session_data = {
             'session_id': session_id,
             'title': session_title,
-            'sermon_topic': sermon_topic,
+            'sermon_title': sermon_topic,
             'service_type': service_type,
             'start_time': start_time,
             'end_time': end_time,
@@ -1890,7 +1902,8 @@ def create_session_qr():
             'limit': limit,
             'timestamp': datetime.now().isoformat(),
             'created_by': session['user'],
-            'active': True
+            'active': True,
+            'sermon_title': data.get('sermon_title', '')
         }
         ref.child('sessions').child(session_id).set(session_data)
 
@@ -2373,7 +2386,7 @@ def service_attendance_page():
             if sessions:
                 for sid, sdata in sessions.items():
                     if sdata.get('active', False):
-                        sermon_title = sdata.get('sermon_topic') or sdata.get('title')
+                        sermon_title = sdata.get('sermon_title') or sdata.get('title')
                         break
             if not sermon_title:
                 sermons = ref.child('sermons').get()
