@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check-In - Redemption Presby</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card card-custom shadow">
+                    <div class="card-body text-center p-5">
+                        <!-- Step 1: Welcome & Sermon Display (Always visible first) -->
+                        <div id="welcomeStep">
+                            <h1 class="h2 text-pcg-blue mb-3">Welcome to Today's Service!</h1>
+
+                            <!-- Sermon Title -->
+                            <div class="mb-4">
+                                <p class="text-muted mb-2">Today's Sermon</p>
+                                <div class="spinner-border text-pcg-green" role="status" id="sermonSpinner">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <h2 class="h3 text-pcg-blue" id="sermonTitle">Loading...</h2>
+                            </div>
+
+                            <!-- Proceed Button -->
+                            <button id="proceedBtn" class="btn btn-custom-primary btn-lg w-100">
+                                Proceed to complete your attendance
+                            </button>
+                        </div>
+
+                        <!-- Step 2: Member Confirmation Form (hidden until proceed clicked) -->
+                        <div id="checkinStep" style="display: none;">
+                            <h2 class="h3 text-pcg-blue mb-3">Confirm Your Attendance</h2>
+
+                            <!-- Member Info Display -->
+                            <div class="mb-4 p-3 bg-light rounded">
+                                <p class="mb-1">Member:</p>
+                                <h4 class="text-pcg-green mb-2" id="memberNameDisplay"></h4>
+                                <p class="text-muted small mb-0" id="memberIdDisplay"></p>
+                            </div>
+
+                            <p class="mb-4">Please confirm your check-in for today's service.</p>
+
+                            <button id="confirmCheckinBtn" class="btn btn-custom-primary btn-lg w-100 mb-2">
+                                Confirm Check-In
+                            </button>
+                            <button id="backBtn" class="btn btn-outline-secondary w-100">
+                                Back
+                            </button>
+                        </div>
+
+                        <!-- Step 3: Success Message -->
+                        <div id="successMessage" style="display: none;">
+                            <svg width="64" height="64" class="mb-3 text-success" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+                            <h2 class="h4 text-success mb-3">Check-in Successful!</h2>
+                            <p class="mb-0">Your attendance has been recorded. Have a blessed service!</p>
+                        </div>
+
+                        <!-- Error Display -->
+                        <div id="errorMessage" class="alert alert-danger" style="display: none;">
+                            <p id="errorText" class="mb-0"></p>
+                            <button class="btn btn-outline-secondary btn-sm mt-2" onclick="resetToWelcome()">Try Again</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get member ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const memberId = urlParams.get('member_id');
+
+            // DOM elements
+            const welcomeStep = document.getElementById('welcomeStep');
+            const checkinStep = document.getElementById('checkinStep');
+            const successMessage = document.getElementById('successMessage');
+            const errorMessage = document.getElementById('errorMessage');
+            const proceedBtn = document.getElementById('proceedBtn');
+            const confirmCheckinBtn = document.getElementById('confirmCheckinBtn');
+            const backBtn = document.getElementById('backBtn');
+            const sermonSpinner = document.getElementById('sermonSpinner');
+            const sermonTitle = document.getElementById('sermonTitle');
+            const memberNameDisplay = document.getElementById('memberNameDisplay');
+            const memberIdDisplay = document.getElementById('memberIdDisplay');
+            const errorText = document.getElementById('errorText');
+
+            // State
+            let currentMemberId = null;
+
+            // Fetch today's sermon on load
+            fetch('/api/today-sermon')
+                .then(res => res.json())
+                .then(data => {
+                    sermonSpinner.style.display = 'none';
+                    if (data.sermon && data.sermon.title) {
+                        sermonTitle.textContent = data.sermon.title;
+                    } else {
+                        sermonTitle.textContent = 'No sermon scheduled';
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching sermon:', err);
+                    sermonSpinner.style.display = 'none';
+                    sermonTitle.textContent = 'Unable to load sermon';
+                });
+
+            // Verify member ID
+            if (memberId) {
+                currentMemberId = memberId;
+                fetch(`/api/member/${memberId}/greeting`)
+                    .then(res => {
+                        if (!res.ok) throw new Error('Member not found');
+                        return res.json();
+                    })
+                    .then(member => {
+                        memberNameDisplay.textContent = member.first_name || 'Member';
+                        memberIdDisplay.textContent = member.member_id;
+                    })
+                    .catch(err => {
+                        errorText.textContent = 'Member not found. Please scan your QR code again or contact admin.';
+                        welcomeStep.style.display = 'none';
+                        errorMessage.style.display = 'block';
+                    });
+            } else {
+                // No member ID in URL
+                errorText.textContent = 'No member ID detected. Please scan your QR code to check in.';
+                welcomeStep.style.display = 'none';
+                errorMessage.style.display = 'block';
+            }
+
+            // Proceed button - show check-in form
+            proceedBtn.addEventListener('click', function() {
+                welcomeStep.style.display = 'none';
+                checkinStep.style.display = 'block';
+            });
+
+            // Back button - return to welcome
+            backBtn.addEventListener('click', function() {
+                checkinStep.style.display = 'none';
+                welcomeStep.style.display = 'block';
+            });
+
+            // Confirm check-in
+            confirmCheckinBtn.addEventListener('click', function() {
+                confirmCheckinBtn.disabled = true;
+                confirmCheckinBtn.textContent = 'Recording...';
+
+                fetch('/api/checkin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ member_id: currentMemberId })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        checkinStep.style.display = 'none';
+                        successMessage.style.display = 'block';
+                    } else {
+                        alert(data.error || 'Check-in failed. Please try again.');
+                        confirmCheckinBtn.disabled = false;
+                        confirmCheckinBtn.textContent = 'Confirm Check-In';
+                    }
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    alert('Network error. Please try again.');
+                    confirmCheckinBtn.disabled = false;
+                    confirmCheckinBtn.textContent = 'Confirm Check-In';
+                });
+            });
+
+            // Reset function for error retry
+            window.resetToWelcome = function() {
+                errorMessage.style.display = 'none';
+                welcomeStep.style.display = 'block';
+                // Reload to get fresh member ID from URL
+                window.location.href = window.location.pathname + '?t=' + Date.now();
+            };
+        });
+    </script>
+</body>
+</html>

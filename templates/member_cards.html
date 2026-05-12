@@ -63,11 +63,14 @@
                         <div class="qr-container">
                             <img src="{{ url_for('get_member_qrcode', member_id=member.id) }}" alt="QR Code" style="width: 140px; height: 140px;">
                         </div>
-                        <div class="mt-2">
-                            <a href="{{ url_for('get_member_card', member_id=member.id) }}" class="btn btn-outline-primary btn-sm" target="_blank">
-                                Print Card
-                            </a>
-                        </div>
+                         <div class="mt-2">
+                             <a href="{{ url_for('get_member_card', member_id=member.id) }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                                 Print Card
+                             </a>
+                             <a href="{{ url_for('get_member_checkin_qrcode', member_id=member.id) }}" class="btn btn-outline-success btn-sm" target="_blank">
+                                 Check-in QR
+                             </a>
+                         </div>
                     </div>
                 </div>
             </div>

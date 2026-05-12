@@ -1149,6 +1149,205 @@ def delete_donation(donation_id):
             return jsonify({'error': str(e)}), 500
     return jsonify({'error': 'Firebase not initialized'}), 503
 
+# ==================== API: TODAY'S SERMON ====================
+
+@app.route('/api/today-sermon')
+def today_sermon():
+    """Get today's sermon or active session sermon"""
+    sermon = None
+    if FIREBASE_INITIALIZED:
+        try:
+            # First check for active session
+            sessions = ref.child('sessions').get()
+            if sessions:
+                for sid, sdata in sessions.items():
+                    if sdata.get('active', False):
+                        # If session has a sermon attached
+                        if sdata.get('sermon_id'):
+                            sermon_data = ref.child('sermons').child(sdata['sermon_id']).get()
+                            if sermon_data:
+                                sermon = {'id': sdata['sermon_id'], **sermon_data}
+                                break
+                        # If session has a date, try to find sermon for that date
+                        session_date = sdata.get('date', '')
+                        if not sermon and session_date:
+                            sermons = ref.child('sermons').get()
+                            if sermons:
+                                for sid, sdata_item in sermons.items():
+                                    if sdata_item.get('date') == session_date:
+                                        sermon = {'id': sid, **sdata_item}
+                                        break
+        except Exception as e:
+            print(f"Error fetching today's sermon: {e}")
+
+        # Fallback to today's sermon if no active session sermon found
+        if not sermon:
+            today = date.today().isoformat()
+            sermons = ref.child('sermons').get()
+            if sermons:
+                for sid, sdata in sermons.items():
+                    if sdata.get('date') == today:
+                        sermon = {'id': sid, **sdata}
+                        break
+    return jsonify({'sermon': sermon})
+
+@app.route('/api/member/<member_id>/greeting')
+def member_greeting(member_id):
+    """Public endpoint to get member name for check-in greeting (limited data)"""
+    member = None
+    if FIREBASE_INITIALIZED:
+        try:
+            members = ref.child('members').get()
+            if members:
+                for key, mdata in members.items():
+                    if mdata.get('member_id') == member_id:
+                        member = {
+                            'member_id': member_id,
+                            'name': f"{mdata.get('first_name', '')} {mdata.get('last_name', '')}".strip(),
+                            'first_name': mdata.get('first_name', '')
+                        }
+                        break
+        except Exception as e:
+            print(f"Error fetching member: {e}")
+            return jsonify({'error': 'Database error'}), 500
+
+    if not member:
+        return jsonify({'error': 'Member not found'}), 404
+
+    return jsonify(member)
+
+@app.route('/api/members/<member_id>/checkin-qr')
+def get_member_checkin_qrcode(member_id):
+    """Generate QR code for member self check-in (URL pointing to /checkin)"""
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    # Verify member exists
+    member = None
+    if FIREBASE_INITIALIZED:
+        try:
+            member_data = ref.child('members').child(member_id).get()
+            if member_data:
+                member = {'id': member_id, **member_data}
+        except Exception as e:
+            print(f"Error fetching member: {e}")
+
+    if not member:
+        return jsonify({'error': 'Member not found'}), 404
+
+    # Get properly formatted member ID
+    raw_member_id = member.get('member_id', member_id)
+    member_id_value = format_member_id(raw_member_id)
+
+    # Build check-in URL
+    checkin_url = f"{request.scheme}://{request.host}/checkin?member_id={member_id_value}"
+
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4
+    )
+    qr.add_data(checkin_url)
+    qr.make(fit=True)
+
+    try:
+        from qrcode.image.svg import SvgImage
+        img = qr.make_image(image_factory=SvgImage)
+        svg_content = img.to_string()
+        return Response(svg_content, mimetype='image/svg+xml')
+    except Exception as e:
+        print(f'QR generation error: {e}')
+        return jsonify({'error': 'Failed to generate QR code'}), 500
+
+# ==================== MEMBER SELF CHECK-IN ====================
+
+@app.route('/checkin')
+def member_checkin():
+    """Render the member self check-in page"""
+    if 'user' in session:
+        return redirect(url_for('dashboard'))
+    return render_template('checkin.html')
+
+@app.route('/api/checkin', methods=['POST'])
+def record_checkin():
+    """
+    Record attendance for a member self-check-in via QR scan.
+    No GPS or admin verification required - accessible to all members.
+    """
+    data = request.get_json()
+    member_id = data.get('member_id')
+    service_type = data.get('service_type', 'sunday')
+
+    if not member_id:
+        return jsonify({'error': 'member_id is required'}), 400
+
+    # First verify the member exists
+    member = None
+    member_key = None
+    if FIREBASE_INITIALIZED:
+        try:
+            members = ref.child('members').get()
+            if members:
+                for key, mdata in members.items():
+                    if mdata.get('member_id') == member_id:
+                        member = {'id': key, **mdata}
+                        member_key = key
+                        break
+        except Exception as e:
+            print(f"Error fetching member: {e}")
+            return jsonify({'error': 'Database error'}), 500
+
+    if not member:
+        return jsonify({'error': 'Member not found. Please contact admin.'}), 404
+
+    # Record attendance for today's date or active session
+    today = date.today().isoformat()
+    try:
+        # Check if there's an active session first
+        active_session = None
+        if FIREBASE_INITIALIZED:
+            try:
+                sessions = ref.child('sessions').get()
+                if sessions:
+                    for sid, sdata in sessions.items():
+                        if sdata.get('active', False):
+                            active_session = sid
+                            break
+            except Exception:
+                pass
+
+        # Record attendance under that session or directly under date
+        if active_session:
+            attendance_ref = ref.child('attendance').child(active_session).child(member_key)
+            attendance_ref.set({
+                'timestamp': datetime.now().isoformat(),
+                'service_type': service_type,
+                'mode': 'self_checkin',
+                'verified': True
+            })
+        else:
+            attendance_ref = ref.child('attendance').child(today).child(member_key)
+            attendance_ref.set({
+                'timestamp': datetime.now().isoformat(),
+                'service_type': service_type,
+                'mode': 'self_checkin',
+                'verified': True
+            })
+    except Exception as e:
+        print(f"Error recording attendance: {e}")
+        return jsonify({'error': 'Failed to record attendance'}), 500
+
+    member_name = f"{member.get('first_name', '')} {member.get('last_name', '')}".strip()
+    return jsonify({
+        'success': True,
+        'member': {
+            'id': member_id,
+            'name': member_name,
+            'status': member.get('status', 'active')
+        }
+    })
+
 # ==================== SERMONS ====================
 
 @app.route('/sermons')
@@ -1644,9 +1843,31 @@ def member_scan_page():
     session_id = request.args.get('sid')
     limit = request.args.get('limit', '3')
     
+    # Fetch sermon title from active session or today's sermon
+    sermon_title = None
+    if FIREBASE_INITIALIZED:
+        try:
+            today = date.today().isoformat()
+            sessions = ref.child('sessions').get()
+            if sessions:
+                for sid, sdata in sessions.items():
+                    if sdata.get('active', False):
+                        sermon_title = sdata.get('sermon_topic') or sdata.get('title')
+                        break
+            if not sermon_title:
+                sermons = ref.child('sermons').get()
+                if sermons:
+                    for sid, sdata in sermons.items():
+                        if sdata.get('date') == today:
+                            sermon_title = sdata.get('title')
+                            break
+        except Exception as e:
+            print(f"Error fetching sermon: {e}")
+    
     return render_template('member_scan.html', 
         session_id=session_id, 
-        limit=limit)
+        limit=limit,
+        sermon_title=sermon_title)
 
 @app.route('/api/attendance/scan', methods=['POST'])
 def scan_attendance():
@@ -2331,6 +2552,61 @@ def trash_page():
         return redirect(url_for('login'))
 
     return render_template('trash.html', user=session.get('email'))
+
+# ==================== PUBLIC SERVICE ATTENDANCE ====================
+
+@app.route('/service-attendance')
+def service_attendance_page():
+    """Public page for members to check-in to service (no login required)"""
+    sermon_title = None
+    if FIREBASE_INITIALIZED:
+        try:
+            today = date.today().isoformat()
+            sessions = ref.child('sessions').get()
+            if sessions:
+                for sid, sdata in sessions.items():
+                    if sdata.get('active', False):
+                        sermon_title = sdata.get('sermon_topic') or sdata.get('title')
+                        break
+            if not sermon_title:
+                sermons = ref.child('sermons').get()
+                if sermons:
+                    for sid, sdata in sermons.items():
+                        if sdata.get('date') == today:
+                            sermon_title = sdata.get('title')
+                            break
+        except Exception as e:
+            print(f"Error fetching sermon: {e}")
+    return render_template('service_attendance.html', sermon_title=sermon_title)
+
+@app.route('/api/public/attendance', methods=['POST'])
+def public_attendance():
+    """Public endpoint for attendance submission (no login required)"""
+    data = request.get_json()
+    member_id = data.get('member_id', '').strip()
+    first_name = data.get('first_name', '').strip()
+    last_name = data.get('last_name', '').strip()
+    member_type = data.get('member_type', 'member')
+    if not member_id or not first_name or not last_name:
+        return jsonify({'error': 'Member ID, first name, and last name are required'}), 400
+    if not FIREBASE_INITIALIZED:
+        return jsonify({'error': 'Firebase not initialized'}), 503
+    try:
+        attendance_id = str(uuid.uuid4())[:8]
+        today = date.today().isoformat()
+        attendance_data = {
+            'member_id': member_id,
+            'first_name': first_name,
+            'last_name': last_name,
+            'member_name': f"{first_name} {last_name}",
+            'member_type': member_type,
+            'service_type': 'Sunday Service',
+            'timestamp': datetime.now().isoformat()
+        }
+        ref.child('attendance').child(today).child(attendance_id).set(attendance_data)
+        return jsonify({'success': True, 'message': 'Attendance recorded successfully'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # ==================== ANALYTICS ====================
 def get_analytics():

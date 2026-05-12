@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Attendance - Redemption Presby Congregation</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=6">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a472a 0%, #2E8B57 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .welcome-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 3rem;
+            margin-top: 2rem;
+        }
+        .church-logo {
+            width: 80px;
+            height: 80px;
+            background: #2E8B57;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+        }
+        .church-logo img {
+            max-width: 60px;
+            max-height: 60px;
+        }
+        .btn-proceed {
+            background: #2E8B57;
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            width: 100%;
+            max-width: 300px;
+        }
+        .btn-proceed:hover {
+            background: #1a472a;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(46, 139, 87, 0.4);
+        }
+        .form-section {
+            display: none;
+        }
+        .sermon-title {
+            color: #2E8B57;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8">
+                <div class="welcome-card text-center">
+                    <div class="church-logo">
+                        <img src="{{ url_for('static', filename='presby-logo.png') }}?v=3" alt="PCG Logo">
+                    </div>
+                    
+                    <h1 class="text-pcg-blue mb-3" style="font-family: 'Playfair Display', serif;">
+                        Welcome to Today's Service!
+                    </h1>
+                    
+                    <div class="divider-custom mx-auto mb-4" style="width: 100px;"></div>
+                    
+                    {% if sermon_title %}
+                    <p class="sermon-title mb-4 fs-5">
+                        <strong>Sermon:</strong> {{ sermon_title }}
+                    </p>
+                    {% endif %}
+                    
+                    <div id="welcomeSection">
+                        <p class="text-muted mb-4">
+                            We're glad to have you worship with us today.
+                            Please proceed to complete your attendance.
+                        </p>
+                        
+                        <button id="proceedBtn" class="btn btn-proceed">
+                            Proceed to Complete Your Attendance
+                        </button>
+                    </div>
+                    
+                    <div id="formSection" class="form-section">
+                        <h4 class="text-pcg-blue mb-4">Attendance Form</h4>
+                        
+                        <form id="attendanceForm">
+                            <div class="mb-3">
+                                <input type="text" class="form-control form-control-lg text-center" 
+                                       id="memberId" placeholder="Member ID (e.g., CHURCH-MEM-001)" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <input type="text" class="form-control form-control-lg text-center" 
+                                       id="firstName" placeholder="First Name" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <input type="text" class="form-control form-control-lg text-center" 
+                                       id="lastName" placeholder="Last Name" required>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <select class="form-select form-select-lg text-center" id="memberType">
+                                    <option value="member">Member</option>
+                                    <option value="visitor">Visitor</option>
+                                    <option value="child">Child</option>
+                                </select>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-proceed">
+                                Submit Attendance
+                            </button>
+                            
+                            <button type="button" id="backBtn" class="btn btn-link text-muted mt-3">
+                                Back
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div id="successSection" class="form-section">
+                        <div class="text-center">
+                            <svg width="64" height="64" class="text-success mb-3" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
+                            <h4 class="text-success">Attendance Recorded!</h4>
+                            <p class="text-muted">Thank you for attending today's service.</p>
+                            <p class="text-muted small" id="timestamp"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const proceedBtn = document.getElementById('proceedBtn');
+            const backBtn = document.getElementById('backBtn');
+            const welcomeSection = document.getElementById('welcomeSection');
+            const formSection = document.getElementById('formSection');
+            const successSection = document.getElementById('successSection');
+            const attendanceForm = document.getElementById('attendanceForm');
+            
+            proceedBtn.addEventListener('click', function() {
+                welcomeSection.style.display = 'none';
+                formSection.style.display = 'block';
+            });
+            
+            backBtn.addEventListener('click', function() {
+                formSection.style.display = 'none';
+                welcomeSection.style.display = 'block';
+            });
+            
+            attendanceForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const memberId = document.getElementById('memberId').value.trim();
+                const firstName = document.getElementById('firstName').value.trim();
+                const lastName = document.getElementById('lastName').value.trim();
+                const memberType = document.getElementById('memberType').value;
+                
+                try {
+                    const response = await fetch('/api/public/attendance', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            member_id: memberId,
+                            first_name: firstName,
+                            last_name: lastName,
+                            member_type: memberType
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        formSection.style.display = 'none';
+                        successSection.style.display = 'block';
+                        document.getElementById('timestamp').textContent = 
+                            'Recorded at: ' + new Date().toLocaleTimeString();
+                        
+                        setTimeout(function() {
+                            attendanceForm.reset();
+                            successSection.style.display = 'none';
+                            welcomeSection.style.display = 'block';
+                        }, 3000);
+                    } else {
+                        const error = await response.json();
+                        alert(error.error || 'Failed to record attendance');
+                    }
+                } catch (error) {
+                    alert('An error occurred. Please try again.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
