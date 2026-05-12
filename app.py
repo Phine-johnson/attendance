@@ -1253,10 +1253,12 @@ def member_checkin():
     
     church_lat = os.environ.get('CHURCH_LATITUDE', '5.5852403')
     church_lon = os.environ.get('CHURCH_LONGITUDE', '-0.3021029')
+    checkin_radius = os.environ.get('CHECKIN_RADIUS_METERS', '7')
     
     return render_template('checkin.html', 
                          church_latitude=church_lat,
-                         church_longitude=church_lon)
+                         church_longitude=church_lon,
+                         checkin_radius=checkin_radius)
 
 @app.route('/api/checkin', methods=['POST'])
 def record_checkin():
@@ -1794,7 +1796,7 @@ def start_service():
     church_longitude = float(os.environ.get('CHURCH_LONGITUDE', '-0.3021029'))
 
     session_id = str(uuid.uuid4())
-    proximity_limit = 5  # 5 meters as specified
+    proximity_limit = float(os.environ.get('CHECKIN_RADIUS_METERS', '7'))  # Default 7m radius
 
     today = date.today().isoformat()
 
@@ -1821,9 +1823,18 @@ def start_service():
     # Generate check-in QR for members (points to public check-in page with session info)
     base_url = request.url_root.rstrip('/')
     qr_url = f"{base_url}/checkin?session={session_id}"
-    
-    # Generate QR code with the check-in URL
+
     qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
+    qr.add_data(qr_url)
+    qr.make(fit=True)
+
+    try:
+        from qrcode.image.svg import SvgImage
+        img = qr.make_image(image_factory=SvgImage)
+        return Response(img.to_string(), mimetype='image/svg+xml')
+    except Exception as e:
+        print(f'QR error: {e}')
+        return jsonify({'error': 'Failed to generate QR code'}), 500
     qr.add_data(qr_url)
     qr.make(fit=True)
     try:
@@ -2332,6 +2343,7 @@ def public_attendance():
         try:
             church_latitude = float(os.environ.get('CHURCH_LATITUDE', '5.5852403'))
             church_longitude = float(os.environ.get('CHURCH_LONGITUDE', '-0.3021029'))
+            checkin_radius = float(os.environ.get('CHECKIN_RADIUS_METERS', '7'))
             import math
             def haversine(lat1, lon1, lat2, lon2):
                 R = 6371000
@@ -2347,11 +2359,12 @@ def public_attendance():
             print(f"Distance calculation error: {e}")
             distance = None
 
-        # Enforce 7m limit if distance computed
-        if distance is not None and distance > 7:
+        # Enforce radius limit
+        if distance is not None and distance > checkin_radius:
             return jsonify({
-                'error': f'You are {distance}m from the church. Please move within 7m of the church building to check in.',
-                'distance': distance
+                'error': f'You are {distance}m from the church. Please move within {checkin_radius}m of the church building to check in.',
+                'distance': distance,
+                'limit': checkin_radius
             }), 403
 
     try:

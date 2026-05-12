@@ -42,6 +42,12 @@
                         <div id="formSection" class="form-section">
                             <h3 class="h4 text-pcg-blue mb-4">Member Check-In</h3>
 
+                            <!-- Sermon Display -->
+                            <div class="mb-4 p-3 bg-light rounded">
+                                <p class="text-muted mb-1">Today's Sermon</p>
+                                <h5 class="text-pcg-blue" id="formSermonTitle">Loading...</h5>
+                            </div>
+
                             <form id="checkinForm">
                                 <!-- Full Name -->
                                 <div class="mb-3">
@@ -135,25 +141,28 @@
             let memberLongitude = null;
             let distanceMeters = null;
 
-            // Church coordinates (passed from server)
+            // Church coordinates and radius (from server)
             const churchLat = parseFloat('{{ church_latitude }}');
             const churchLon = parseFloat('{{ church_longitude }}');
+            const CHECKIN_RADIUS = parseFloat('{{ checkin_radius }}');  // meters
 
             // Fetch today's sermon
             fetch('/api/today-sermon')
                 .then(res => res.json())
                 .then(data => {
                     sermonSpinner.style.display = 'none';
+                    let title = 'No sermon scheduled';
                     if (data.sermon && data.sermon.title) {
-                        sermonTitle.textContent = data.sermon.title;
-                    } else {
-                        sermonTitle.textContent = 'No sermon scheduled';
+                        title = data.sermon.title;
                     }
+                    sermonTitle.textContent = title;
+                    document.getElementById('formSermonTitle').textContent = title;
                 })
                 .catch(err => {
                     console.error('Error fetching sermon:', err);
                     sermonSpinner.style.display = 'none';
                     sermonTitle.textContent = 'Unable to load sermon';
+                    document.getElementById('formSermonTitle').textContent = 'Unable to load sermon';
                 });
 
             // Update time every second
@@ -208,13 +217,13 @@
 
                 distanceMeters = distance;
 
-                if (distance <= 7) {
+                if (distance <= CHECKIN_RADIUS) {
                     distanceStatus.innerHTML = `<span class="badge badge-success status-badge">Within range (${distance}m)</span>`;
-                    distanceText.textContent = 'You are within the church premises';
+                    distanceText.textContent = `You are within ${CHECKIN_RADIUS}m of the church premises`;
                     submitCheckinBtn.disabled = false;
                 } else {
                     distanceStatus.innerHTML = `<span class="badge bg-danger status-badge">Too far (${distance}m)</span>`;
-                    distanceText.textContent = 'Please move closer to the church building (within 7m)';
+                    distanceText.textContent = `Please move closer to the church building (within ${CHECKIN_RADIUS}m)`;
                     submitCheckinBtn.disabled = true;
                 }
             }
