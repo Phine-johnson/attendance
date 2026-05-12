@@ -102,9 +102,9 @@
         
         <div class="member-name">{{ member.member_id }}</div>
         
-        <div class="qr">
-            <img src="{{ url_for('get_member_qrcode', member_id=member.id) }}" alt="QR">
-        </div>
+         <div class="qr">
+             <img src="{{ url_for('get_member_checkin_qrcode', member_id=member.id) }}" alt="QR">
+         </div>
         
         <div class="footer">Printed: {{ now|default('Today') }}</div>
     </div>
