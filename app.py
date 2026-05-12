@@ -1250,7 +1250,13 @@ def member_checkin():
     """Render the member self check-in page"""
     if 'user' in session:
         return redirect(url_for('dashboard'))
-    return render_template('checkin.html')
+    
+    church_lat = os.environ.get('CHURCH_LATITUDE', '5.5852403')
+    church_lon = os.environ.get('CHURCH_LONGITUDE', '-0.3021029')
+    
+    return render_template('checkin.html', 
+                         church_latitude=church_lat,
+                         church_longitude=church_lon)
 
 @app.route('/api/checkin', methods=['POST'])
 def record_checkin():
@@ -1260,12 +1266,17 @@ def record_checkin():
     """
     data = request.get_json()
     member_id = data.get('member_id')
+    latitude = data.get('latitude')
+    longitude = data.get('longitude')
     service_type = data.get('service_type', 'sunday')
 
     if not member_id:
         return jsonify({'error': 'member_id is required'}), 400
 
-    # First verify the member exists
+    if not latitude or not longitude:
+        return jsonify({'error': 'GPS coordinates are required'}), 400
+
+    # Verify member exists
     member = None
     member_key = None
     if FIREBASE_INITIALIZED:
@@ -1282,12 +1293,37 @@ def record_checkin():
             return jsonify({'error': 'Database error'}), 500
 
     if not member:
-        return jsonify({'error': 'Member not found. Please contact admin.'}), 404
+        return jsonify({'error': 'Member not found'}), 404
 
-    # Record attendance for today's date or active session
+    # Calculate distance to church
+    try:
+        church_latitude = float(os.environ.get('CHURCH_LATITUDE', '5.5852403'))
+        church_longitude = float(os.environ.get('CHURCH_LONGITUDE', '-0.3021029'))
+        import math
+        def haversine(lat1, lon1, lat2, lon2):
+            R = 6371000
+            phi1 = math.radians(lat1)
+            phi2 = math.radians(lat2)
+            delta_phi = math.radians(lat2 - lat1)
+            delta_lambda = math.radians(lon2 - lon1)
+            a = math.sin(delta_phi/2)**2 + math.cos(phi1)*math.cos(phi2)*math.sin(delta_lambda/2)**2
+            c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+            return R * c
+        distance = round(haversine(latitude, longitude, church_latitude, church_longitude), 1)
+    except Exception as e:
+        print(f"Distance calculation error: {e}")
+        distance = None
+
+    # Verify within 7 meters
+    if distance is not None and distance > 7:
+        return jsonify({
+            'error': f'You are {distance}m from the church. Please move within 7m of the church building.',
+            'distance': distance
+        }), 403
+
+    # Record attendance
     today = date.today().isoformat()
     try:
-        # Check if there's an active session first
         active_session = None
         if FIREBASE_INITIALIZED:
             try:
@@ -1300,14 +1336,14 @@ def record_checkin():
             except Exception:
                 pass
 
-        # Record attendance under that session or directly under date
         if active_session:
             attendance_ref = ref.child('attendance').child(active_session).child(member_key)
             attendance_ref.set({
                 'timestamp': datetime.now().isoformat(),
                 'service_type': service_type,
                 'mode': 'self_checkin',
-                'verified': True
+                'verified': True,
+                'distance': distance
             })
         else:
             attendance_ref = ref.child('attendance').child(today).child(member_key)
@@ -1315,7 +1351,8 @@ def record_checkin():
                 'timestamp': datetime.now().isoformat(),
                 'service_type': service_type,
                 'mode': 'self_checkin',
-                'verified': True
+                'verified': True,
+                'distance': distance
             })
     except Exception as e:
         print(f"Error recording attendance: {e}")
@@ -1328,7 +1365,8 @@ def record_checkin():
             'id': member_id,
             'name': member_name,
             'status': member.get('status', 'active')
-        }
+        },
+        'distance': distance
     })
 
 # ==================== SERMONS ====================
@@ -1780,9 +1818,9 @@ def start_service():
     except Exception as e:
         return jsonify({'error': f'Failed to create session: {str(e)}'}), 500
     
-    # Generate check-in QR for members (points to public check-in page)
+    # Generate check-in QR for members (points to public check-in page with session info)
     base_url = request.url_root.rstrip('/')
-    qr_url = f"{base_url}/checkin"
+    qr_url = f"{base_url}/checkin?session={session_id}"
     
     # Generate QR code with the check-in URL
     qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
@@ -2272,29 +2310,88 @@ def service_attendance_page():
 
 @app.route('/api/public/attendance', methods=['POST'])
 def public_attendance():
-    """Public endpoint for attendance submission (no login required)"""
+    """Public endpoint for self check-in attendance (no login required)"""
     data = request.get_json()
     member_id = data.get('member_id', '').strip()
     first_name = data.get('first_name', '').strip()
     last_name = data.get('last_name', '').strip()
     member_type = data.get('member_type', 'member')
-    if not member_id or not first_name or not last_name:
-        return jsonify({'error': 'Member ID, first name, and last name are required'}), 400
+    latitude = data.get('latitude')
+    longitude = data.get('longitude')
+
+    # Require at least a name
+    if not first_name:
+        return jsonify({'error': 'First name is required'}), 400
+
     if not FIREBASE_INITIALIZED:
         return jsonify({'error': 'Firebase not initialized'}), 503
+
+    distance = None
+    # GPS coordinates: if provided, verify proximity
+    if latitude is not None and longitude is not None:
+        try:
+            church_latitude = float(os.environ.get('CHURCH_LATITUDE', '5.5852403'))
+            church_longitude = float(os.environ.get('CHURCH_LONGITUDE', '-0.3021029'))
+            import math
+            def haversine(lat1, lon1, lat2, lon2):
+                R = 6371000
+                phi1 = math.radians(lat1)
+                phi2 = math.radians(lat2)
+                delta_phi = math.radians(lat2 - lat1)
+                delta_lambda = math.radians(lon2 - lon1)
+                a = math.sin(delta_phi/2)**2 + math.cos(phi1)*math.cos(phi2)*math.sin(delta_lambda/2)**2
+                c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+                return R * c
+            distance = round(haversine(float(latitude), float(longitude), church_latitude, church_longitude), 1)
+        except Exception as e:
+            print(f"Distance calculation error: {e}")
+            distance = None
+
+        # Enforce 7m limit if distance computed
+        if distance is not None and distance > 7:
+            return jsonify({
+                'error': f'You are {distance}m from the church. Please move within 7m of the church building to check in.',
+                'distance': distance
+            }), 403
+
     try:
         attendance_id = str(uuid.uuid4())[:8]
         today = date.today().isoformat()
+
+        # Build attendance record
         attendance_data = {
-            'member_id': member_id,
-            'first_name': first_name,
-            'last_name': last_name,
-            'member_name': f"{first_name} {last_name}",
+            'timestamp': datetime.now().isoformat(),
             'member_type': member_type,
-            'service_type': 'Sunday Service',
-            'timestamp': datetime.now().isoformat()
+            'mode': 'self_checkin',
+            'verified': True
         }
-        ref.child('attendance').child(today).child(attendance_id).set(attendance_data)
+        if member_id:
+            attendance_data['member_id'] = member_id
+        if first_name:
+            attendance_data['first_name'] = first_name
+            attendance_data['last_name'] = last_name
+            attendance_data['member_name'] = f"{first_name} {last_name}".strip() if last_name else first_name
+        if distance is not None:
+            attendance_data['distance'] = distance
+
+        # Check for active session
+        active_session = None
+        try:
+            sessions = ref.child('sessions').get()
+            if sessions:
+                for sid, sdata in sessions.items():
+                    if sdata.get('active', False):
+                        active_session = sid
+                        break
+        except Exception:
+            pass
+
+        if active_session:
+            attendance_ref = ref.child('attendance').child(active_session).child(attendance_id)
+        else:
+            attendance_ref = ref.child('attendance').child(today).child(attendance_id)
+
+        attendance_ref.set(attendance_data)
         return jsonify({'success': True, 'message': 'Attendance recorded successfully'})
     except Exception as e:
         return jsonify({'error': str(e)}), 500

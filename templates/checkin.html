@@ -6,74 +6,103 @@
     <title>Check-In - Redemption Presby</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body { background: linear-gradient(135deg, #1a472a 0%, #2E8B57 100%); min-height: 100vh; }
+        .card { border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); border: none; }
+        .sermon-title { color: #2E8B57; font-weight: 600; font-size: 1.5rem; }
+        .btn-proceed { background: #2E8B57; color: white; border: none; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 600; border-radius: 50px; width: 100%; max-width: 300px; transition: all 0.3s; }
+        .btn-proceed:hover { background: #1a472a; transform: translateY(-2px); box-shadow: 0 10px 30px rgba(46, 139, 87, 0.4); }
+        .form-section { display: none; }
+        .status-badge { font-size: 1rem; padding: 8px 16px; border-radius: 50px; }
+        .form-control, .form-select { border-radius: 10px; padding: 12px; }
+    </style>
 </head>
-<body class="bg-light">
+<body>
     <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-md-8 col-lg-6">
-                <div class="card card-custom shadow">
+                <div class="card">
                     <div class="card-body text-center p-5">
-                        <!-- Step 1: Welcome & Sermon Display -->
-                        <div id="welcomeStep">
-                            <h1 class="h2 text-pcg-blue mb-3">Welcome to Today's Service!</h1>
 
-                            <!-- Sermon Title -->
+                        <!-- Welcome + Sermon Section -->
+                        <div id="welcomeSection">
+                            <h1 class="h2 text-pcg-blue mb-3">Welcome to Today's Service!</h1>
+                            <div class="divider-custom mx-auto mb-4" style="width: 100px;"></div>
                             <div class="mb-4">
                                 <p class="text-muted mb-2">Today's Sermon</p>
-                                <div class="spinner-border text-pcg-green" role="status" id="sermonSpinner">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
+                                <div class="spinner-border text-pcg-green" id="sermonSpinner" role="status"></div>
                                 <h2 class="h3 text-pcg-blue" id="sermonTitle">Loading...</h2>
                             </div>
-
-                            <!-- Member Search Section -->
-                            <div class="mb-4">
-                                <label for="memberSearch" class="form-label fw-bold text-pcg-blue">Select Your Name</label>
-                                <input type="text" class="form-control form-control-lg" id="memberSearch" 
-                                       placeholder="Search by name or member ID..." autocomplete="off">
-                                <div id="memberDropdown" class="dropdown-menu w-100" style="max-height: 300px; overflow-y: auto;"></div>
-                                <small class="text-muted">Start typing to search members</small>
-                            </div>
-
-                            <!-- Proceed Button (shown when member is selected) -->
-                            <button id="proceedBtn" class="btn btn-custom-primary btn-lg w-100" style="display: none;">
+                            <button id="proceedBtn" class="btn btn-proceed">
                                 Proceed to complete your attendance
                             </button>
                         </div>
 
-                        <!-- Step 2: Confirmation (shown after proceed) -->
-                        <div id="checkinStep" style="display: none;">
-                            <h2 class="h3 text-pcg-blue mb-3">Confirm Your Attendance</h2>
+                        <!-- Check-In Form Section -->
+                        <div id="formSection" class="form-section">
+                            <h3 class="h4 text-pcg-blue mb-4">Member Check-In</h3>
 
-                            <!-- Member Info Display -->
-                            <div class="mb-4 p-3 bg-light rounded">
-                                <p class="mb-1">Member:</p>
-                                <h4 class="text-pcg-green mb-2" id="memberNameDisplay"></h4>
-                                <p class="text-muted small mb-0" id="memberIdDisplay"></p>
-                            </div>
+                            <form id="checkinForm">
+                                <!-- Full Name -->
+                                <div class="mb-3">
+                                    <input type="text" class="form-control form-control-lg text-center" 
+                                           id="fullName" placeholder="Full Name" required>
+                                </div>
 
-                            <p class="mb-4">Please confirm your check-in for today's service.</p>
+                                <!-- Category -->
+                                <div class="mb-3">
+                                    <select class="form-select form-control-lg text-center" id="memberCategory" required>
+                                        <option value="">Select Category</option>
+                                        <option value="Member">Member</option>
+                                        <option value="Children Service">Children Service</option>
+                                        <option value="YPG">YPG</option>
+                                        <option value="JY">JY</option>
+                                        <option value="YAF">YAF</option>
+                                        <option value="Men's Fellowship">Men's Fellowship</option>
+                                        <option value="Women's Fellowship">Women's Fellowship</option>
+                                        <option value="Church Choir">Church Choir</option>
+                                        <option value="Singing Band">Singing Band</option>
+                                        <option value="Usher">Usher</option>
+                                        <option value="Visit">Visit</option>
+                                        <option value="Guest">Guest</option>
+                                    </select>
+                                </div>
 
-                            <button id="confirmCheckinBtn" class="btn btn-custom-primary btn-lg w-100 mb-2">
-                                Confirm Check-In
-                            </button>
-                            <button id="backBtn" class="btn btn-outline-secondary w-100">
-                                Back to Search
-                            </button>
+                                <!-- Time (readonly) -->
+                                <div class="mb-3">
+                                    <input type="text" class="form-control form-control-lg text-center" 
+                                           id="checkinTime" readonly>
+                                </div>
+
+                                <!-- Location Status -->
+                                <div class="mb-4">
+                                    <p class="mb-2">Proximity to Church</p>
+                                    <div id="distanceStatus" class="distance-status">
+                                        <span class="badge bg-warning status-badge">Getting location...</span>
+                                    </div>
+                                    <small class="text-muted" id="distanceText">Please allow location access</small>
+                                </div>
+
+                                <button type="submit" id="submitCheckinBtn" class="btn btn-custom-primary btn-lg w-100" disabled>
+                                    Confirm Check-In
+                                </button>
+                            </form>
                         </div>
 
-                        <!-- Step 3: Success Message -->
-                        <div id="successMessage" style="display: none;">
+                        <!-- Success Message -->
+                        <div id="successMessage" class="form-section">
                             <svg width="64" height="64" class="mb-3 text-success" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
                             <h2 class="h4 text-success mb-3">Check-in Successful!</h2>
-                            <p class="mb-0" id="successText">Your attendance has been recorded. Have a blessed service!</p>
+                            <p class="mb-0" id="successText">Your attendance has been recorded.</p>
                         </div>
 
                         <!-- Error Display -->
-                        <div id="errorMessage" class="alert alert-danger" style="display: none;">
-                            <p id="errorText" class="mb-0"></p>
-                            <button class="btn btn-outline-secondary btn-sm mt-2" onclick="resetToWelcome()">Try Again</button>
+                        <div id="errorMessage" class="form-section">
+                            <svg width="64" height="64" class="mb-3 text-danger" fill="currentColor" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                            <h4 class="text-danger" id="errorText">Error</h4>
+                            <button class="btn btn-outline-secondary mt-3" onclick="location.reload()">Try Again</button>
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -83,25 +112,34 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const memberSearch = document.getElementById('memberSearch');
-            const memberDropdown = document.getElementById('memberDropdown');
-            const proceedBtn = document.getElementById('proceedBtn');
-            const checkinStep = document.getElementById('checkinStep');
+            // DOM Elements
+            const welcomeSection = document.getElementById('welcomeSection');
+            const formSection = document.getElementById('formSection');
             const successMessage = document.getElementById('successMessage');
             const errorMessage = document.getElementById('errorMessage');
-            const confirmCheckinBtn = document.getElementById('confirmCheckinBtn');
-            const backBtn = document.getElementById('backBtn');
+            const proceedBtn = document.getElementById('proceedBtn');
             const sermonSpinner = document.getElementById('sermonSpinner');
             const sermonTitle = document.getElementById('sermonTitle');
-            const memberNameDisplay = document.getElementById('memberNameDisplay');
-            const memberIdDisplay = document.getElementById('memberIdDisplay');
+            const fullNameInput = document.getElementById('fullName');
+            const categorySelect = document.getElementById('memberCategory');
+            const checkinTimeInput = document.getElementById('checkinTime');
+            const distanceStatus = document.getElementById('distanceStatus');
+            const distanceText = document.getElementById('distanceText');
+            const submitCheckinBtn = document.getElementById('submitCheckinBtn');
+            const checkinForm = document.getElementById('checkinForm');
             const errorText = document.getElementById('errorText');
             const successText = document.getElementById('successText');
 
-            let allMembers = [];
-            let selectedMember = null;
+            // State
+            let memberLatitude = null;
+            let memberLongitude = null;
+            let distanceMeters = null;
 
-            // Fetch today's sermon on load
+            // Church coordinates (passed from server)
+            const churchLat = parseFloat('{{ church_latitude }}');
+            const churchLon = parseFloat('{{ church_longitude }}');
+
+            // Fetch today's sermon
             fetch('/api/today-sermon')
                 .then(res => res.json())
                 .then(data => {
@@ -118,128 +156,134 @@
                     sermonTitle.textContent = 'Unable to load sermon';
                 });
 
-            // Fetch all members on page load
-            fetch('/api/members')
-                .then(res => res.json())
-                .then(data => {
-                    allMembers = data.members || [];
-                })
-                .catch(err => {
-                    console.error('Error fetching members:', err);
-                });
+            // Update time every second
+            function updateTime() {
+                const now = new Date();
+                checkinTimeInput.value = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            }
+            updateTime();
+            setInterval(updateTime, 1000);
 
-            // Member search functionality
-            memberSearch.addEventListener('input', function() {
-                const query = this.value.toLowerCase().trim();
-                
-                if (query.length < 2) {
-                    memberDropdown.innerHTML = '';
-                    memberDropdown.style.display = 'none';
-                    proceedBtn.style.display = 'none';
+            // Get device location and check proximity
+            function getLocation() {
+                if (!navigator.geolocation) {
+                    distanceStatus.innerHTML = '<span class="badge bg-danger status-badge">Location not supported</span>';
+                    distanceText.textContent = 'Geolocation is required for check-in';
                     return;
                 }
 
-                // Filter members by name or ID
-                const matches = allMembers.filter(m => {
-                    const fullName = `${m.first_name || ''} ${m.last_name || ''}`.toLowerCase();
-                    const memberId = (m.member_id || '').toLowerCase();
-                    return fullName.includes(query) || memberId.includes(query);
-                }).slice(0, 10); // Limit to 10 results
+                distanceStatus.innerHTML = '<span class="badge bg-warning status-badge">Getting location...</span>';
+                distanceText.textContent = 'Please wait...';
 
-                if (matches.length > 0) {
-                    memberDropdown.innerHTML = matches.map(m => `
-                        <a href="#" class="dropdown-item" data-id="${m.id}" data-memberid="${m.member_id || ''}" data-name="${m.first_name || ''} ${m.last_name || ''}">
-                            <strong>${m.first_name || ''} ${m.last_name || ''}</strong><br>
-                            <small class="text-muted">${m.member_id || ''}</small>
-                        </a>
-                    `).join('');
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        memberLatitude = position.coords.latitude;
+                        memberLongitude = position.coords.longitude;
+                        checkProximity(memberLatitude, memberLongitude);
+                    },
+                    (error) => {
+                        let msg = 'Location access denied';
+                        if (error.code === error.PERMISSION_DENIED) msg = 'Location access denied';
+                        else if (error.code === error.POSITION_UNAVAILABLE) msg = 'Location unavailable';
+                        else if (error.code === error.TIMEOUT) msg = 'Location request timeout';
+                        distanceStatus.innerHTML = `<span class="badge bg-danger status-badge">${msg}</span>`;
+                        distanceText.textContent = 'Please enable location access and refresh';
+                        submitCheckinBtn.disabled = true;
+                    },
+                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+                );
+            }
 
-                    // Show dropdown
-                    memberDropdown.style.display = 'block';
+            // Haversine distance
+            function checkProximity(userLat, userLon) {
+                const R = 6371000; // meters
+                const φ1 = Math.PI/180 * userLat;
+                const φ2 = Math.PI/180 * churchLat;
+                const Δφ = Math.PI/180 * (churchLat - userLat);
+                const Δλ = Math.PI/180 * (churchLon - userLon);
 
-                    // Attach click handlers
-                    memberDropdown.querySelectorAll('.dropdown-item').forEach(item => {
-                        item.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            selectedMember = {
-                                id: this.dataset.id,
-                                member_id: this.dataset.memberid,
-                                name: this.dataset.name
-                            };
-                            memberSearch.value = selectedMember.name;
-                            memberDropdown.style.display = 'none';
-                            proceedBtn.style.display = 'block';
-                        });
-                    });
+                const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                const distance = Math.round(R * c);
+
+                distanceMeters = distance;
+
+                if (distance <= 7) {
+                    distanceStatus.innerHTML = `<span class="badge badge-success status-badge">Within range (${distance}m)</span>`;
+                    distanceText.textContent = 'You are within the church premises';
+                    submitCheckinBtn.disabled = false;
                 } else {
-                    memberDropdown.innerHTML = '<span class="dropdown-item-text text-muted">No members found</span>';
-                    memberDropdown.style.display = 'block';
-                    proceedBtn.style.display = 'none';
+                    distanceStatus.innerHTML = `<span class="badge bg-danger status-badge">Too far (${distance}m)</span>`;
+                    distanceText.textContent = 'Please move closer to the church building (within 7m)';
+                    submitCheckinBtn.disabled = true;
                 }
-            });
+            }
 
-            // Hide dropdown when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!memberSearch.contains(e.target) && !memberDropdown.contains(e.target)) {
-                    memberDropdown.style.display = 'none';
-                }
-            });
+            // Start location on load
+            getLocation();
 
-            // Proceed button - show check-in form
+            // Proceed button reveals form
             proceedBtn.addEventListener('click', function() {
-                if (!selectedMember) return;
-                memberNameDisplay.textContent = selectedMember.name;
-                memberIdDisplay.textContent = selectedMember.member_id;
-                document.getElementById('welcomeStep').style.display = 'none';
-                checkinStep.style.display = 'block';
+                welcomeSection.style.display = 'none';
+                formSection.style.display = 'block';
             });
 
-            // Back button - return to welcome
-            backBtn.addEventListener('click', function() {
-                checkinStep.style.display = 'none';
-                document.getElementById('welcomeStep').style.display = 'block';
-            });
+            // Form submission
+            checkinForm.addEventListener('submit', function(e) {
+                e.preventDefault();
 
-            // Confirm check-in
-            confirmCheckinBtn.addEventListener('click', function() {
-                if (!selectedMember) return;
+                if (distanceMeters === null || distanceMeters > 7) {
+                    showError('You must be within 7 meters of the church to check in.');
+                    return;
+                }
 
-                confirmCheckinBtn.disabled = true;
-                confirmCheckinBtn.textContent = 'Recording...';
+                const payload = {
+                    first_name: fullNameInput.value.trim(),
+                    last_name: '',  // not collected separately
+                    member_type: categorySelect.value,
+                    latitude: memberLatitude,
+                    longitude: memberLongitude
+                };
 
-                fetch('/api/checkin', {
+                if (!payload.first_name) {
+                    showError('Please enter your name');
+                    return;
+                }
+
+                submitCheckinBtn.disabled = true;
+                submitCheckinBtn.textContent = 'Recording...';
+
+                fetch('/api/public/attendance', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ member_id: selectedMember.member_id })
+                    body: JSON.stringify(payload)
                 })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        checkinStep.style.display = 'none';
+                        formSection.style.display = 'none';
                         successMessage.style.display = 'block';
-                        successText.textContent = `Thank you, ${selectedMember.name.split(' ')[0]}! Your attendance has been recorded.`;
+                        const firstName = payload.first_name.split(' ')[0];
+                        successText.textContent = `Thank you, ${firstName}! Your attendance has been recorded.`;
                     } else {
-                        alert(data.error || 'Check-in failed. Please try again.');
-                        confirmCheckinBtn.disabled = false;
-                        confirmCheckinBtn.textContent = 'Confirm Check-In';
+                        showError(data.error || 'Check-in failed. Please try again.');
+                        submitCheckinBtn.disabled = false;
+                        submitCheckinBtn.textContent = 'Confirm Check-In';
                     }
                 })
                 .catch(err => {
                     console.error('Error:', err);
-                    alert('Network error. Please try again.');
-                    confirmCheckinBtn.disabled = false;
-                    confirmCheckinBtn.textContent = 'Confirm Check-In';
+                    showError('Network error. Please try again.');
+                    submitCheckinBtn.disabled = false;
+                    submitCheckinBtn.textContent = 'Confirm Check-In';
                 });
             });
 
-            // Reset function for error retry
-            window.resetToWelcome = function() {
-                errorMessage.style.display = 'none';
-                document.getElementById('welcomeStep').style.display = 'block';
-                memberSearch.value = '';
-                selectedMember = null;
-                proceedBtn.style.display = 'none';
-            };
+            function showError(msg) {
+                errorText.textContent = msg;
+                formSection.style.display = 'none';
+                errorMessage.style.display = 'block';
+            }
         });
     </script>
 </body>
