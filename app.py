@@ -1820,7 +1820,7 @@ def start_service():
     except Exception as e:
         return jsonify({'error': f'Failed to create session: {str(e)}'}), 500
     
-# Generate check-in QR for members (points to public check-in page with session info)
+    # Generate check-in QR for members (points to public check-in page with session info)
     base_url = request.url_root.rstrip('/')
     qr_url = f"{base_url}/checkin?session={session_id}"
 
@@ -1831,9 +1831,9 @@ def start_service():
     try:
         from qrcode.image.svg import SvgImage
         img = qr.make_image(image_factory=SvgImage)
-        # Return session_id in JSON along with QR code as data URI fallback
-        qr_svg = img.to_string().decode('utf-8')
-        return jsonify({'session_id': session_id, 'qr_svg': qr_svg})
+        svg_bytes = img.to_string()
+        svg_content = svg_bytes.decode('utf-8') if isinstance(svg_bytes, bytes) else svg_bytes
+        return jsonify({'session_id': session_id, 'qr_svg': svg_content})
     except Exception as e:
         print(f'QR error: {e}')
         return jsonify({'error': 'Failed to generate QR code'}), 500
@@ -1847,11 +1847,11 @@ def stop_service():
         return jsonify({'error': 'Firebase not initialized'}), 503
 
     try:
-        # Get active sessions and mark them inactive
-        if FIREBASE_INITIALIZED:
-            data = ref.child('sessions').order_by_child('active').equal_to(True).get()
-            if data:
-                for sid in data.keys():
+        # Get all sessions
+        sessions = ref.child('sessions').get()
+        if sessions:
+            for sid, sdata in sessions.items():
+                if sdata and sdata.get('active') == True:
                     ref.child('sessions').child(sid).update({'active': False})
         return jsonify({'success': True})
     except Exception as e:
