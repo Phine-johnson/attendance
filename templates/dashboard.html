@@ -457,11 +457,11 @@ if (response.ok) {
                       const result = await response.json();
                       currentSessionId = result.session_id;
                       
-                      // Display QR code from SVG
+                      // Display QR code from SVG - create a blob URL for the img element
                       if (result.qr_svg) {
-                          const qrContainer_div = document.getElementById('qrContainer');
-                          qrContainer_div.innerHTML = `<div class="qr-display">${result.qr_svg}</div>`;
-                          qrContainer_div.style.display = 'block';
+                          const svgBlob = new Blob([result.qr_svg], {type: 'image/svg+xml'});
+                          const qrCodeUrl = URL.createObjectURL(svgBlob);
+                          qrCodeImg.src = qrCodeUrl;
                       }
                       
                       // Update UI: show QR, hide placeholder, show active service info
