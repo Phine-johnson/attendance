@@ -1820,7 +1820,7 @@ def start_service():
     except Exception as e:
         return jsonify({'error': f'Failed to create session: {str(e)}'}), 500
     
-    # Generate check-in QR for members (points to public check-in page with session info)
+# Generate check-in QR for members (points to public check-in page with session info)
     base_url = request.url_root.rstrip('/')
     qr_url = f"{base_url}/checkin?session={session_id}"
 
@@ -1831,19 +1831,86 @@ def start_service():
     try:
         from qrcode.image.svg import SvgImage
         img = qr.make_image(image_factory=SvgImage)
-        return Response(img.to_string(), mimetype='image/svg+xml')
+        # Return session_id in JSON along with QR code as data URI fallback
+        qr_svg = img.to_string().decode('utf-8')
+        return jsonify({'session_id': session_id, 'qr_svg': qr_svg})
     except Exception as e:
         print(f'QR error: {e}')
         return jsonify({'error': 'Failed to generate QR code'}), 500
-    qr.add_data(qr_url)
-    qr.make(fit=True)
+
+@app.route('/stop_service', methods=['POST'])
+def stop_service():
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    if not FIREBASE_INITIALIZED:
+        return jsonify({'error': 'Firebase not initialized'}), 503
+
     try:
-        from qrcode.image.svg import SvgImage
-        img = qr.make_image(image_factory=SvgImage)
-        return Response(img.to_string(), mimetype='image/svg+xml')
+        # Get active sessions and mark them inactive
+        if FIREBASE_INITIALIZED:
+            data = ref.child('sessions').order_by_child('active').equal_to(True).get()
+            if data:
+                for sid in data.keys():
+                    ref.child('sessions').child(sid).update({'active': False})
+        return jsonify({'success': True})
     except Exception as e:
-        print(f'QR error: {e}')
-        return jsonify({'error': 'Failed to generate QR code'}), 500
+        return jsonify({'error': f'Failed to stop service: {str(e)}'}), 500
+
+@app.route('/api/sessions/qr', methods=['POST'])
+def create_session_qr():
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    if not is_admin():
+        return jsonify({'error': 'Admin access required'}), 403
+
+    if not FIREBASE_INITIALIZED:
+        return jsonify({'error': 'Firebase not initialized'}), 503
+
+    try:
+        data = request.get_json(silent=True) or {}
+        program_name = data.get('program_name', 'Service')
+        date = data.get('date', date.today().isoformat())
+        start_time = data.get('start_time', '08:00')
+        end_time = data.get('end_time', '11:30')
+        latitude = float(data.get('latitude', os.environ.get('CHURCH_LATITUDE', '5.5852403')))
+        longitude = float(data.get('longitude', os.environ.get('CHURCH_LONGITUDE', '-0.3021029')))
+        limit = float(data.get('limit', '7'))
+
+        session_id = str(uuid.uuid4())
+
+        session_data = {
+            'session_id': session_id,
+            'program_name': program_name,
+            'date': date,
+            'start_time': start_time,
+            'end_time': end_time,
+            'latitude': latitude,
+            'longitude': longitude,
+            'limit': limit,
+            'timestamp': datetime.now().isoformat(),
+            'created_by': session['user'],
+            'active': True
+        }
+        ref.child('sessions').child(session_id).set(session_data)
+
+        base_url = request.url_root.rstrip('/')
+        qr_url = f"{base_url}/scan?sid={session_id}&limit={limit}"
+
+        qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
+        qr.add_data(qr_url)
+        qr.make(fit=True)
+
+        try:
+            from qrcode.image.svg import SvgImage
+            img = qr.make_image(image_factory=SvgImage)
+            return Response(img.to_string(), mimetype='image/svg+xml')
+        except Exception as e:
+            print(f'QR error: {e}')
+            return jsonify({'error': 'Failed to generate QR code'}), 500
+    except Exception as e:
+        return jsonify({'error': f'Failed to create session: {str(e)}'}), 500
+
 
 @app.route('/api/sessions', methods=['GET'])
 def get_sessions():

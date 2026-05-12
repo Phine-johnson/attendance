@@ -402,19 +402,21 @@
             document.getElementById('qrSessionDetails').innerHTML = `
                 <strong>${escapeHtml(sessionObj.program_name)}</strong><br>
                 ${escapeHtml(sessionObj.date)} ${escapeHtml(sessionObj.start_time)} - ${escapeHtml(sessionObj.end_time)}
-            `;
-            
-            // Generate QR code
-            const baseUrl = window.location.origin;
-            const qrUrl = `${baseUrl}/scan?sid=${sessionObj.session_id}&limit=${sessionObj.limit || 3}`;
-            
-            const qr = qrcode.qrcode(0, 'L');
-            qr.addData(qrUrl);
-            qr.make();
-            
-            document.getElementById('qrCodeDisplay').innerHTML = qr.createImgTag(6);
-            new bootstrap.Modal(document.getElementById('qrCodeModal')).show();
-        };
+`;
+             
+             // Generate QR code using modern QRCode API
+             const baseUrl = window.location.origin;
+             const qrUrl = `${baseUrl}/scan?sid=${sessionObj.session_id}&limit=${sessionObj.limit || 3}`;
+             
+             QRCode.toString(qrUrl, { errorCorrectionLevel: 'L', type: 'svg', width: 256, height: 256 }, function (err, string) {
+                 if (err) {
+                     console.error('QR generation error:', err);
+                     return;
+                 }
+                 document.getElementById('qrCodeDisplay').innerHTML = string;
+                 new bootstrap.Modal(document.getElementById('qrCodeModal')).show();
+             });
+         };
 
         // Delete session
         window.deleteSession = async function(sessionId) {
