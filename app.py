@@ -1216,31 +1216,14 @@ def member_greeting(member_id):
 
     return jsonify(member)
 
-@app.route('/api/members/<member_id>/checkin-qr')
-def get_member_checkin_qrcode(member_id):
-    """Generate QR code for member self check-in (URL pointing to /checkin)"""
+@app.route('/api/members/checkin-qr')
+def get_checkin_qrcode():
+    """Generate generic QR code for member check-in (points to /checkin)"""
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
 
-    # Verify member exists
-    member = None
-    if FIREBASE_INITIALIZED:
-        try:
-            member_data = ref.child('members').child(member_id).get()
-            if member_data:
-                member = {'id': member_id, **member_data}
-        except Exception as e:
-            print(f"Error fetching member: {e}")
-
-    if not member:
-        return jsonify({'error': 'Member not found'}), 404
-
-    # Get properly formatted member ID
-    raw_member_id = member.get('member_id', member_id)
-    member_id_value = format_member_id(raw_member_id)
-
-    # Build check-in URL
-    checkin_url = f"{request.scheme}://{request.host}/checkin?member_id={member_id_value}"
+    # Build generic check-in URL (no member_id in query)
+    checkin_url = f"{request.scheme}://{request.host}/checkin"
 
     qr = qrcode.QRCode(
         version=1,

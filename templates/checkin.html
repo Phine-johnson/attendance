@@ -13,7 +13,7 @@
             <div class="col-md-8 col-lg-6">
                 <div class="card card-custom shadow">
                     <div class="card-body text-center p-5">
-                        <!-- Step 1: Welcome & Sermon Display (Always visible first) -->
+                        <!-- Step 1: Welcome & Sermon Display -->
                         <div id="welcomeStep">
                             <h1 class="h2 text-pcg-blue mb-3">Welcome to Today's Service!</h1>
 
@@ -26,13 +26,22 @@
                                 <h2 class="h3 text-pcg-blue" id="sermonTitle">Loading...</h2>
                             </div>
 
-                            <!-- Proceed Button -->
-                            <button id="proceedBtn" class="btn btn-custom-primary btn-lg w-100">
+                            <!-- Member Search Section -->
+                            <div class="mb-4">
+                                <label for="memberSearch" class="form-label fw-bold text-pcg-blue">Select Your Name</label>
+                                <input type="text" class="form-control form-control-lg" id="memberSearch" 
+                                       placeholder="Search by name or member ID..." autocomplete="off">
+                                <div id="memberDropdown" class="dropdown-menu w-100" style="max-height: 300px; overflow-y: auto;"></div>
+                                <small class="text-muted">Start typing to search members</small>
+                            </div>
+
+                            <!-- Proceed Button (shown when member is selected) -->
+                            <button id="proceedBtn" class="btn btn-custom-primary btn-lg w-100" style="display: none;">
                                 Proceed to complete your attendance
                             </button>
                         </div>
 
-                        <!-- Step 2: Member Confirmation Form (hidden until proceed clicked) -->
+                        <!-- Step 2: Confirmation (shown after proceed) -->
                         <div id="checkinStep" style="display: none;">
                             <h2 class="h3 text-pcg-blue mb-3">Confirm Your Attendance</h2>
 
@@ -49,7 +58,7 @@
                                 Confirm Check-In
                             </button>
                             <button id="backBtn" class="btn btn-outline-secondary w-100">
-                                Back
+                                Back to Search
                             </button>
                         </div>
 
@@ -57,7 +66,7 @@
                         <div id="successMessage" style="display: none;">
                             <svg width="64" height="64" class="mb-3 text-success" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
                             <h2 class="h4 text-success mb-3">Check-in Successful!</h2>
-                            <p class="mb-0">Your attendance has been recorded. Have a blessed service!</p>
+                            <p class="mb-0" id="successText">Your attendance has been recorded. Have a blessed service!</p>
                         </div>
 
                         <!-- Error Display -->
@@ -74,16 +83,12 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Get member ID from URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const memberId = urlParams.get('member_id');
-
-            // DOM elements
-            const welcomeStep = document.getElementById('welcomeStep');
+            const memberSearch = document.getElementById('memberSearch');
+            const memberDropdown = document.getElementById('memberDropdown');
+            const proceedBtn = document.getElementById('proceedBtn');
             const checkinStep = document.getElementById('checkinStep');
             const successMessage = document.getElementById('successMessage');
             const errorMessage = document.getElementById('errorMessage');
-            const proceedBtn = document.getElementById('proceedBtn');
             const confirmCheckinBtn = document.getElementById('confirmCheckinBtn');
             const backBtn = document.getElementById('backBtn');
             const sermonSpinner = document.getElementById('sermonSpinner');
@@ -91,9 +96,10 @@
             const memberNameDisplay = document.getElementById('memberNameDisplay');
             const memberIdDisplay = document.getElementById('memberIdDisplay');
             const errorText = document.getElementById('errorText');
+            const successText = document.getElementById('successText');
 
-            // State
-            let currentMemberId = null;
+            let allMembers = [];
+            let selectedMember = null;
 
             // Fetch today's sermon on load
             fetch('/api/today-sermon')
@@ -112,57 +118,106 @@
                     sermonTitle.textContent = 'Unable to load sermon';
                 });
 
-            // Verify member ID
-            if (memberId) {
-                currentMemberId = memberId;
-                fetch(`/api/member/${memberId}/greeting`)
-                    .then(res => {
-                        if (!res.ok) throw new Error('Member not found');
-                        return res.json();
-                    })
-                    .then(member => {
-                        memberNameDisplay.textContent = member.first_name || 'Member';
-                        memberIdDisplay.textContent = member.member_id;
-                    })
-                    .catch(err => {
-                        errorText.textContent = 'Member not found. Please scan your QR code again or contact admin.';
-                        welcomeStep.style.display = 'none';
-                        errorMessage.style.display = 'block';
+            // Fetch all members on page load
+            fetch('/api/members')
+                .then(res => res.json())
+                .then(data => {
+                    allMembers = data.members || [];
+                })
+                .catch(err => {
+                    console.error('Error fetching members:', err);
+                });
+
+            // Member search functionality
+            memberSearch.addEventListener('input', function() {
+                const query = this.value.toLowerCase().trim();
+                
+                if (query.length < 2) {
+                    memberDropdown.innerHTML = '';
+                    memberDropdown.style.display = 'none';
+                    proceedBtn.style.display = 'none';
+                    return;
+                }
+
+                // Filter members by name or ID
+                const matches = allMembers.filter(m => {
+                    const fullName = `${m.first_name || ''} ${m.last_name || ''}`.toLowerCase();
+                    const memberId = (m.member_id || '').toLowerCase();
+                    return fullName.includes(query) || memberId.includes(query);
+                }).slice(0, 10); // Limit to 10 results
+
+                if (matches.length > 0) {
+                    memberDropdown.innerHTML = matches.map(m => `
+                        <a href="#" class="dropdown-item" data-id="${m.id}" data-memberid="${m.member_id || ''}" data-name="${m.first_name || ''} ${m.last_name || ''}">
+                            <strong>${m.first_name || ''} ${m.last_name || ''}</strong><br>
+                            <small class="text-muted">${m.member_id || ''}</small>
+                        </a>
+                    `).join('');
+
+                    // Show dropdown
+                    memberDropdown.style.display = 'block';
+
+                    // Attach click handlers
+                    memberDropdown.querySelectorAll('.dropdown-item').forEach(item => {
+                        item.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            selectedMember = {
+                                id: this.dataset.id,
+                                member_id: this.dataset.memberid,
+                                name: this.dataset.name
+                            };
+                            memberSearch.value = selectedMember.name;
+                            memberDropdown.style.display = 'none';
+                            proceedBtn.style.display = 'block';
+                        });
                     });
-            } else {
-                // No member ID in URL
-                errorText.textContent = 'No member ID detected. Please scan your QR code to check in.';
-                welcomeStep.style.display = 'none';
-                errorMessage.style.display = 'block';
-            }
+                } else {
+                    memberDropdown.innerHTML = '<span class="dropdown-item-text text-muted">No members found</span>';
+                    memberDropdown.style.display = 'block';
+                    proceedBtn.style.display = 'none';
+                }
+            });
+
+            // Hide dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!memberSearch.contains(e.target) && !memberDropdown.contains(e.target)) {
+                    memberDropdown.style.display = 'none';
+                }
+            });
 
             // Proceed button - show check-in form
             proceedBtn.addEventListener('click', function() {
-                welcomeStep.style.display = 'none';
+                if (!selectedMember) return;
+                memberNameDisplay.textContent = selectedMember.name;
+                memberIdDisplay.textContent = selectedMember.member_id;
+                document.getElementById('welcomeStep').style.display = 'none';
                 checkinStep.style.display = 'block';
             });
 
             // Back button - return to welcome
             backBtn.addEventListener('click', function() {
                 checkinStep.style.display = 'none';
-                welcomeStep.style.display = 'block';
+                document.getElementById('welcomeStep').style.display = 'block';
             });
 
             // Confirm check-in
             confirmCheckinBtn.addEventListener('click', function() {
+                if (!selectedMember) return;
+
                 confirmCheckinBtn.disabled = true;
                 confirmCheckinBtn.textContent = 'Recording...';
 
                 fetch('/api/checkin', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ member_id: currentMemberId })
+                    body: JSON.stringify({ member_id: selectedMember.member_id })
                 })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
                         checkinStep.style.display = 'none';
                         successMessage.style.display = 'block';
+                        successText.textContent = `Thank you, ${selectedMember.name.split(' ')[0]}! Your attendance has been recorded.`;
                     } else {
                         alert(data.error || 'Check-in failed. Please try again.');
                         confirmCheckinBtn.disabled = false;
@@ -180,9 +235,10 @@
             // Reset function for error retry
             window.resetToWelcome = function() {
                 errorMessage.style.display = 'none';
-                welcomeStep.style.display = 'block';
-                // Reload to get fresh member ID from URL
-                window.location.href = window.location.pathname + '?t=' + Date.now();
+                document.getElementById('welcomeStep').style.display = 'block';
+                memberSearch.value = '';
+                selectedMember = null;
+                proceedBtn.style.display = 'none';
             };
         });
     </script>
